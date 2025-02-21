@@ -1,17 +1,9 @@
-"""
-Generate paths for guided path navigation
+# Copyright (c) 2025 Rhys Mainwaring. All rights reserved.
 
-Python implementation of a subset of trajectory /  path generation functions
-from the ETHZ terrain-navigation package.
-https://github.com/ethz-asl/terrain-navigation.git
-"""
-
-#  Copyright (c) 2025 Rhys Mainwaring. All rights reserved.
-
-# Copyright notice from C++ version
+# BSD-3-Clause and copyright notice from original C++ version.
 #
-#  Copyright (c) 2021-2023 Jaeyoung Lim, Autonomous Systems Lab,
-#  ETH Zürich. All rights reserved.
+# Copyright (c) 2021-2023 Jaeyoung Lim, Autonomous Systems Lab,
+# ETH Zürich. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
