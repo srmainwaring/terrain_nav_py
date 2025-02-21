@@ -106,8 +106,7 @@ class Path:
         tangent = Vector3()
         curvature = 0.0
 
-        # TODO: accessing private member - add method
-        closest_point = self._segments[0].first_state().position
+        closest_point = self.first_segment().first_state().position
 
         # iterate through all segments
         for segment in self._segments:
@@ -136,17 +135,70 @@ class Path:
         return (closest_point, tangent, curvature)
 
     def get_end_of_current_segment(self, position: Vector3) -> Vector3:
-        end_of_current_segment = Vector3()
-        return end_of_current_segment
+        if self._segments.empty():
+            return position
+        else:
+            pos = self.get_current_segment(position).last_state().position
+            return pos
 
     def get_current_segment(self, position: Vector3) -> PathSegment:
-        current_segment = PathSegment()
-        return current_segment
+        closest_point = Vector3
+        tangent = Vector3
+        curvature = 0.0
+
+        segment_idx = -1
+        for segment in self._segments:
+            segment_idx += 1
+            if segment.reached and (segment is not self._segments.back()):
+                continue
+
+            theta = segment.get_closest_point(
+                position, closest_point, tangent, curvature
+            )
+
+            # If current segment is a full circle, and has a next segment,
+            # escape when close to start of next segment
+            if segment.is_periodic and (segment is not self._segments.back()):
+                # Segment is a terminal periodic set
+                next_segment_start = self._segments[segment_idx].states.front().position
+                if (closest_point - next_segment_start).length() < self._epsilon:
+                    segment.reached = True
+                    return segment
+
+            if theta <= 0.0:
+                return segment
+            elif theta < 1.0:
+                return segment
+            else:
+                segment.reached = True
 
     def get_current_segment_index(self, position: Vector3) -> int:
-        current_segment_index = 0
-        return current_segment_index
+        closest_point = Vector3
+        tangent = Vector3
+        curvature = 0.0
 
-    def get_length(self, start_index: int = 0) -> float:
+        #  Iterate through all segments
+        segment_idx = -1
+        for segment in self._segments:
+            segment_idx += 1
+            if segment.reached and (segment is not self._segments.back()):
+                continue
+            theta = segment.get_closest_point(
+                position, closest_point, tangent, curvature
+            )
+            if theta <= 0.0:
+                # theta can be negative on the start of the next segment
+                return segment_idx
+            elif theta < 1.0:
+                # TODO: This is a magic number in terms of acceptance
+                #       radius of end of segments
+                return segment_idx
+
+        return segment_idx
+
+    def get_length(self, start_idx: int = 0) -> float:
         length = 0.0
+        for i in range(start_idx, len(self._segments)):
+            length += self._segments[i].get_length()
+
         return length
