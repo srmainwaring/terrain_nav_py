@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terrain_nav_py"
+version = "0.0.1"
+authors = [
+  { name="Rhys Mainwaring", email="rhys.mainwaring@me.com" },
+]
+description = "Terrain navigation"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/srmainwaring/terrain_nav_py"
+Issues = "https://github.com/srmainwaring/terrain_nav_py/issues"
