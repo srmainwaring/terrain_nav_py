@@ -187,7 +187,7 @@ class DubinsPath:
 
     def __init__(
         self,
-        type: Index = Self.Index.TYPE_LRL,
+        type = Index.TYPE_LRL,
         t: float = 0.0,
         p: float = float("nan"),
         q: float = 0.0,
@@ -301,7 +301,7 @@ class DubinsPath:
         A function returning the length (normalized by minimum radius) of the 3D (non-optimal) Dubins airplane
         path.
         """
-        return self.length_2d * self._one_div_cos_abs_gamma
+        return self.length_2d() * self._one_div_cos_abs_gamma
 
     def getFoundOptimalPath(self) -> bool:
         """
@@ -327,31 +327,31 @@ class DubinsPath:
         """
         self._additionalManeuver = additional_maneuver
 
-    def getAltitudeCase(self) -> Self.AltitudeCase:
+    def getAltitudeCase(self) -> AltitudeCase:
         """
         Return lmh_
         """
         return self._lmh
 
-    def setAltitudeCase(self, altitude_case: Self.AltitudeCase) -> None:
+    def setAltitudeCase(self, altitude_case: AltitudeCase) -> None:
         """
         Set lmh_
         """
         self._lmh = altitude_case
 
-    def getIdx(self) -> Self.Index:
+    def getIdx(self) -> Index:
         """
         Return idx_
         """
         return self._idx
 
-    def setClassification(self, classification: Self.Classification) -> None:
+    def setClassification(self, classification: Classification) -> None:
         """
         Set classification_
         """
         self._classification = classification
 
-    def getClassification(self) -> Self.Classification:
+    def getClassification(self) -> Classification:
         """
         Return classification_
         """
@@ -436,7 +436,7 @@ class DubinsPath:
             + self._length[5]
         )
 
-    def getType(self) -> Self.DubinsPathSegmentType:
+    def getType(self) -> DubinsPathSegmentType:
         """
         Return type_
         """
