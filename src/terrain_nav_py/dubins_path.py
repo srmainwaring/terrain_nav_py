@@ -244,7 +244,7 @@ class DubinsPath:
         self._length = [0.0, t, 0.0, p, q, 0.0]
 
         # The 2D length of the curve based on the values in the length_ array.
-        self._length_2d = t + p + q
+        self._length_2d: float = t + p + q
 
         # Radius ratio (R_opt/rho_) for each segment.
         # For high altitude case, the radius may be bigger than rho_ in order to
@@ -262,17 +262,17 @@ class DubinsPath:
         ]
 
         # Current path angle (positive for flying upwards)
-        self._gamma = gam
+        self._gamma: float = gam
 
         # Computed to speed up the length3D computation.
         # 1.0 / cos(fabs(gamma))
-        self._one_div_cos_abs_gamma = 1.0 / math.cos(math.fabs(self._gamma))
+        self._one_div_cos_abs_gamma: float = 1.0 / math.cos(math.fabs(self._gamma))
 
         # Number of circles to fly in end-helix
-        self._k_end = ke
+        self._k_end: int = ke
 
         # Number of circles to fly in start-helix
-        self._k_start = ks
+        self._k_start: int = ks
 
         # Classification of path according to "Classification of the Dubins Set", Shkel, Lumelsky, 2001
         # If a is equal to 0, the class of the path corresponds to a_11 of the mentioned paper:
@@ -287,7 +287,7 @@ class DubinsPath:
         #  15: a_44
         #  16, the class is not assigned
         #
-        self._classification = DubinsPath.Classification.NOT_ASSIGNED
+        self._classification: DubinsPath.Classification = DubinsPath.Classification.NOT_ASSIGNED
 
         # Same information as in type_:
         #   0: LSL
@@ -297,21 +297,21 @@ class DubinsPath:
         #   4: RLR
         #   5: LRL
         #
-        self._idx = type
+        self._idx: DubinsPath.Index = type
 
         # Altitude case of the path:
         #     low (0)
         #     (medium (1), never appears for this state space)
         #     high (2)
         #
-        self._lmh = DubinsPath.AltitudeCase.ALT_CASE_LOW
+        self._lmh: DubinsPath.AltitudeCase = DubinsPath.AltitudeCase.ALT_CASE_LOW
 
         # Indicates if the path consists of three parts (CCC and CSC) with a
         # value of 0 or of four parts CCSC with a value of 1
-        self._additionalManeuver = False
+        self._additionalManeuver: bool = False
 
         # True if an optimal path was found, false if no or a suboptimal path was found.
-        self._foundOptimalPath = True
+        self._foundOptimalPath: bool = True
 
     def length_2d(self) -> float:
         """
