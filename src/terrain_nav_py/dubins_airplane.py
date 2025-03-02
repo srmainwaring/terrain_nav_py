@@ -1085,11 +1085,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         state: ob.State = None
         return state
 
-    # // TODO: Check if it makes sense to use mutable class variables for the following functions to speed it up.
-    # /** \brief t_lsr
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double t_lsr(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
+    # TODO: Check if it makes sense to use mutable class variables for the following functions to speed it up.
     def t_lsr(
         self,
         d: float,
@@ -1100,13 +1096,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
+        p = math.sqrt(max(tmp, 0.0))
+        theta = math.atan2(-ca - cb, d + sa + sb) - math.atan2(-2.0, p)
+        return mod2pi(-alpha + theta)  # t
 
-    # /** \brief p_lsr
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double p_lsr(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def p_lsr(
         self,
         d: float,
@@ -1117,13 +1114,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
+        return math.sqrt(max(tmp, 0.0))  # p
 
-    # /** \brief q_lsr
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double q_lsr(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def q_lsr(
         self,
         d: float,
@@ -1134,13 +1130,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
+        p = math.sqrt(max(tmp, 0.0))
+        theta = math.atan2(-ca - cb, d + sa + sb) - math.atan2(-2.0, p)
+        return mod2pi(-beta + theta)  # q
 
-    # /** \brief t_rsl
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double t_rsl(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def t_rsl(
         self,
         d: float,
@@ -1151,13 +1148,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
+        p = math.sqrt(max(tmp, 0.0))
+        theta = math.atan2(ca + cb, d - sa - sb) - math.atan2(2.0, p)
+        return mod2pi(alpha - theta)  # t
 
-    # /** \brief p_rsl
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double p_rsl(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def p_rsl(
         self,
         d: float,
@@ -1168,13 +1166,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
+        return math.sqrt(max(tmp, 0.0))  # p
 
-    # /** \brief q_rsl
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double q_rsl(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def q_rsl(
         self,
         d: float,
@@ -1185,13 +1182,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
+        p = math.sqrt(max(tmp, 0.0))
+        theta = math.atan2(ca + cb, d - sa - sb) - math.atan2(2.0, p)
+        return mod2pi(beta - theta)  # q
 
-    # /** \brief t_rsr
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double t_rsr(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def t_rsr(
         self,
         d: float,
@@ -1202,13 +1200,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        theta = math.atan2(ca - cb, d - sa + sb)
+        return mod2pi(alpha - theta)  # t
 
-    # /** \brief p_rsr
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double p_rsr(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def p_rsr(
         self,
         d: float,
@@ -1219,13 +1216,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sb - sa))
+        return math.sqrt(max(tmp, 0.0))  # p
 
-    # /** \brief q_rsr
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double q_rsr(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def q_rsr(
         self,
         d: float,
@@ -1236,13 +1232,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        theta = math.atan2(ca - cb, d - sa + sb)
+        return mod2pi(-beta + theta)  # q
 
-    # /** \brief t_lsl
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double t_lsl(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def t_lsl(
         self,
         d: float,
@@ -1253,13 +1248,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        theta = math.atan2(cb - ca, d + sa - sb)
+        return mod2pi(-alpha + theta)  # t
 
-    # /** \brief p_lsl
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double p_lsl(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def p_lsl(
         self,
         d: float,
@@ -1270,13 +1264,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sa - sb))
+        return math.sqrt(max(tmp, 0.0))  # p
 
-    # /** \brief q_lsl
-    #   * Function to compute a value for classifying the dubins curve.
-    #   */
-    # double q_lsl(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def q_lsl(
         self,
         d: float,
@@ -1287,8 +1280,11 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Function to compute a value for classifying the dubins curve.
+        """
+        theta = math.atan2(cb - ca, d + sa - sb)
+        return mod2pi(beta - theta)  # q
 
     def dubinsLSL(self, d: float, alpha: float, beta: float) -> DubinsPath:
         """
