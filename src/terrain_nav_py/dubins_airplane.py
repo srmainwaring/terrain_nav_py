@@ -49,6 +49,34 @@ from ompl import base as ob
 
 from terrain_nav_py.dubins_path import DubinsPath
 
+half_pi: float = 0.5 * math.pi
+pi: float = math.pi
+twopi: float = 2.0 * math.pi
+one_div_twopi: float = 1.0 / twopi
+
+DUBINS_EPS: float = 1.0e-2
+DUBINS_ZERO: float = -1.0e-4
+
+
+# /** \brief mod2pi
+#  * Sets the input angle to the corresponding angle between 0 and 2pi.
+#  * TODO Move it to a general file as this function can be used in many different functions/classes
+#  */
+def mod2pi(x: float) -> float:
+    if x < 0 and x > DUBINS_ZERO:
+        return 0
+
+    return x - twopi * math.floor(x * one_div_twopi)
+
+
+# /** \brief sgn
+#  * Returns +1 for positive sign, -1 for negative sign and 0 if val=0
+#  * TODO Move it to a general file as this function can be used in many different functions/classes
+#  */
+def sgn(val) -> int:
+    return (0 < val) - (val < 0)
+
+
 # DubinsAirplaneStateSpace
 # A Dubins airplane state space for (non-optimal) planning using (non-optimal) Dubins airplane paths.
 #
@@ -418,20 +446,20 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 DubinsAirplaneStateSpace.SegmentStarts.Start(),
             ]
 
-    # /** \brief getMaximumExtent
-    #   * Get the maximum value a call to distance() can return (or an upper bound).
-    #   *
-    #   * For unbounded state spaces, this function can return infinity.
-    #   * \note Tight upper bounds are preferred because the value of the extent is used in
-    #   * the automatic computation of parameters for planning. If the bounds are less tight,
-    #   * the automatically computed parameters will be less useful.
-    #   *
-    #   * TODO Think about a meaningful and reasonable MaximumExtent for Dubins state space.
-    #   * Remember, the length of (non-optimal) Dubins airplane paths do not define a proper metric space.
-    #   * Currently the getMaximumExtent function of the CompoundStateSpace is used. */
-    # virtual double getMaximumExtent() const override;
     def getMaximumExtent(self) -> float:
-        # or the DubinsAirplaneStateSpace this computes:
+        """
+        Get the maximum value a call to distance() can return (or an upper bound).
+
+        For unbounded state spaces, this function can return infinity.
+        NOTE: Tight upper bounds are preferred because the value of the extent is used in
+              the automatic computation of parameters for planning. If the bounds are less tight,
+              the automatically computed parameters will be less useful.
+
+        TODO Think about a meaningful and reasonable MaximumExtent for Dubins state space.
+            Remember, the length of (non-optimal) Dubins airplane paths do not define a proper metric space.
+            Currently the getMaximumExtent function of the CompoundStateSpace is used.
+        """
+        # For the DubinsAirplaneStateSpace this computes:
         # R3_max_extent + SO2_max_extent = sqrtf(bound_x^2 + bound_y^2 + bound_z^2) + pi */
         e = 0.0
         components_ = self.getSubspaces()
@@ -445,37 +473,84 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 e += weights_[i] * components_[i].getMaximumExtent()
         return e
 
-    # /** \brief getEuclideanExtent
-    #   * Get the maximum extent of the RealVectorStateSpace part of the DubinsAirplaneStateSpace */
-    # double getEuclideanExtent() const;
     def getEuclideanExtent(self) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Get the maximum extent of the RealVectorStateSpace part of the DubinsAirplaneStateSpace
+        """
+        # For the DubinsAirplaneStateSpace this computes:
+        # R3_max_extent = sqrtf(bound_x^2 + bound_y^2 + bound_z^2) */
+        components_ = self.getSubspaces()
+        return components_[0].getMaximumExtent()
 
-    # /** \brief validSegmentCount
-    #   * Count how many segments of the "longest valid length" fit on the motion from \e state1 to \e state2.
-    #   * Used to determine the number of states for collision detection. Always returns the dubins airplane
-    #   * distance even though useEuclideanDistance == true. */
-    # virtual unsigned int validSegmentCount(const ob::State* state1, const ob::State* state2) const override;
     def validSegmentCount(self, state1: ob.State, state2: ob.State) -> int:
-        # TODO: implement
-        return 0
+        """
+        Count how many segments of the "longest valid length" fit on the motion from \e state1 to \e state2.
 
-    # /** \brief distance
-    #   * Returns the length of the (non-optimal) Dubins airplane path connecting \a state1 and \a state2.
-    #   */
-    # virtual double distance(const ob::State* state1, const ob::State* state2) const override;
+        Used to determine the number of states for collision detection. Always returns the dubins airplane
+        distance even though useEuclideanDistance == true.
+        """
+        longestValidSegmentCountFactor_ = self.getValidSegmentCountFactor()
+        longestValidSegment_ = self.getLongestValidSegmentLength()
+
+        if self._useEuclideanDistance:
+            dist = self.distance(state1, state2)
+            if math.isnan(dist):
+                return 0
+            else:
+                return longestValidSegmentCountFactor_ * int(
+                    math.ceil(dist / longestValidSegment_)
+                )
+        else:
+            #  still compute the dubins airplane distance.
+            self._useEuclideanDistance = False
+            nd = longestValidSegmentCountFactor_ * int(
+                math.ceil(self.distance(state1, state2) / longestValidSegment_)
+            )
+            self.useEuclideanDistance_ = True
+            return nd
+
     def distance(self, state1: ob.State, state2: ob.State) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Returns the length of the (non-optimal) Dubins airplane path connecting \a state1 and \a state2.
+        """
+        if self._useEuclideanDistance:
+            return self.euclidean_distance(state1, state2)
+        else:
+            self._dp = self.dubins(state1, state2)
+            dist = self._rho * self._dp.length_3D()
+            return dist
 
-    # /** \brief euclidean_distance
-    #   * Returns distance with is an approximation to the dubins airplane path between \a state1 and \a state2.
-    #   */
-    # double euclidean_distance(const ob::State* state1, const ob::State* state2) const;
     def euclidean_distance(self, state1: ob.State, state2: ob.State) -> float:
-        # TODO: implement
-        return 0.0
+        """
+        Returns distance with is an approximation to the dubins airplane path between \a state1 and \a state2.
+        """
+        # TODO: coerce state correctly
+        dubinsAirplane2State1: DubinsAirplaneStateSpace.DubinsAirplaneState = state1()
+        dubinsAirplane2State2: DubinsAirplaneStateSpace.DubinsAirplaneState = state2()
+
+        eucl_dist = (
+            (
+                (dubinsAirplane2State1.getX() - dubinsAirplane2State2.getX())
+                * (dubinsAirplane2State1.getX() - dubinsAirplane2State2.getX())
+            )
+            + (
+                (dubinsAirplane2State1.getY() - dubinsAirplane2State2.getY())
+                * (dubinsAirplane2State1.getY() - dubinsAirplane2State2.getY())
+            )
+            + (
+                (dubinsAirplane2State1.getZ() - dubinsAirplane2State2.getZ())
+                * (dubinsAirplane2State1.getZ() - dubinsAirplane2State2.getZ())
+            )
+        )
+
+        eucl_dist = math.sqrt(eucl_dist)
+
+        dub_dist = (
+            math.fabs(dubinsAirplane2State1.getZ() - dubinsAirplane2State2.getZ())
+            * self._one_div_sin_gammaMax
+        )
+
+        return max(eucl_dist, dub_dist)
 
     # /** \brief dubins
     #   * Compute the (non-optimal) Dubins airplane path from SE(2)xR3 state state1 to SE(2)xR3 state state2
@@ -1215,19 +1290,16 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # TODO: implement
         return 0.0
 
-    # /** \brief dubinsLSL
-    #   * Compute the dubins LSL path.
-    #   */
-    # DubinsPath dubinsLSL(double d, double alpha, double beta) const;
     def dubinsLSL(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Compute the dubins LSL path.
+        """
+        ca = math.cos(alpha)
+        sa = math.sin(alpha)
+        cb = math.cos(beta)
+        sb = math.sin(beta)
+        return self.dubinsLSL(d, alpha, beta, sa, sb, ca, cb)
 
-    # /** \brief dubinsLSL
-    #   * Overloaded dubinsLSL function to compute the LSL path with precompute sine and cosine values.
-    #   */
-    # DubinsPath dubinsLSL(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def dubinsLSL(
         self,
         d: float,
@@ -1238,23 +1310,32 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Overloaded dubinsLSL function to compute the LSL path with precompute sine and cosine values.
+        """
+        tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sa - sb))
+        if tmp >= DUBINS_ZERO:  # TODO Check if fabs is missing.
+            theta = math.atan2f(cb - ca, d + sa - sb)
+            t = mod2pi(-alpha + theta)
+            p = math.sqrt(max(tmp, 0.0))
+            q = mod2pi(beta - theta)
+            # assert(math.fabs(p * math.cos(alpha + t) - sa + sb - d) < DUBINS_EPS)
+            # assert(math.fabs(p * math.sin(alpha + t) + ca - cb) < DUBINS_EPS)
+            # assert(mod2pi(alpha + t + q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
+            return DubinsPath(DubinsPath.TYPE_LSL, t, p, q)
+        return DubinsPath()
 
-    # /** \brief dubinsRSR
-    #   * Compute the dubins RSR path.
-    #   */
     # DubinsPath dubinsRSR(double d, double alpha, double beta) const;
     def dubinsRSR(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Compute the dubins RSR path.
+        """
+        ca = math.cos(alpha)
+        sa = math.sin(alpha)
+        cb = math.cos(beta)
+        sb = math.sin(beta)
+        return self.dubinsRSR(d, alpha, beta, sa, sb, ca, cb)
 
-    # /** \brief dubinsRSR
-    #   * Overloaded dubinsRSR function to compute the RSR path with precompute sine and cosine values.
-    #   */
-    # DubinsPath dubinsRSR(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def dubinsRSR(
         self,
         d: float,
@@ -1265,23 +1346,31 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Overloaded dubinsRSR function to compute the RSR path with precompute sine and cosine values.
+        """
+        tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sb - sa))
+        if tmp >= DUBINS_ZERO:  # TODO Check if fabs is missing.
+            theta = math.atan2(ca - cb, d - sa + sb)
+            t = mod2pi(alpha - theta)
+            p = math.sqrt(max(tmp, 0.0))
+            q = mod2pi(-beta + theta)
+            # assert(math.fabs(p * math.cos(alpha - t) + sa - sb - d) < DUBINS_EPS)
+            # assert(math.fabs(p * math.sin(alpha - t) - ca + cb) < DUBINS_EPS)
+            # assert(mod2pi(alpha - t - q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
+            return DubinsPath(DubinsPath.TYPE_RSR, t, p, q)
+        return DubinsPath()
 
-    # /** \brief dubinsRSL
-    #   * Compute the dubins RSL path.
-    #   */
-    # DubinsPath dubinsRSL(double d, double alpha, double beta) const;
     def dubinsRSL(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Compute the dubins RSL path.
+        """
+        ca = math.cos(alpha)
+        sa = math.sin(alpha)
+        cb = math.cos(beta)
+        sb = math.sin(beta)
+        return self.dubinsRSL(d, alpha, beta, sa, sb, ca, cb)
 
-    # /** \brief dubinsRSL
-    #   * Overloaded dubinsRSL function to compute the RSL path with precompute sine and cosine values.
-    #   */
-    # DubinsPath dubinsRSL(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def dubinsRSL(
         self,
         d: float,
@@ -1292,21 +1381,31 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Overloaded dubinsRSL function to compute the RSL path with precompute sine and cosine values.
+        """
+        tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
+        if tmp >= DUBINS_ZERO:  # TODO Check if here fabs is missing.
+            p = math.sqrt(max(tmp, 0.0))
+            theta = math.atan2(ca + cb, d - sa - sb) - math.atan2(2.0, p)
+            t = mod2pi(alpha - theta)
+            q = mod2pi(beta - theta)
+            # assert(math.fabs(p * math.cos(alpha - t) - 2.0 * math.sin(alpha - t) + sa + sb - d) < DUBINS_EPS)
+            # assert(math.fabs(p * math.sin(alpha - t) + 2.0 * math.cos(alpha - t) - ca - cb) < DUBINS_EPS)
+            # assert(mod2pi(alpha - t + q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
+            return DubinsPath(DubinsPath.TYPE_RSL, t, p, q)
+        return DubinsPath()
 
-    # /** \brief dubinsLSR
-    #   * Compute the dubins LSR path.
-    #   */
-    # DubinsPath dubinsLSR(double d, double alpha, double beta) const;
     def dubinsLSR(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        pass
+        """
+        Compute the dubins LSR path.
+        """
+        ca = math.cos(alpha)
+        sa = math.sin(alpha)
+        cb = math.cos(beta)
+        sb = math.sin(beta)
+        return self.dubinsLSR(d, alpha, beta, sa, sb, ca, cb)
 
-    # /** \brief dubinsLSR
-    #   * Overloaded dubinsLSR function to compute the LSR path with precompute sine and cosine values.
-    #   */
-    # DubinsPath dubinsLSR(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def dubinsLSR(
         self,
         d: float,
@@ -1317,23 +1416,31 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Overloaded dubinsLSR function to compute the LSR path with precompute sine and cosine values.
+        """
+        tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
+        if tmp >= DUBINS_ZERO:  # TODO Check if here fabs is missing.
+            p = math.sqrt(max(tmp, 0.0))
+            theta = math.atan2(-ca - cb, d + sa + sb) - math.atan2(-2.0, p)
+            t = mod2pi(-alpha + theta)
+            q = mod2pi(-beta + theta)
+            # assert(math.fabs(p * math.cos(alpha + t) + 2.0 * math.sin(alpha + t) - sa - sb - d) < DUBINS_EPS)
+            # assert(math.fabs(p * math.sin(alpha + t) - 2.0 * math.cos(alpha + t) + ca + cb) < DUBINS_EPS)
+            # assert(mod2pi(alpha + t - q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
+            return DubinsPath(DubinsPath.TYPE_LSR, t, p, q)
+        return DubinsPath()
 
-    # /** \brief dubinsRLR
-    #   * Compute the dubins RLR path.
-    #   */
-    # DubinsPath dubinsRLR(double d, double alpha, double beta) const;
     def dubinsRLR(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Compute the dubins RLR path.
+        """
+        ca = math.cos(alpha)
+        sa = math.sin(alpha)
+        cb = math.cos(beta)
+        sb = math.sin(beta)
+        return self.dubinsRLR(d, alpha, beta, sa, sb, ca, cb)
 
-    # /** \brief dubinsRLR
-    #   * Overloaded dubinsRLR function to compute the RLR path with precompute sine and cosine values.
-    #   */
-    # DubinsPath dubinsRLR(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def dubinsRLR(
         self,
         d: float,
@@ -1344,23 +1451,31 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Overloaded dubinsRLR function to compute the RLR path with precompute sine and cosine values.
+        """
+        tmp = 0.125 * (6.0 - d * d + 2.0 * (ca * cb + sa * sb + d * (sa - sb)))
+        if math.fabs(tmp) < 1.0:
+            p = twopi - math.acos(tmp)
+            theta = math.atan2(ca - cb, d - sa + sb)
+            t = mod2pi(alpha - theta + 0.5 * p)
+            q = mod2pi(alpha - beta - t + p)
+            # assert(math.fabs(2.0 * math.sin(alpha - t + p) - 2.0 * math.sin(alpha - t) - d + sa - sb) < DUBINS_EPS)
+            # assert(math.fabs(-2.0 * math.cos(alpha - t + p) + 2.0 * math.cos(alpha - t) - ca + cb) < DUBINS_EPS)
+            # assert(mod2pi(alpha - t + p - q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
+            return DubinsPath(DubinsPath.TYPE_RLR, t, p, q)
+        return DubinsPath()
 
-    # /** \brief dubinsLRL
-    #   * Compute the dubins LRL path.
-    #   */
-    # DubinsPath dubinsLRL(double d, double alpha, double beta) const;
     def dubinsLRL(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Compute the dubins LRL path.
+        """
+        ca = math.cos(alpha)
+        sa = math.sin(alpha)
+        cb = math.cos(beta)
+        sb = math.sin(beta)
+        return self.dubinsLRL(d, alpha, beta, sa, sb, ca, cb)
 
-    # /** \brief dubinsLRL
-    #   * Overloaded dubinsLRL function to compute the LRL path with precompute sine and cosine values.
-    #   */
-    # DubinsPath dubinsLRL(double d, double alpha, double beta, double sa, double sb, double ca, double cb) const;
     def dubinsLRL(
         self,
         d: float,
@@ -1371,6 +1486,17 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
-        path: DubinsPath = None
-        return path
+        """
+        Overloaded dubinsLRL function to compute the LRL path with precompute sine and cosine values.
+        """
+        tmp = 0.125 * (6.0 - d * d + 2.0 * (ca * cb + sa * sb - d * (sa - sb)))
+        if math.fabs(tmp) < 1.0:
+            p = twopi - math.acos(tmp)
+            theta = math.atan2(-ca + cb, d + sa - sb)
+            t = mod2pi(-alpha + theta + 0.5 * p)
+            q = mod2pi(beta - alpha - t + p)
+            # assert(math.fabs(-2.0 * math.sin(alpha + t - p) + 2.0 * math.sin(alpha + t) - d - sa + sb) < DUBINS_EPS)
+            # assert(math.fabs(2.0 * math.cos(alpha + t - p) - 2.0 * math.cos(alpha + t) + ca - cb) < DUBINS_EPS)
+            # assert(mod2pi(alpha + t - p + q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
+            return DubinsPath(DubinsPath.TYPE_LRL, t, p, q)
+        return DubinsPath()

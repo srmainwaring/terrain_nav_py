@@ -135,4 +135,10 @@ def test_dubins_airplane_state_space():
     e = ss.getMaximumExtent()
     assert e == math.pi
 
+    e = ss.getEuclideanExtent()
+    assert e == 0.0
 
+    # state1 = ob.State()
+    # state2 = ob.State()
+    # count = ss.validSegmentCount(state1, state2)
+    # dist = ss.distance(state1, state2)
