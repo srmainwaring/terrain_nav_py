@@ -31,7 +31,10 @@ import math
 import pytest
 
 from ompl import base as ob
+from ompl import geometric as og
 
+
+from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
 def test_ompl_base_states():
 
@@ -76,15 +79,13 @@ def test_ompl_base_states():
 
 
 def test_dubins_airplane_state():
-    from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
-
     # compound state space
     c_ss = ob.CompoundStateSpace()
     c_ss.addSubspace(ob.RealVectorStateSpace(3), 1.0)
     c_ss.addSubspace(ob.SO2StateSpace(), 1.0)
     c_ss.lock()
 
-    s = DubinsAirplaneStateSpace.DubinsAirplaneState(c_ss)
+    s = DubinsAirplaneStateSpace.DubinsAirplaneState(ob.State(c_ss))
     assert s.getX() == 0.0
     assert s.getY() == 0.0
     assert s.getZ() == 0.0
@@ -121,8 +122,6 @@ def test_dubins_airplane_state():
 
 
 def test_dubins_airplane_state_space():
-    from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
-
     ss = DubinsAirplaneStateSpace()
     # TODO: why DubinsAirplaneCompoundSpace6?
     # assert ss.getName() == "DubinsAirplaneCompoundSpace3"
@@ -142,3 +141,15 @@ def test_dubins_airplane_state_space():
     # state2 = ob.State()
     # count = ss.validSegmentCount(state1, state2)
     # dist = ss.distance(state1, state2)
+
+def test_dubins_airplane_alloc_state():
+
+    # state space
+    space = DubinsAirplaneStateSpace()
+
+    ss = og.SimpleSetup(space)
+    si = ss.getSpaceInformation()
+
+    # cs = ob.CompoundState(si)
+    # print(type(cs))
+
