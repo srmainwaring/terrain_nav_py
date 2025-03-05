@@ -44,6 +44,23 @@ def test_terrain_ompl_gridmap_at_position():
     assert map.atPosition("distance_surface", pos) == 0.0
 
 
+def test_terrain_ompl_gridmap_iterator():
+    map = GridMap()
+
+    for i, index in enumerate(map):
+        assert index.value == i
+        # print(f"index: {index.value}")
+
+
+def test_terrain_ompl_gridmap_at():
+    map = GridMap()
+
+    for index in map:
+        assert map.atPosition("elevation", index) == 0.0
+        assert map.atPosition("max_elevation", index) == 120.0
+        assert map.atPosition("distance_surface", index) == 0.0
+
+
 def test_terrain_ompl_validity_checker_collision():
     # gridmap
     map = GridMap()
@@ -132,4 +149,4 @@ def test_terrain_ompl_sampler_uniform():
 
 
 if __name__ == "__main__":
-    test_terrain_ompl_sampler_uniform()
+    test_terrain_ompl_gridmap_iterator()
