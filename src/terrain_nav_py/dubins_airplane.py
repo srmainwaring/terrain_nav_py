@@ -1383,23 +1383,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         path: DubinsPath = None
         return path
 
-    # /** \brief calcDubPathWithoutClassification
-    #   * Compute the dubins airplane path without path classification.
-    #   * That means computing the paths for all six cases and returning the shortest
-    #   * path.
-    #   * Slower than calcDubPathWithClassification.
-    #   *
-    #   * @param[out] path: The computed dubins path.
-    #   * @param[in] d: euclidean distance between start and goal state
-    #   * @param[in] alpha: Corrected heading of the start state
-    #   * @param[in] beta: Corrected heading of the goal state
-    #   * @param[in] sa: Precomputed sin(alpha)
-    #   * @param[in] sb: Precomputed sin(beta)
-    #   * @param[in] ca: Precomputed cos(alpha)
-    #   * @param[in] cb: Precomputed cos(beta)
-    #   */
-    # void calcDubPathWithoutClassification(DubinsPath& path, double d, double alpha, double beta, double sa, double sb,
-    #                                       double ca, double cb) const;
     def calcDubPathWithoutClassification(
         self,
         d: float,
@@ -1410,9 +1393,55 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
+        """
+        Compute the dubins airplane path without path classification.
+
+        That means computing the paths for all six cases and returning the shortest
+        path. Slower than calcDubPathWithClassification.
+
+        :param path: The computed dubins path.
+        :param d: euclidean distance between start and goal state
+        :param alpha: Corrected heading of the start state
+        :param beta: Corrected heading of the goal state
+        :param sa: Precomputed sin(alpha)
+        :param sb: Precomputed sin(beta)
+        :param ca: Precomputed cos(alpha)
+        :param cb: Precomputed cos(beta)
+        """
+        # TODO: test
         print("[DubinsAirplaneStateSpace] calcDubPathWithoutClassification")
-        path: DubinsPath = None
+        path = DubinsAirplaneStateSpace.dubinsLSL(d, alpha, beta, sa, sb, ca, cb)
+        minLength = path.length_2d()
+
+        tmp2 = DubinsAirplaneStateSpace.dubinsRSR(d, alpha, beta, sa, sb, ca, cb)
+        len = tmp2.length_2D()
+        if len < minLength:
+            minLength = len
+            path = tmp2
+
+        tmp2 = DubinsAirplaneStateSpace.dubinsRSL(d, alpha, beta, sa, sb, ca, cb)
+        len = tmp2.length_2D()
+        if len < minLength:
+            minLength = len
+            path = tmp2
+
+        tmp2 = DubinsAirplaneStateSpace.dubinsLSR(d, alpha, beta, sa, sb, ca, cb)
+        len = tmp2.length_2D()
+        if len < minLength:
+            minLength = len
+            path = tmp2
+
+        tmp2 = DubinsAirplaneStateSpace.dubinsRLR(d, alpha, beta, sa, sb, ca, cb)
+        len = tmp2.length_2D()
+        if len < minLength:
+            minLength = len
+            path = tmp2
+
+        tmp2 = DubinsAirplaneStateSpace.dubinsLRL(d, alpha, beta, sa, sb, ca, cb)
+        len = tmp2.length_2D()
+        if len < minLength:
+            path = tmp2
+
         return path
 
     # /** \brief additionalManeuver
