@@ -493,7 +493,7 @@ class TerrainOmplRrt:
         # TODO: test
         self._check_max_altitude = check_max_altitude
 
-    def Solve(self, time_budget: float, path: Path) -> bool:
+    def Solve1(self, time_budget: float, path: Path) -> bool:
         """
         Solve the planning problem for a given time budget, and return a
         TerrainSegments object if an exact solution is found
@@ -521,7 +521,7 @@ class TerrainOmplRrt:
 
         return False
 
-    def Solve(self, time_budget: float, path: list[tuple[float, float, float]]) -> bool:
+    def Solve2(self, time_budget: float, path: list[tuple[float, float, float]]) -> bool:
         # TODO: test
         if self._problem_setup.solve(time_budget):
             print("Found solution:")
