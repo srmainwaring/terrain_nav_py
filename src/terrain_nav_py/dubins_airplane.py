@@ -567,15 +567,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         return max(eucl_dist, dub_dist)
 
-    # /** \brief dubins
-    #   * Compute the (non-optimal) Dubins airplane path from SE(2)xR3 state state1 to SE(2)xR3 state state2
-    #   *
-    #   * @param[in] state1: Start state
-    #   * @param[in] state2: Goal state
-    #   * @param[out] dp: Computed dubins path.
-    #   */
-    # void dubins(const ob::State* state1, const ob::State* state2, DubinsPath& dp) const;
     def dubins2(self, state1: ob.State, state2: ob.State) -> DubinsPath:
+        """
+        Compute the (non-optimal) Dubins airplane path from SE(2)xR3 state state1 to SE(2)xR3 state state2
+
+        :param state1: Start state
+        :param state2: Goal state
+        :return dp: Computed dubins path.
+        """
         # TODO: test
         print("[DubinsAirplaneStateSpace] dubins")
 
