@@ -477,7 +477,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         # For the DubinsAirplaneStateSpace this computes:
-        # R3_max_extent + SO2_max_extent = sqrtf(bound_x^2 + bound_y^2 + bound_z^2) + pi */
+        # R3_max_extent + SO2_max_extent = math.sqrt(bound_x^2 + bound_y^2 + bound_z^2) + pi */
         e = 0.0
         components_ = self.getSubspaces()
         componentCount_ = self.getSubspaceCount()
@@ -496,7 +496,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         # For the DubinsAirplaneStateSpace this computes:
-        # R3_max_extent = sqrtf(bound_x^2 + bound_y^2 + bound_z^2) */
+        # R3_max_extent = math.sqrt(bound_x^2 + bound_y^2 + bound_z^2) */
         components_ = self.getSubspaces()
         return components_[0].getMaximumExtent()
 
