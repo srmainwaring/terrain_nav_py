@@ -313,6 +313,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             """
             self._state = state
 
+        def getState(self) -> ob.State:
+            """
+            Get the wrapped abstract State
+            """
+            return self._state
+
         #   double getX() const;
         def getX(self) -> float:
             """
