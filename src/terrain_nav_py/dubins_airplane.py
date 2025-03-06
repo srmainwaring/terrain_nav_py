@@ -733,13 +733,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         rstate = state()
 
         # RE3 part
-        # for i in range(self.getSubspace(0).getDimension()):
-        #     if rstate(0).values[i] > self(0).getBounds().high[i]:
-        #         rstate(0).values[i] = self(0).getBounds().high[i]
-        #     elif rstate(0).values[i] < self(0).getBounds().low[i]:
-        #         rstate(0).values[i] = self(0).getBounds().low[i]
-
-        # RE3 part
         re3_space = self.getSubspace(0)
         for i in range(re3_space.getDimension()):
             if rstate(0).values[i] > re3_space.getBounds().high[i]:
