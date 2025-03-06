@@ -1364,28 +1364,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             self.calcDubPathWithoutClassification(path, d, alpha, beta, sa, sb, ca, cb)
             return path
 
-    # protected:
-    # /** \brief calcDubPathWithClassification
-    #   * Compute the dubins airplane path with path classification.
-    #   *
-    #   * TODO Currently, classifies only samples that far enough from each other ("long paths")!
-    #   *    Does not work properly when OPTIMAL Dubins AIRPLANE State Space is used! For intermediate case, there are cases
-    #   * with d > ... and still CCC may be optimal (not 100% sure) Bigger parts of work:
-    #   *      - Implement classification for short path case (see "Classification of the Dubins set, Shkel & Lumelsky, 2001)
-    #   *      - Implement fast and fully optimal Dubins state space. Note that classification of the Dubins set will not be
-    #   * correct anymore for some cases. *
-    #   *
-    #   * @param[out] path: The computed dubins path.
-    #   * @param[in] d: euclidean distance between start and goal state
-    #   * @param[in] alpha: Corrected heading of the start state
-    #   * @param[in] beta: Corrected heading of the goal state
-    #   * @param[in] sa: Precomputed sin(alpha)
-    #   * @param[in] sb: Precomputed sin(beta)
-    #   * @param[in] ca: Precomputed cos(alpha)
-    #   * @param[in] cb: Precomputed cos(beta)
-    #   */
-    # void calcDubPathWithClassification(DubinsPath& path, double d, double alpha, double beta, double sa, double sb,
-    #                                     double ca, double cb) const;
     def calcDubPathWithClassification(
         self,
         d: float,
@@ -1396,9 +1374,430 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         ca: float,
         cb: float,
     ) -> DubinsPath:
-        # TODO: implement
+        """
+        Compute the dubins airplane path with path classification.
+
+        TODO Currently, classifies only samples that far enough from each other
+            ("long paths")! Does not work properly when OPTIMAL Dubins AIRPLANE
+            State Space is used! For intermediate case, there are cases
+            with d > ... and still CCC may be optimal (not 100% sure) Bigger parts of work:
+              - Implement classification for short path case
+                (see "Classification of the Dubins set, Shkel & Lumelsky, 2001)
+              - Implement fast and fully optimal Dubins state space.
+                Note that classification of the Dubins set will not be
+        correct anymore for some cases.
+
+        :param d: euclidean distance between start and goal state
+        :param alpha: Corrected heading of the start state
+        :param beta: Corrected heading of the goal state
+        :param sa: Precomputed sin(alpha)
+        :param sb: Precomputed sin(beta)
+        :param ca: Precomputed cos(alpha)
+        :param cb: Precomputed cos(beta)
+        :return path: The computed dubins path.
+        """
+        # TODO: test
         print("[DubinsAirplaneStateSpace] calcDubPathWithClassification")
-        path: DubinsPath = None
+        path = DubinsPath()
+
+        # TODO: Computational speed up could be achieved here by ordering the
+        # if-cases according to their relative probability (if known a priori)
+        classification = path.getClassification()
+        if classification == DubinsPath.CLASS_A11:
+            # class a_11: optimal path is RSL
+            path = DubinsAirplaneStateSpace.dubinsRSL(d, alpha, beta, sa, sb, ca, cb)
+        elif classification == DubinsPath.CLASS_A12:
+            # class a_12: depending on S_12, optimal path is either RSR (S_12<0) or RSL (S_12>0)
+            if (
+                DubinsAirplaneStateSpace.t_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                if (
+                    DubinsAirplaneStateSpace.p_rsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.q_rsl(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                    > 0.0
+                ):
+                    # S_12>0: RSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # S_12<0: RSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+            else:
+                if (
+                    DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.t_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.q_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.q_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.t_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    < 0.0
+                ):
+                    # S_12>0: RSL is optimal
+                    # LSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # RSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+        elif classification == DubinsPath.CLASS_A13:
+            # class a_13: depending on S_13, optimal path is either RSR (S_13<0) or LSR (S_13>0)
+            if (
+                DubinsAirplaneStateSpace.t_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
+                > 0.0
+            ):
+                # S_13>0: LSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # S_13<0: RSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A14:
+            # class a_14: depending on S^{1,2}_14,
+            # optimal path is LSR (S^1_14>0) or RSL (S^2_14>0) or RSR otherwise
+            if (
+                DubinsAirplaneStateSpace.t_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
+                > 0.0
+            ):
+                # S^1_14>0: LSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            elif (
+                DubinsAirplaneStateSpace.q_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
+                > 0.0
+            ):
+                # S^2_14>0: RSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # RSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A21:
+            # class a_21 (top. equiv. a_12): depending on S_21, optimal path is either LSL
+            # (S_21<0) or RSL (S_12>0)
+            if (
+                DubinsAirplaneStateSpace.q_lsl(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                if (
+                    DubinsAirplaneStateSpace.p_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.t_rsl(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                    < 0.0
+                ):
+                    # S_21<0: LSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # S_21>0: RSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+            else:
+                if (
+                    DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.t_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.q_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.q_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.t_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    < 0.0
+                ):
+                    # S_21<0: LSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:  # S_21>0: RSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+        elif classification == DubinsPath.CLASS_A22:
+            # class a_22 (top. equiv. a_33): depending on alpha, beta, S^{1,2}_22,
+            # optimal path is  LSL (alpha>beta && S^1_22<0) or RSL (alpha>beta && S^1_22>0)
+            #                  RSR (alpha<beta && S^2_22<0) or RSL (alpha<beta && S^2_22>0)
+            if (
+                alpha >= beta
+                and (
+                    DubinsAirplaneStateSpace.p_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.t_rsl(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                )
+                < 0.0
+            ):
+                # LSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            elif (
+                alpha < beta
+                and (
+                    DubinsAirplaneStateSpace.p_rsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.q_rsl(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                )
+                < 0.0
+            ):
+                # RSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # if( alpha < beta && (DubinsAirplaneStateSpace.p_rsr(d, alpha, beta, sa, sb, ca, cb) - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb) -
+                # 2*(DubinsAirplaneStateSpace.q_rsl(d, alpha, beta, sa, sb, ca, cb) - pi)) > 0 ) {
+                # # RSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A23:  # class a_23: RSR is optimal
+            path = DubinsAirplaneStateSpace.dubinsRSR(d, alpha, beta, sa, sb, ca, cb)
+        elif classification == DubinsPath.CLASS_A24:
+            # class a_24: depending on S_24, optimal path is RSR (S_24<0) or RSL (S_24>0)
+            if (
+                DubinsAirplaneStateSpace.q_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                # S_24<0: RSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # S_24>0: RSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A31:
+            # class a_31 (top. equiv. to a_13): depending on S_31, optimal path is LSL (S_31<0)
+            # or LSR (S_31>0)
+            if (
+                DubinsAirplaneStateSpace.q_lsl(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                # S_31<0: LSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # S_31>0: LSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A32:
+            # class a_32 (top. equiv. to a_32): optimal path is LSL
+            path = DubinsAirplaneStateSpace.dubinsLSL(d, alpha, beta, sa, sb, ca, cb)
+        elif classification == DubinsPath.CLASS_A33:
+            # class a_33 (top. equiv. to a_33): depending on a, b, S^{1,2}_33,
+            # optimal path is  RSR (alpha<beta && S^1_33<0) or LSR (alpha>beta && S^1_33>0)
+            #                  LSL (alpha<beta && S^2_33<0) or LSR (alpha>beta && S^2_33>0)
+            if (
+                alpha <= beta
+                and (
+                    DubinsAirplaneStateSpace.p_rsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.t_lsr(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                )
+                < 0.0
+            ):
+                # alpha<beta && S^1_33<0: RSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            elif (
+                alpha > beta
+                and (
+                    DubinsAirplaneStateSpace.p_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.q_lsr(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                )
+                < 0.0
+            ):
+                # alpha<beta && S^2_33<0: LSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # LSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A34:
+            # class a_34 (top. equiv. to a_12): depending on S_34, optimal path is RSR
+            # (S_34<0) or LSR (S_34>0)
+            if (
+                DubinsAirplaneStateSpace.q_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                if (
+                    DubinsAirplaneStateSpace.p_rsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.t_lsr(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                    < 0
+                ):
+                    # S_34<0: RSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # S_34>0: LSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+            else:
+                if (
+                    DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.t_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.q_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.q_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.t_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    < 0.0
+                ):
+                    # S_34<0: RSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # S_34>0: LSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+        elif classification == DubinsPath.CLASS_A41:
+            # class a_41 (top. equiv. to a_14): depending on S^{1,2}_41,
+            # optimal path is RSL (S^1_41>0) or LSR (S^2_41>0) or LSL otherwise
+            if (
+                DubinsAirplaneStateSpace.t_lsl(d, alpha, beta, sa, sb, ca, cb) - pi
+                > 0.0
+            ):
+                # S^1_41>0: RSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            elif (
+                DubinsAirplaneStateSpace.q_lsl(d, alpha, beta, sa, sb, ca, cb) - pi
+                > 0.0
+            ):
+                # S^2_41>0: LSR is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSR(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # LSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A42:
+            # class a_42 (top. equiv. to a_13): depending on S_42, optimal path is LSL (S_42<0)
+            # or RSL (S_42>0)
+            if (
+                DubinsAirplaneStateSpace.t_lsl(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                # S_42 < 0: LSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsLSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+            else:
+                # S_42 > 0: RSL is optimal
+                path = DubinsAirplaneStateSpace.dubinsRSL(
+                    d, alpha, beta, sa, sb, ca, cb
+                )
+        elif classification == DubinsPath.CLASS_A43:
+            # class a_43 (top. equiv. to a_34): depending on S_43, optimal path is LSL
+            # (S_43<0) or LSR (S_43>0)
+            if (
+                DubinsAirplaneStateSpace.t_lsl(d, alpha, beta, sa, sb, ca, cb) - pi
+                < 0.0
+            ):
+                if (
+                    DubinsAirplaneStateSpace.p_lsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - 2.0
+                    * (
+                        DubinsAirplaneStateSpace.q_lsr(d, alpha, beta, sa, sb, ca, cb)
+                        - pi
+                    )
+                    < 0.0
+                ):
+                    # S_43<0: LSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # S_43>0: LSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+            else:
+                if (
+                    DubinsAirplaneStateSpace.p_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.t_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    + DubinsAirplaneStateSpace.q_lsr(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.p_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.q_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    - DubinsAirplaneStateSpace.t_rsl(d, alpha, beta, sa, sb, ca, cb)
+                    < 0.0
+                ):
+                    # S_12>0: RSL is optimal
+                    # LSR is optimal
+                    path = DubinsAirplaneStateSpace.dubinsLSR(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+                else:
+                    # RSL is optimal
+                    path = DubinsAirplaneStateSpace.dubinsRSL(
+                        d, alpha, beta, sa, sb, ca, cb
+                    )
+        elif classification == DubinsPath.CLASS_A44:
+            # class a_44: optimal path is LSR
+            path = DubinsAirplaneStateSpace.dubinsLSR(d, alpha, beta, sa, sb, ca, cb)
+        else:
+            raise RuntimeError(
+                f"default (a not in set{0,1,...,15}), path.a: {path.getClassification()} ,d: {d}"
+                f", alpha: {alpha}, beta: {beta}"
+            )
+            # assert(false && "class of path (path.a) was not assigned to an integer in the set {0,1,...,15}.");
         return path
 
     def calcDubPathWithoutClassification(
