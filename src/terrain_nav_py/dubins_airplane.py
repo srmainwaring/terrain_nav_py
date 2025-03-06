@@ -1463,9 +1463,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(cb - ca, d + sa - sb)
         return mod2pi(beta - theta)  # q
 
-    # TODO: handle overloads correctly - these functions need to be named differently
-    #       (and ditto for other dubinsXXX variants)
-    def dubinsLSL(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    @staticmethod
+    def dubinsLSL(d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins LSL path.
         """
@@ -1474,10 +1473,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         sa = math.sin(alpha)
         cb = math.cos(beta)
         sb = math.sin(beta)
-        return self.dubinsLSL(d, alpha, beta, sa, sb, ca, cb)
+        return DubinsAirplaneStateSpace.dubinsLSL_fast(d, alpha, beta, sa, sb, ca, cb)
 
-    def dubinsLSL(
-        self,
+    @staticmethod
+    def dubinsLSL_fast(
         d: float,
         alpha: float,
         beta: float,
@@ -1492,7 +1491,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # TODO: test
         tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sa - sb))
         if tmp >= DUBINS_ZERO:  # TODO Check if fabs is missing.
-            theta = math.atan2f(cb - ca, d + sa - sb)
+            theta = math.atan2(cb - ca, d + sa - sb)
             t = mod2pi(-alpha + theta)
             p = math.sqrt(max(tmp, 0.0))
             q = mod2pi(beta - theta)
@@ -1502,8 +1501,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return DubinsPath(DubinsPath.TYPE_LSL, t, p, q)
         return DubinsPath()
 
-    # DubinsPath dubinsRSR(double d, double alpha, double beta) const;
-    def dubinsRSR(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    @staticmethod
+    def dubinsRSR(d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins RSR path.
         """
@@ -1512,10 +1511,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         sa = math.sin(alpha)
         cb = math.cos(beta)
         sb = math.sin(beta)
-        return self.dubinsRSR(d, alpha, beta, sa, sb, ca, cb)
+        return DubinsAirplaneStateSpace.dubinsRSR_fast(d, alpha, beta, sa, sb, ca, cb)
 
-    def dubinsRSR(
-        self,
+    @staticmethod
+    def dubinsRSR_fast(
         d: float,
         alpha: float,
         beta: float,
@@ -1540,7 +1539,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return DubinsPath(DubinsPath.TYPE_RSR, t, p, q)
         return DubinsPath()
 
-    def dubinsRSL(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    @staticmethod
+    def dubinsRSL(d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins RSL path.
         """
@@ -1549,10 +1549,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         sa = math.sin(alpha)
         cb = math.cos(beta)
         sb = math.sin(beta)
-        return self.dubinsRSL(d, alpha, beta, sa, sb, ca, cb)
+        return DubinsAirplaneStateSpace.dubinsRSL_fast(d, alpha, beta, sa, sb, ca, cb)
 
-    def dubinsRSL(
-        self,
+    @staticmethod
+    def dubinsRSL_fast(
         d: float,
         alpha: float,
         beta: float,
@@ -1577,7 +1577,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return DubinsPath(DubinsPath.TYPE_RSL, t, p, q)
         return DubinsPath()
 
-    def dubinsLSR(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    @staticmethod
+    def dubinsLSR(d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins LSR path.
         """
@@ -1586,10 +1587,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         sa = math.sin(alpha)
         cb = math.cos(beta)
         sb = math.sin(beta)
-        return self.dubinsLSR(d, alpha, beta, sa, sb, ca, cb)
+        return DubinsAirplaneStateSpace.dubinsLSR_fast(d, alpha, beta, sa, sb, ca, cb)
 
-    def dubinsLSR(
-        self,
+    @staticmethod
+    def dubinsLSR_fast(
         d: float,
         alpha: float,
         beta: float,
@@ -1614,7 +1615,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return DubinsPath(DubinsPath.TYPE_LSR, t, p, q)
         return DubinsPath()
 
-    def dubinsRLR(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    @staticmethod
+    def dubinsRLR(d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins RLR path.
         """
@@ -1623,10 +1625,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         sa = math.sin(alpha)
         cb = math.cos(beta)
         sb = math.sin(beta)
-        return self.dubinsRLR(d, alpha, beta, sa, sb, ca, cb)
+        return DubinsAirplaneStateSpace.dubinsRLR_fast(d, alpha, beta, sa, sb, ca, cb)
 
-    def dubinsRLR(
-        self,
+    @staticmethod
+    def dubinsRLR_fast(
         d: float,
         alpha: float,
         beta: float,
@@ -1651,7 +1653,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return DubinsPath(DubinsPath.TYPE_RLR, t, p, q)
         return DubinsPath()
 
-    def dubinsLRL(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    @staticmethod
+    def dubinsLRL(d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins LRL path.
         """
@@ -1660,10 +1663,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         sa = math.sin(alpha)
         cb = math.cos(beta)
         sb = math.sin(beta)
-        return self.dubinsLRL(d, alpha, beta, sa, sb, ca, cb)
+        return DubinsAirplaneStateSpace.dubinsLRL_fast(d, alpha, beta, sa, sb, ca, cb)
 
-    def dubinsLRL(
-        self,
+    @staticmethod
+    def dubinsLRL_fast(
         d: float,
         alpha: float,
         beta: float,
