@@ -528,7 +528,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         if self._useEuclideanDistance:
             return self.euclidean_distance(state1, state2)
         else:
-            self._dp = self.dubins(state1, state2)
+            self._dp = self.dubins2(state1, state2)
             dist = self._rho * self._dp.length_3D()
             return dist
 
@@ -565,8 +565,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         return max(eucl_dist, dub_dist)
 
-    # TODO: handle overloads (x2) of dubins, functions must be named differently
-
     # /** \brief dubins
     #   * Compute the (non-optimal) Dubins airplane path from SE(2)xR3 state state1 to SE(2)xR3 state state2
     #   *
@@ -575,7 +573,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     #   * @param[out] dp: Computed dubins path.
     #   */
     # void dubins(const ob::State* state1, const ob::State* state2, DubinsPath& dp) const;
-    def dubins(self, state1: ob.State, state2: ob.State) -> DubinsPath:
+    def dubins2(self, state1: ob.State, state2: ob.State) -> DubinsPath:
         # TODO: implement
         print("[DubinsAirplaneStateSpace] dubins")
         dp: DubinsPath = None
@@ -632,7 +630,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         # compute the path if interpolate is called the first time.
         if firstTime:
-            path = self.dubins(from_state, to_state)
+            path = self.dubins2(from_state, to_state)
 
             # compute the segment starts
             segmentStarts = self.calculateSegmentStarts(from_state, path)
@@ -695,7 +693,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         #  compute the path if interpolate is called the first time.
-        path = self.dubins(from_state, to_state)
+        path = self.dubins2(from_state, to_state)
         #  compute the segment starts
         segmentStarts = self.calculateSegmentStarts(from_state, path, segmentStarts)
 
@@ -1022,8 +1020,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         else:  # third dubins segment and end helix
             return 2
 
-    # TODO: handle overloads (x2) of dubins, functions must be named differently
-
     # /** \brief dubins
     #   * Compute the 2D dubins path using path classification for the long distance case and
     #   * no classification for the short distance case.
@@ -1034,7 +1030,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     #   * @param[out] path: The computed dubins path.
     #   */
     # void dubins(double d, double alpha, double beta, DubinsPath& path) const;
-    def dubins(self, d: float, alpha: float, beta: float) -> DubinsPath:
+    def dubins1(self, d: float, alpha: float, beta: float) -> DubinsPath:
         # TODO: implement
         print("[DubinsAirplaneStateSpace] dubins")
         path: DubinsPath = None
