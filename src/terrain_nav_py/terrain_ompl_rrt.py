@@ -123,8 +123,9 @@ class TerrainOmplRrt:
         bounds.setHigh(2, self._upper_bound[2])
 
         # define start and goal positions.
-        db_space = self._problem_setup.getGeometricComponentStateSpace()
-        db_space.setBounds(bounds)
+        # da_space = self._problem_setup.getGeometricComponentStateSpace()
+        da_space = self._problem_setup.getStateSpace()
+        da_space.setBounds(bounds)
 
         self._problem_setup.setStateValidityCheckingResolution(0.001)
 
@@ -141,9 +142,9 @@ class TerrainOmplRrt:
         :param goal: center of the goal loiter position
         """
         # TODO: test
-        db_space = self._problem_setup.getStateSpace()
-        start_loiter_radius = db_space.getMinTurningRadius()
-        self.setupProblem(start_pos, goal, start_loiter_radius)
+        da_space = self._problem_setup.getStateSpace()
+        start_loiter_radius = da_space.getMinTurningRadius()
+        self.setupProblem2(start_pos, goal, start_loiter_radius)
 
     def setupProblem(
         self,
@@ -161,8 +162,8 @@ class TerrainOmplRrt:
         # TODO: test
         self.configureProblem()
 
-        db_space = self._problem_setup.getStateSpace()
-        radius = db_space.getMinTurningRadius()
+        da_space = self._problem_setup.getStateSpace()
+        radius = da_space.getMinTurningRadius()
 
         delta_theta = 0.1
         theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
@@ -173,14 +174,14 @@ class TerrainOmplRrt:
 
             # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
             #     self._problem_setup.getSpaceInformation());
-            start_state = ob.State(db_space)
+            start_state = ob.State(da_space)
             start_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(start_state)
 
             start_ompl.setX(
-                start_pos[0] + math.abs(start_loiter_radius) * math.cos(theta)
+                start_pos[0] + math.fabs(start_loiter_radius) * math.cos(theta)
             )
             start_ompl.setY(
-                start_pos[1] + math.abs(start_loiter_radius) * math.sin(theta)
+                start_pos[1] + math.fabs(start_loiter_radius) * math.sin(theta)
             )
             start_ompl.setZ(start_pos[2])
             start_yaw = (
@@ -188,9 +189,11 @@ class TerrainOmplRrt:
                 if start_loiter_radius > 0.0
                 else theta + 2.0 * math.pi
             )
-            wrap_pi(start_yaw)
+            start_yaw = wrap_pi(start_yaw)
             start_ompl.setYaw(start_yaw)
-            self._problem_setup.addStartState(start_ompl)
+            # TODO scoped vs abstract state
+            # self._problem_setup.addStartState(start_ompl)
+            self._problem_setup.addStartState(start_state)
 
         self._goal_states = ob.GoalStates(self._problem_setup.getSpaceInformation())
 
@@ -200,21 +203,25 @@ class TerrainOmplRrt:
 
             # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> goal_ompl(
             #     self._problem_setup.getSpaceInformation());
-            goal_state = ob.State(db_space)
+            goal_state = ob.State(da_space)
             goal_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(goal_state)
 
             goal_ompl.setX(goal[0] + radius * math.cos(theta))
             goal_ompl.setY(goal[1] + radius * math.sin(theta))
             goal_ompl.setZ(goal[2])
             goal_yaw = theta + 2.0 * math.pi
-            wrap_pi(goal_yaw)
+            goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
-            self._goal_states.addState(goal_ompl)
+            # TODO scoped vs abstract state
+            # self._goal_states.addState(goal_ompl)
+            self._goal_states.addState(goal_state)
             goal_yaw = theta - 2.0 * math.pi
-            wrap_pi(goal_yaw)
+            goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
             # Add additional state for bidirectional tangents
-            self._goal_states.addState(goal_ompl)
+            # TODO scoped vs abstract state
+            # self._goal_states.addState(goal_ompl)
+            self._goal_states.addState(goal_state)
 
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
@@ -240,12 +247,12 @@ class TerrainOmplRrt:
         # TODO: test
         self.configureProblem()
 
-        db_space = self._problem_setup.getStateSpace()
-        radius = db_space.getMinTurningRadius()
+        da_space = self._problem_setup.getStateSpace()
+        radius = da_space.getMinTurningRadius()
 
         radius = goal_radius
         if goal_radius < 0.0:
-            radius = db_space.getMinTurningRadius()
+            radius = da_space.getMinTurningRadius()
 
         delta_theta = 0.1
         theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
@@ -253,7 +260,7 @@ class TerrainOmplRrt:
         # TODO: check (see above)
         # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
         #     self._problem_setup.getSpaceInformation())
-        start_state = ob.State(db_space)
+        start_state = ob.State(da_space)
         start_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(start_state)
 
         start_ompl.setX(start_pos(0))
@@ -262,7 +269,9 @@ class TerrainOmplRrt:
         start_yaw = math.atan2(start_vel[1], start_vel[0])
         start_ompl.setYaw(start_yaw)
         self._problem_setup.clearStartStates()  # Clear previous goal states
-        self._problem_setup.addStartState(start_ompl)
+        # TODO scoped vs abstract state
+        # self._problem_setup.addStartState(start_ompl)
+        self._problem_setup.addStartState(start_state)
 
         self._goal_states = ob.GoalStates(self._problem_setup.getSpaceInformation())
 
@@ -270,21 +279,25 @@ class TerrainOmplRrt:
         for theta in theta_samples:
             # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> goal_ompl(
             #     self._problem_setup.getSpaceInformation());
-            goal_state = ob.State(db_space)
+            goal_state = ob.State(da_space)
             goal_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(goal_state)
 
             goal_ompl.setX(goal[0] + radius * math.cos(theta))
             goal_ompl.setY(goal[1] + radius * math.sin(theta))
             goal_ompl.setZ(goal[2])
             goal_yaw = theta + 2.0 * math.pi
-            wrap_pi(goal_yaw)
+            goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
-            self._goal_states.addState(goal_ompl)
+            # TODO scoped vs abstract state
+            # self._goal_states.addState(goal_ompl)
+            self._goal_states.addState(goal_state)
             goal_yaw = theta - 2.0 * math.pi
-            wrap_pi(goal_yaw)
+            goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
             # Add additional state for bidirectional tangents
-            self._goal_states.addState(goal_ompl)
+            # TODO scoped vs abstract state
+            # self._goal_states.addState(goal_ompl)
+            self._goal_states.addState(goal_state)
 
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
@@ -311,10 +324,10 @@ class TerrainOmplRrt:
 
         self.configureProblem()
 
-        db_space = self._problem_setup.getStateSpace()
-        radius = db_space.getMinTurningRadius()
+        da_space = self._problem_setup.getStateSpace()
+        radius = da_space.getMinTurningRadius()
 
-        radius = db_space.getMinTurningRadius()
+        radius = da_space.getMinTurningRadius()
 
         delta_theta = 0.1
         theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
@@ -322,7 +335,7 @@ class TerrainOmplRrt:
         # TODO: check (see above)
         # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
         #     self._problem_setup.getSpaceInformation());
-        start_state = ob.State(db_space)
+        start_state = ob.State(da_space)
         start_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(start_state)
 
         start_ompl.setX(start_pos(0))
@@ -331,27 +344,33 @@ class TerrainOmplRrt:
         start_yaw = math.atan2(start_vel[1], start_vel[0])
         start_ompl.setYaw(start_yaw)
         self._problem_setup.clearStartStates()  # Clear previous goal states
-        self._problem_setup.addStartState(start_ompl)
+        # TODO scoped vs abstract state
+        # self._problem_setup.addStartState(start_ompl)
+        self._problem_setup.addStartState(start_state)
 
         self._goal_states = ob.GoalStates(self._problem_setup.getSpaceInformation())
 
         for goal in goal_positions:
             for theta in theta_samples:
-                goal_state = ob.State(db_space)
+                goal_state = ob.State(da_space)
                 goal_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(goal_state)
 
                 goal_ompl.setX(goal[0] + radius * math.cos(theta))
                 goal_ompl.setY(goal[1] + radius * math.sin(theta))
                 goal_ompl.setZ(goal[2])
                 goal_yaw = theta + 2.0 * math.pi
-                wrap_pi(goal_yaw)
+                goal_yaw = wrap_pi(goal_yaw)
                 goal_ompl.setYaw(goal_yaw)
-                self._goal_states.addState(goal_ompl)
+                # TODO scoped vs abstract state
+                # self._goal_states.addState(goal_ompl)
+                self._goal_states.addState(goal_state)
                 goal_yaw = theta - 2.0 * math.pi
-                wrap_pi(goal_yaw)
+                goal_yaw = wrap_pi(goal_yaw)
                 goal_ompl.setYaw(goal_yaw)
                 # Add additional state for bidirectional tangents
-                self._goal_states.addState(goal_ompl)
+                # TODO scoped vs abstract state
+                # self._goal_states.addState(goal_ompl)
+                self._goal_states.addState(goal_state)
 
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
@@ -374,16 +393,16 @@ class TerrainOmplRrt:
         # TODO: test
         self.configureProblem()
 
-        db_space = self._problem_setup.getStateSpace()
+        da_space = self._problem_setup.getStateSpace()
 
         # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
         #     self._problem_setup.getSpaceInformation())
-        start_state = ob.State(db_space)
+        start_state = ob.State(da_space)
         start_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(start_state)
 
         # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> goal_ompl(
         #     self._problem_setup.getSpaceInformation());
-        goal_state = ob.State(db_space)
+        goal_state = ob.State(da_space)
         goal_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(goal_state)
 
         start_ompl.setX(start_pos[0])
@@ -527,14 +546,17 @@ class TerrainOmplRrt:
         self, problem_setup: OmplSetup, dubins_path: DubinsPath, start_idx: int
     ) -> float:
         # TODO: test
-        db_space = problem_setup.getGeometricComponentStateSpace()
+        # TODO: difference between getGeometricComponentStateSpace and getStateSpace
+        # NOTE: they are equivalent in Python (one is the derived type in C++) 
+        # da_space = problem_setup.getGeometricComponentStateSpace()
+        da_space = problem_setup.getStateSpace()
 
         segment_curvature = 0.0
-        maximum_curvature = 1.0 / db_space.getMinTurningRadius()
+        maximum_curvature = 1.0 / da_space.getMinTurningRadius()
 
-        # TODO: difference between getGeometricComponentStateSpace and getStateSpace
-        db_space = problem_setup.getStateSpace()
-        db_idx = db_space.convert_idx(start_idx)
+        # TODO: see NOTE above
+        # da_space = problem_setup.getStateSpace()
+        db_idx = da_space.convert_idx(start_idx)
         dubins_path_type = dubins_path.getType()[db_idx]
         # switch (
         #     dubins_path
@@ -564,18 +586,18 @@ class TerrainOmplRrt:
         for idx in range(len(state_vector) - 1):
             from_state = state_vector[idx]  # Start of the segment
             to_state = state_vector[idx + 1]  # End of the segment
-            db_space = self._problem_setup.getStateSpace()
+            da_space = self._problem_setup.getStateSpace()
 
             dubins_path = DubinsPath()
-            db_space.dubins(from_state, to_state, dubins_path)
+            da_space.dubins(from_state, to_state, dubins_path)
 
             segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
-            db_space.calculateSegments(from_state, to_state, dubins_path, segmentStarts)
+            da_space.calculateSegments(from_state, to_state, dubins_path, segmentStarts)
 
             # segment_start_state: ob.State = self._problem_setup.getStateSpace()->allocState();
             # segment_end_state: ob.State = self._problem_setup.getStateSpace()->allocState();
-            segment_start_state = ob.State(db_space)
-            segment_end_state = ob.State(db_space)
+            segment_start_state = ob.State(da_space)
+            segment_end_state = ob.State(da_space)
 
             total_length = dubins_path.length_2d()
             dt = resolution / total_length
@@ -608,7 +630,7 @@ class TerrainOmplRrt:
                         self._problem_setup, dubins_path, start_idx
                     )
                     # ompl::base::State* state = self._problem_setup.getStateSpace()->allocState()
-                    state = ob.State(db_space)
+                    state = ob.State(da_space)
                     trajectory.flightpath_angle = dubins_path.getGamma()
                     yaw = 0.0
                     track_progress = 0.0
@@ -618,7 +640,7 @@ class TerrainOmplRrt:
                         segment_state = path_segment.State()
                         # self._problem_setup.getStateSpace()->as<fw_planning::spaces::DubinsAirplaneStateSpace>()->interpolate(
                         #     dubins_path, segmentStarts, t, state)
-                        db_space.interpolate(dubins_path, segmentStarts, t, state)
+                        da_space.interpolate(dubins_path, segmentStarts, t, state)
 
                         position = TerrainOmplRrt.dubinsairplanePosition(state)
                         yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
@@ -721,15 +743,15 @@ class TerrainOmplRrt:
     @staticmethod
     def dubinsairplanePosition(state_ptr: ob.State) -> tuple[float, float, float]:
         # TODO: test
-        db_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state_ptr)
-        position = (db_state.getX(), db_state.getY(), db_state.getZ())
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state_ptr)
+        position = (da_state.getX(), da_state.getY(), da_state.getZ())
         return position
 
     @staticmethod
     def dubinsairplaneYaw(state_ptr: ob.State) -> float:
         # TODO: test
-        db_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state_ptr)
-        yaw = db_state.getYaw()
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state_ptr)
+        yaw = da_state.getYaw()
         return yaw
 
     @staticmethod
@@ -737,8 +759,8 @@ class TerrainOmplRrt:
         start: DubinsAirplaneStateSpace.SegmentStarts.Start, state: ob.State
     ) -> None:
         # TODO: test
-        db_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-        db_state.setXYZYaw(start.x, start.y, start.x, start.yaw)
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+        da_state.setXYZYaw(start.x, start.y, start.x, start.yaw)
 
     def setAltitudeLimits(self, max_altitude: float, min_altitude: float) -> None:
         # TODO: test
