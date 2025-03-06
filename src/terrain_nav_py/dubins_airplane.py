@@ -576,9 +576,137 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     #   */
     # void dubins(const ob::State* state1, const ob::State* state2, DubinsPath& dp) const;
     def dubins2(self, state1: ob.State, state2: ob.State) -> DubinsPath:
-        # TODO: implement
+        # TODO: test
         print("[DubinsAirplaneStateSpace] dubins")
-        dp: DubinsPath = None
+
+        # extract state 1
+        da_state1 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
+        x1 = da_state1.getX()
+        y1 = da_state1.getY()
+        z1 = da_state1.getZ()
+        th1 = da_state1.getYaw()
+
+        # extract state 2
+        da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
+        x2 = da_state2.getX()
+        y2 = da_state2.getY()
+        z2 = da_state2.getZ()
+        th2 = da_state2.getYaw()
+
+        dx = (x2 - x1) * self._curvature
+        dy = (y2 - y1) * self._curvature
+        dz = (z2 - z1) * self._curvature
+        fabs_dz = math.fabs(dz)
+        d = math.sqrt(dx * dx + dy * dy)
+        th = math.atan2(dy, dx)
+        alpha = mod2pi(th1 - th)
+        beta = mod2pi(th2 - th)
+
+        # compute the 2D path
+        dp: DubinsPath = self.dubins1(d, alpha, beta)
+        L = dp.length_2d()
+
+        # set the climbing angle
+        if fabs_dz * self._tanGammaMaxInv <= L:
+            # low altitude
+            dp.setAltitudeCase(DubinsPath.ALT_CASE_LOW)
+            dp.setGamma(math.atan2(dz, L))
+
+        elif fabs_dz * self._tanGammaMaxInv >= (L + twopi):
+            # /high altitude
+            dp.setAltitudeCase(DubinsPath.ALT_CASE_HIGH)
+            k: int = math.floor((fabs_dz * self._tanGammaMaxInv - L) * one_div_twopi)
+
+            if dz >= 0:
+                dp.setGamma(self._gammaMax)
+                dp.setStartHelix(
+                    k,
+                    self.computeOptRratio(
+                        fabs_dz, L, math.tan(math.fabs(dp.getGamma())), k
+                    ),
+                )
+            else:
+                dp.setGamma(-self._gammaMax)
+                dp.setEndHelix(
+                    k,
+                    self.computeOptRratio(
+                        fabs_dz, L, math.tan(math.fabs(dp.getGamma())), k
+                    ),
+                )
+
+        else:
+            # // medium altitude
+
+            dp.setAltitudeCase(DubinsPath.ALT_CASE_MEDIUM)
+
+            if self._optimalStSp:
+                # additionalManeuver -> tuple[float, bool, float, float, float, float]
+                # (rho, foundSol, t_min, p_min, q_min, L_2D)
+                # tuple[0] -> rho
+                # tuple[1] -> foundSol
+                # tuple[2] -> t_min
+                # tuple[3] -> p_min
+                # tuple[4] -> q_min
+                # tuple[5] -> L_2D
+
+                (rho, foundSol, t_min, p_min, q_min, L_2D) = self.additionalManeuver(
+                    dp, L, state1, state2
+                )
+
+                if dp.getIdx() < 4:
+                    # CSC cases
+                    # phi_i = t_min;
+                    dp.setFoundOptimalPath(foundSol)
+                    dp.setAdditionalManeuver(True)
+                    dp.setSegmentLength(rho, 1)
+                    dp.setSegmentLength(p_min, 3)
+                    dp.setSegmentLength(q_min, 4)
+                    if dz >= 0:
+                        dp.setGamma(self._gammaMax)
+                        dp.setSegmentLength(0.0, 0)
+                        dp.setSegmentLength(t_min, 2)
+                    else:
+                        dp.setGamma(-self._gammaMax)
+                        dp.setSegmentLength(0.0, 5)
+                        dp.setSegmentLength(t_min, 2)
+
+                else:
+                    # CCC cases (does not find any optimal path yet).
+                    # Flies 2D Dubins path with adequate climbing rate gamma.
+                    # rad = rho;
+                    dp.setFoundOptimalPath(foundSol)
+                    dp.setSegmentLength(t_min, 1)
+                    dp.setSegmentLength(p_min, 3)
+                    dp.setSegmentLength(q_min, 4)
+
+                    if dz >= 0:
+                        dp.setStartHelix(1, 1.0)
+                        dp.setGamma(math.atan2(dz, L + twopi))
+                    else:
+                        dp.setEndHelix(1, 1.0)
+                        dp.setGamma(math.atan2(dz, L + twopi))
+
+            else:
+                # fly at most one circle too much
+                k: int = (
+                    math.floor((fabs_dz * self._tanGammaMaxInv - L) * one_div_twopi) + 1
+                )
+
+                if dz >= 0:
+                    dp.setStartHelix(k, 1.0)
+                    dp.setGamma(math.atan2(dz, L + dp.getSegmentLength(0)))
+                    # need to use dp.length_2D since length changed in line before!
+                else:
+                    dp.setEndHelix(k, 1.0)
+                    dp.setGamma(math.atan2(dz, L + dp.getSegmentLength(5)))
+                    # need to use dp.length_2D since length changed in line before!
+
+        # CSC cases
+        if dp.getIdx() < 4:
+            self._csc_ctr += 1
+        else:
+            self._ccc_ctr += 1
+
         return dp
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, const double t, ob::State* state) const override;
@@ -1153,9 +1281,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     # std::tuple<double, bool, double, double, double> additionalManeuver(const DubinsPath& dp, double& L_2D,
     #                                                                     const ob::State* state1,
     #                                                                     const ob::State* state2) const;
+    # TODO: return L_2D in tuple (last entry)
     def additionalManeuver(
         self, dp: DubinsPath, L_2D: float, state1: ob.State, state2: ob.State
-    ) -> tuple[tuple[float, bool, float, float, float], float]:
+    ) -> tuple[float, bool, float, float, float, float]:
         # TODO: implement
         print("[DubinsAirplaneStateSpace] additionalManeuver")
         pass
