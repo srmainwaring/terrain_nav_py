@@ -178,7 +178,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self._enable_classification: bool = True
 
         # Minimum turning radius
-        self._rho_: float = turningRadius
+        self._rho: float = turningRadius
 
         # Maximum curvature (1/rho), for savings in computational cost
         self._curvature: float = 1.0 / turningRadius
@@ -723,16 +723,27 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         #     self(0)->getBounds().high[i]
         #
 
-        # RE3 part
+        print("[DubinsAirplaneStateSpace] enforceBounds")
         rstate = state()
-        for i in range(self.getSubspace(0).getDimension()):
-            if rstate(0).values[i] > self(0).getBounds().high[i]:
-                rstate(0).values[i] = self(0).getBounds().high[i]
-            elif rstate(0).values[i] < self(0).getBounds().low[i]:
-                rstate(0).values[i] = self(0).getBounds().low[i]
 
-        # Orientation (S02 part)
-        self.getSubspace(1).enforceBounds(rstate(1))
+        # RE3 part
+        # for i in range(self.getSubspace(0).getDimension()):
+        #     if rstate(0).values[i] > self(0).getBounds().high[i]:
+        #         rstate(0).values[i] = self(0).getBounds().high[i]
+        #     elif rstate(0).values[i] < self(0).getBounds().low[i]:
+        #         rstate(0).values[i] = self(0).getBounds().low[i]
+
+        # RE3 part
+        re3_space = self.getSubspace(0)
+        for i in range(re3_space.getDimension()):
+            if rstate(0).values[i] > re3_space.getBounds().high[i]:
+                rstate(0).values[i] = re3_space.getBounds().high[i]
+            elif rstate(0).values[i] < re3_space.getBounds().low[i]:
+                rstate(0).values[i] = re3_space.getBounds().low[i]
+
+        # Orientation (SO(2) part)
+        so2_space = self.getSubspace(1)
+        so2_space.enforceBounds(rstate(1))
 
     def setMaxClimbingAngle(self, maxClimb: float) -> None:
         """
@@ -900,15 +911,20 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         the range of the space in which sampling is performed.
         """
         # TODO: test
-        # TODO: check access to subspace
-        self(0).setBounds(bounds)
+        print("[DubinsAirplaneStateSpace] setBounds")
+        # self(0).setBounds(bounds)
+        re3_space = self.getSubspace(0)
+        re3_space.setBounds(bounds)
 
     def getBounds(self) -> ob.RealVectorBounds:
         """
         Set the bounds of the state space.
         """
         # TODO: test
-        return self(0).getBounds()
+        print("[DubinsAirplaneStateSpace] getBounds")
+        # return self(0).getBounds()
+        re3_space = self.getSubspace(0)
+        return re3_space.getBounds()
 
     def printStateSpaceProperties(self) -> None:
         """
