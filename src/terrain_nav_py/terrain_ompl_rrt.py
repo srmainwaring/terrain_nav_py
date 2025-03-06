@@ -1,5 +1,16 @@
 """
 Terrain planner OMPL RRT
+
+
+Notes: using ompl Python bindings - conversions
+
+These functions are equivalent
+
+    og.SimpleSetup.getStateSpace -> ob.StateSpace
+    og.OmplSetup.getGeometricComponentStateSpace -> ob.StateSpace
+
+    
+
 """
 
 # Copyright (c) 2025 Rhys Mainwaring. All rights reserved.
@@ -98,12 +109,24 @@ class TerrainOmplRrt:
         Configure OMPL problem descriptions
         """
         # TODO: test
+        print(f"[TerrainOmplRrt] configureProblem")
+
+        print(f"[TerrainOmplRrt] clearing previous states")
         self._problem_setup.clear()
         self._problem_setup.clearStartStates()
 
+        print(f"[TerrainOmplRrt] setup default planner and objective")
         self._problem_setup.setDefaultPlanner()
         self._problem_setup.setDefaultObjective()
 
+        # TODO: DEBUG
+        # planner = self._problem_setup.getPlanner()
+        # print(f"[TerrainOmplRrt] planner: {planner}")
+        # objective = self._problem_setup.getOptimizationObjective()
+        # print(f"[TerrainOmplRrt] objective: {objective}")
+        # TODO: DEBUG
+
+        print(f"[TerrainOmplRrt] setup terrain collition checking")
         grid_map = self._map.getGridMap()
         self._problem_setup.setTerrainCollisionChecking(
             grid_map, self._check_max_altitude
@@ -113,25 +136,35 @@ class TerrainOmplRrt:
         #      std::bind(&TerrainOmplRrt::allocTerrainStateSampler, this, std::placeholders::_1));
         # self._problem_setup.getStateSpace().allocStateSampler()
 
+        print(f"[TerrainOmplRrt] get lower bounds")
         bounds = ob.RealVectorBounds(3)
         bounds.setLow(0, self._lower_bound[0])
         bounds.setLow(1, self._lower_bound[1])
         bounds.setLow(2, self._lower_bound[2])
 
+        print(f"[TerrainOmplRrt] get upper bounds")
         bounds.setHigh(0, self._upper_bound[0])
         bounds.setHigh(1, self._upper_bound[1])
         bounds.setHigh(2, self._upper_bound[2])
 
         # define start and goal positions.
+        # TODO: understand types returned by problem_setup.getGeometricComponentStateSpace
+        #       vs problem_setup.getStateSpace
+        # NOTE: in Python they are equivalent and both return the derived type
         # da_space = self._problem_setup.getGeometricComponentStateSpace()
         da_space = self._problem_setup.getStateSpace()
+        print(f"[TerrainOmplRrt] type(da_space): {type(da_space)}")
+        print(f"[TerrainOmplRrt] set bounds")
         da_space.setBounds(bounds)
 
+        print(f"[TerrainOmplRrt] setup validity check resolution")
         self._problem_setup.setStateValidityCheckingResolution(0.001)
 
+        print(f"[TerrainOmplRrt] setup planner data ")
         si = self._problem_setup.getSpaceInformation()
         self._planner_data = ob.PlannerData(si)
 
+    # setup using start and goal positions and default start loiter radius
     def setupProblem1(
         self, start_pos: tuple[float, float, float], goal: tuple[float, float, float]
     ) -> None:
@@ -146,6 +179,7 @@ class TerrainOmplRrt:
         start_loiter_radius = da_space.getMinTurningRadius()
         self.setupProblem2(start_pos, goal, start_loiter_radius)
 
+    # setup using start and goal positions and start loiter radius
     def setupProblem2(
         self,
         start_pos: tuple[float, float, float],
@@ -160,10 +194,13 @@ class TerrainOmplRrt:
         :param start_loiter_radius:
         """
         # TODO: test
+        print(f"[TerrainOmplRrt] setupProblem2")
         self.configureProblem()
 
         da_space = self._problem_setup.getStateSpace()
+        print(f"[TerrainOmplRrt] type(da_space): {da_space}")
         radius = da_space.getMinTurningRadius()
+        print(f"[TerrainOmplRrt] radius: {radius}")
 
         delta_theta = 0.1
         theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
@@ -175,7 +212,9 @@ class TerrainOmplRrt:
             # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
             #     self._problem_setup.getSpaceInformation());
             start_state = ob.State(da_space)
+            # print(f"[TerrainOmplRrt] type(start_state): {type(start_state)}")
             start_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(start_state)
+            # print(f"[TerrainOmplRrt] type(start_ompl): {type(start_ompl)}")
 
             start_ompl.setX(
                 start_pos[0] + math.fabs(start_loiter_radius) * math.cos(theta)
@@ -191,11 +230,13 @@ class TerrainOmplRrt:
             )
             start_yaw = wrap_pi(start_yaw)
             start_ompl.setYaw(start_yaw)
+            # print(f"[TerrainOmplRrt] adding start state to problem")
             # TODO scoped vs abstract state
             # self._problem_setup.addStartState(start_ompl)
             self._problem_setup.addStartState(start_state)
 
         self._goal_states = ob.GoalStates(self._problem_setup.getSpaceInformation())
+        # print(f"[TerrainOmplRrt] type(goal_states): {type(self._goal_states)}")
 
         # for (double theta = -M_PI; theta < M_PI; theta += (delta_theta * 2 * M_PI)) {
         for theta in theta_samples:
@@ -223,13 +264,31 @@ class TerrainOmplRrt:
             # self._goal_states.addState(goal_ompl)
             self._goal_states.addState(goal_state)
 
+        print(f"[TerrainOmplRrt] setting problem goals")
         self._problem_setup.setGoal(self._goal_states)
+
+        # TODO: DEBUG inspect the problem definition
+        problem_def = self._problem_setup.getProblemDefinition()
+        print(f"[TerrainOmplRrt] type(problem_def): {type(problem_def)}")
+        print(f"[TerrainOmplRrt] problem_def:\n{problem_def}")
+
+        # TODO: check the bounds on the state space is set correctly.
+        da_space = self._problem_setup.getStateSpace()
+        re3_space = da_space.getSubspace(0)
+        so2_space = da_space.getSubspace(1)
+        # print()
+
+
+        # TODO: *** RUN FAILING AT THIS POINT ***
+        print(f"[TerrainOmplRrt] running problem setup")
         self._problem_setup.setup()
 
+        print(f"[TerrainOmplRrt] get planner from problem")
         planner_ptr = self._problem_setup.getPlanner()
         # TODO: check cast of planner_ptr to og::RRTstar
         print(f"Planner Range: {planner_ptr.getRange()}")
 
+    # setup using start position and velocity and goal position and loiter radius
     def setupProblem3(
         self,
         start_pos: tuple[float, float, float],
@@ -302,6 +361,7 @@ class TerrainOmplRrt:
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
 
+    # setup using start position and velocity and rally points
     def setupProblem4(
         self,
         start_pos: tuple[float, float, float],
@@ -375,6 +435,7 @@ class TerrainOmplRrt:
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
 
+    # setup using start position and velocity and goal position and velocity
     def setupProblem5(
         self,
         start_pos: tuple[float, float, float],
@@ -460,6 +521,7 @@ class TerrainOmplRrt:
         map_width = map.getLength()
         map_width_x = map_width[0]
         map_width_y = map_width[1]
+        # TODO: make roi_ratio a property 
         roi_ratio = 0.5
         lower_bounds = (
             map_pos[0] - roi_ratio * map_width_x,
