@@ -1503,34 +1503,21 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         classification = DubinsPath.Classification((column - 1) + 4 * (row - 1))
         return classification
 
-    # /** \brief computeOptRratio
-    #   * Compute the opt radius ratio for the start/end helix.
-    #   *
-    #   * @param[in] fabsHdist: Absolute value of height of the helix.
-    #   * @param[in] L: Length of the helix.
-    #   * @param[in] fabsTanGamma: Maximum climb angle of the airplane.
-    #   * @param[in] k: Number of circles in the helix.
-    #   */
-    # double computeOptRratio(double fabsHdist, double L, double fabsTanGamma, int k) const;
     def computeOptRratio(
         self, fabsHdist: float, L: float, fabsTanGamma: float, k: int
     ) -> float:
-        # TODO: implement
-        print("[DubinsAirplaneStateSpace] computeOptRratio")
-        return 0.0
+        """
+        Compute the opt radius ratio for the start/end helix.
 
-    # /** \brief interpolateWithWind
-    #   * Calculates the \a state in between \a from and \a to after a fraction of \a t of the length of the known
-    #   * (non-optimal) Dubins airplane path \a path with wind.
-    #   *
-    #   * @param[in] from: Start state of the path.
-    #   * @param[in] path: Known dubins airplane path.
-    #   * @param[in] segmentStarts: Known starts of the segments of the dubins airplane path.
-    #   * @param[in] t: Fraction of the length of the path.
-    #   * @param[out] state: Interpolated state.
-    #   */
-    # virtual void interpolateWithWind(const ob::State* from, const DubinsPath& path, const SegmentStarts& segmentStarts,
-    #                                   double t, ob::State* state) const;
+        :param fabsHdist: Absolute value of height of the helix.
+        :param L: Length of the helix.
+        :param fabsTanGamma: Maximum climb angle of the airplane.
+        :param k: Number of circles in the helix.
+        """
+        # TODO: test
+        print("[DubinsAirplaneStateSpace] computeOptRratio")
+        return (fabsHdist - L * fabsTanGamma) / (twopi * fabsTanGamma * k)
+
     def interpolateWithWind(
         self,
         from_state: ob.State,
@@ -1538,10 +1525,20 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         segmentStarts: SegmentStarts,
         t: float,
     ) -> ob.State:
-        # TODO: implement
+        """
+        Calculates the state in between from_state and to_state after a
+        fraction of t of the length of the known (non-optimal) Dubins airplane
+        path with wind.
+
+        :param from: Start state of the path.
+        :param path: Known dubins airplane path.
+        :param segmentStarts: Known starts of the segments of the dubins airplane path.
+        :param t: Fraction of the length of the path.
+        :return state: Interpolated state.
+        """
+        # TODO: test
         print("[DubinsAirplaneStateSpace] interpolateWithWind")
-        state: ob.State = None
-        return state
+        return self.interpolate3(path, segmentStarts, t)
 
     # /** \brief calculateSegmentStarts
     #   * Calculates the segment starts of the input
