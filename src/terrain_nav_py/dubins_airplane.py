@@ -45,6 +45,8 @@ using geometric motion planning algorithms. (This is an extension ot the OMPL Du
 import math
 import sys
 
+import numpy as np
+
 from ompl import base as ob
 
 from terrain_nav_py.dubins_path import DubinsPath
@@ -1861,27 +1863,238 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         return path
 
-    # /** \brief additionalManeuver
-    #   * Calculates an additional maneuver such that in the intermediate altitude case an optimal path is returned.
-    #   *
-    #   * The implementation is based on the paper:
-    #   *      Implementing Dubins Airplane Paths on Fixed-wing UAVs, Beard, McLain, 2013
-    #   *
-    #   * WARNING: This function does not yet work properly and hence does not yet find an optimal path in all cases.
-    #   * Deviations in z-direction of the temporary goal and the final state of the calculated intermediate Dubins airplane
-    #   * path are possible!
-    #   * TODO: fix this function
-    #   */
-    # std::tuple<double, bool, double, double, double> additionalManeuver(const DubinsPath& dp, double& L_2D,
-    #                                                                     const ob::State* state1,
-    #                                                                     const ob::State* state2) const;
-    # TODO: return L_2D in tuple (last entry)
     def additionalManeuver(
         self, dp: DubinsPath, L_2D: float, state1: ob.State, state2: ob.State
     ) -> tuple[float, bool, float, float, float, float]:
-        # TODO: implement
+        """
+        Calculates an additional maneuver such that in the intermediate
+        altitude case an optimal path is returned.
+
+        The implementation is based on the paper:
+          Implementing Dubins Airplane Paths on Fixed-wing UAVs, Beard, McLain, 2013
+
+        WARNING: This function does not yet work properly and hence does not yet
+        find an optimal path in all cases. Deviations in z-direction of the
+        temporary goal and the final state of the calculated intermediate Dubins
+        airplane path are possible!
+        TODO: fix this function
+
+        :return tuple[float, bool, float, float, float, float]: (rho, foundSol, t_min, p_min, q_min, L_2D)
+        """
+        # TODO: test
         print("[DubinsAirplaneStateSpace] additionalManeuver")
-        pass
+        foundSol = False
+
+        # extract state 1
+        da_state1 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
+        x1 = da_state1.getX()
+        y1 = da_state1.getY()
+        z1 = da_state1.getZ()
+        th1 = da_state1.getYaw()
+
+        # extract state 2
+        da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state2)
+        x2 = da_state2.getX()
+        y2 = da_state2.getY()
+        z2 = da_state2.getZ()
+        th2 = da_state2.getYaw()
+
+        dx = (x2 - x1) * self._curvature  # dx scaled by the radius
+        dy = (y2 - y1) * self._curvature  # dy scaled by the radius
+        dz = (z2 - z1) * self._curvature  # dz scaled by the radius
+        d = math.sqrt(dx * dx + dy * dy)  # 2D euclidean distance
+        th = math.atan2(dy, dx)
+        alpha = mod2pi(th1 - th)
+        beta = mod2pi(th2 - th)
+
+        step = 0.26
+        # 0.35 = 20 / 180 * pi, 0.26 = 15. / 180. * pi, 0.17 = 10. / 180. * pi, 0.09 = 5. / 180. * pi
+
+        L_desired2D = math.fabs(dz) * self._tanGammaMaxInv
+
+        error_abs = math.fabs(L_desired2D - L_2D)
+        error_min_abs = error_abs
+
+        # allocate variables outside the loop.
+        phi_min = dp.getSegmentLength(1)
+        t_min = 0.0
+        p_min = dp.getSegmentLength(3)
+        q_min = dp.getSegmentLength(4)
+        x1_c = 0.0
+        y1_c = 0.0
+        # z1_c = 0.0
+        dx_c = 0.0
+        dy_c = 0.0
+        # dz_c = 0.0
+        d_c = 0.0
+        th1_c = 0.0
+        th_c = 0.0
+        alpha_c = 0.0
+        beta_c = 0.0
+
+        dp_tmp = DubinsPath()
+
+        # seperate by path case
+        path_type = dp.getIdx()
+        if path_type == DubinsPath.TYPE_LSL:
+            # The sub-optimal 2D dubins path is LSL so the optimal path is L + RSL
+            for phi in np.arange(0.0, twopi, step):
+                # get a state on the circle with the angle phi
+                # rl: right (0), left (1)
+                si = self.getStateOnCircle(state1, rl=1, ud=sgn(dz), t=phi)
+                da_si = DubinsAirplaneStateSpace.DubinsAirplaneState(si)
+
+                # extract state
+                x1_c = da_si.getX()
+                y1_c = da_si.getY()
+                # z1_c = da_si.getZ()
+                th1_c = da_si.getYaw()
+                dx_c = (x2 - x1_c) * self._curvature
+                dy_c = (y2 - y1_c) * self._curvature
+                # dz_c = (z2 - z1_c) * self._curvature
+                d_c = math.sqrt(dx_c * dx_c + dy_c * dy_c)
+                th_c = math.atan2(dy_c, dx_c)
+                alpha_c = mod2pi(th1_c - th_c)
+                beta_c = mod2pi(th2 - th_c)
+
+                dp_tmp = DubinsAirplaneStateSpace.dubinsRSL(d_c, alpha_c, beta_c)
+                L_2D = dp_tmp.length_2D() + phi
+
+                error_abs = math.fabs(L_desired2D - L_2D)
+                if error_abs < error_min_abs:
+                    error_min_abs = error_abs
+                    phi_min = phi
+                    foundSol = True
+                    t_min = dp_tmp.getSegmentLength(1)
+                    p_min = dp_tmp.getSegmentLength(3)
+                    q_min = dp_tmp.getSegmentLength(4)
+            return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
+        elif path_type == DubinsPath.TYPE_RSR:
+            # The 2D dubins path is RSR so the optimal 3D path is R + LSR
+            for phi in np.arange(0.0, twopi, step):
+                # get a state on the circle with the angle phi
+                # rl: right (0), left (1)
+                si = self.getStateOnCircle(state1, rl=0, ud=sgn(dz), t=phi)
+                da_si = DubinsAirplaneStateSpace.DubinsAirplaneState(si)
+
+                # extract state
+                x1_c = da_si.getX()
+                y1_c = da_si.getY()
+                # z1_c = da_si.getZ()
+                th1_c = da_si.getYaw()
+                dx_c = (x2 - x1_c) * self._curvature
+                dy_c = (y2 - y1_c) * self._curvature
+                # dz_c = (z2 - z1_c) * self._curvature
+                d_c = math.sqrt(dx_c * dx_c + dy_c * dy_c)
+                th_c = math.atan2(dy_c, dx_c)
+                alpha_c = mod2pi(th1_c - th_c)
+                beta_c = mod2pi(th2 - th_c)
+
+                dp_tmp = DubinsAirplaneStateSpace.dubinsLSR(d_c, alpha_c, beta_c)
+                L_2D = dp_tmp.length_2D() + phi
+
+                error_abs = math.fabs(L_desired2D - L_2D)
+                if error_abs < error_min_abs:
+                    error_min_abs = error_abs
+                    phi_min = phi
+                    foundSol = True
+                    t_min = dp_tmp.getSegmentLength(1)
+                    p_min = dp_tmp.getSegmentLength(3)
+                    q_min = dp_tmp.getSegmentLength(4)
+            return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
+        elif path_type == DubinsPath.TYPE_RSL:
+            # The 2D dubins path is RSL so the optimal 3D path is R + LSL
+            for phi in np.arange(0.0, twopi, step):
+                # get a state on the circle with the angle phi
+                # rl: right (0), left (1)
+                si = self.getStateOnCircle(state1, rl=0, ud=sgn(dz), t=phi)
+                da_si = DubinsAirplaneStateSpace.DubinsAirplaneState(si)
+
+                # extract state
+                x1_c = da_si.getX()
+                y1_c = da_si.getY()
+                # z1_c = da_si.getZ()
+                th1_c = da_si.getYaw()
+                dx_c = (x2 - x1_c) * self._curvature
+                dy_c = (y2 - y1_c) * self._curvature
+                # dz_c = (z2 - z1_c) * self._curvature
+                d_c = math.sqrt(dx_c * dx_c + dy_c * dy_c)
+                th_c = math.atan2(dy_c, dx_c)
+                alpha_c = mod2pi(th1_c - th_c)
+                beta_c = mod2pi(th2 - th_c)
+
+                dp_tmp = DubinsAirplaneStateSpace.dubinsLSL(d_c, alpha_c, beta_c)
+                L_2D = dp_tmp.length_2D() + phi
+
+                error_abs = math.fabs(L_desired2D - L_2D)
+
+                if error_abs < error_min_abs:
+                    error_min_abs = error_abs
+                    phi_min = phi
+                    foundSol = True
+                    t_min = dp_tmp.getSegmentLength(1)
+                    p_min = dp_tmp.getSegmentLength(3)
+                    q_min = dp_tmp.getSegmentLength(4)
+            return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
+        elif path_type == DubinsPath.TYPE_LSR:
+            # The 2D dubins path is LSR so the optimal 3D path is L + RSR
+            for phi in np.arange(0.0, twopi, step):
+                # get a state on the circle with the angle phi
+                # rl: right (0), left (1)
+                si = self.getStateOnCircle(state1, rl=1, ud=sgn(dz), t=phi)
+                da_si = DubinsAirplaneStateSpace.DubinsAirplaneState(si)
+
+                # extract state
+                x1_c = da_si.getX()
+                y1_c = da_si.getY()
+                # z1_c = da_si.getZ()
+                th1_c = da_si.getYaw()
+                dx_c = (x2 - x1_c) * self._curvature
+                dy_c = (y2 - y1_c) * self._curvature
+                # dz_c = (z2 - z1_c) * self._curvature
+                d_c = math.sqrt(dx_c * dx_c + dy_c * dy_c)
+                th_c = math.atan2(dy_c, dx_c)
+                alpha_c = mod2pi(th1_c - th_c)
+                beta_c = mod2pi(th2 - th_c)
+
+                dp_tmp = DubinsAirplaneStateSpace.dubinsRSR(d_c, alpha_c, beta_c)
+                L_2D = dp_tmp.length_2D() + phi
+
+                error_abs = math.fabs(L_desired2D - L_2D)
+                if error_abs < error_min_abs:
+                    error_min_abs = error_abs
+                    phi_min = phi
+                    foundSol = True
+                    t_min = dp_tmp.getSegmentLength(1)
+                    p_min = dp_tmp.getSegmentLength(3)
+                    q_min = dp_tmp.getSegmentLength(4)
+            return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
+        elif path_type == DubinsPath.TYPE_RLR:
+            # RLR
+            # does not find any adequate solution so far. Returns 2D Dubins car
+            # path and flies with adequate climbing rate
+            # TODO: Check if that is necessary, isn't that the same path as the input path?
+            dp_tmp = DubinsAirplaneStateSpace.dubinsRLR(d, alpha, beta)
+            t_min = dp_tmp.getSegmentLength(1)
+            p_min = dp_tmp.getSegmentLength(3)
+            q_min = dp_tmp.getSegmentLength(4)
+            foundSol = False
+            return (self._rho, foundSol, t_min, p_min, q_min, L_2D)
+        elif path_type == DubinsPath.TYPE_LRL:
+            # LRL
+            # does not find any adqeuate solution so far. Returns 2D Dubins car
+            # path and flies with adequate climbing rate
+            # TODO: Check if that is necessary, isn't that the same path as the input path?
+            dp_tmp = DubinsAirplaneStateSpace.dubinsLRL(d, alpha, beta)
+            t_min = dp_tmp.getSegmentLength(1)
+            p_min = dp_tmp.getSegmentLength(3)
+            q_min = dp_tmp.getSegmentLength(4)
+            foundSol = False
+            return (self._rho, foundSol, t_min, p_min, q_min, L_2D)
+        else:
+            raise RuntimeError(
+                f"DubinsAirplane.additionalManeuver: Invalid path index: {dp.getIdx()}"
+            )
 
     def classifyPath(self, alpha: float, beta: float) -> DubinsPath.Classification:
         """
