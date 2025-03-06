@@ -1149,17 +1149,16 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         else:  # third dubins segment and end helix
             return 2
 
-    # /** \brief dubins
-    #   * Compute the 2D dubins path using path classification for the long distance case and
-    #   * no classification for the short distance case.
-    #   *
-    #   * @param[in] d: euclidean distance between start and goal state
-    #   * @param[in] alpha: Corrected heading of the start state
-    #   * @param[in] beta: Corrected heading of the goal state
-    #   * @param[out] path: The computed dubins path.
-    #   */
-    # void dubins(double d, double alpha, double beta, DubinsPath& path) const;
     def dubins1(self, d: float, alpha: float, beta: float) -> DubinsPath:
+        """
+        Compute the 2D dubins path using path classification for the long distance case and
+        no classification for the short distance case.
+        
+        :param d: euclidean distance between start and goal state
+        :param alpha: Corrected heading of the start state
+        :param beta: Corrected heading of the goal state
+        :return path: The computed dubins path.
+        """
         # TODO: test
         # TODO: reorganise early returns?
         print("[DubinsAirplaneStateSpace] dubins")
