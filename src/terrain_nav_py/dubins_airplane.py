@@ -288,7 +288,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # TODO: check if protected members of subclass are exposed to Python.
         self._type = ob.StateSpaceType.STATE_SPACE_SE3
 
-        self._stateInterpolation = DubinsAirplaneStateSpace.DubinsAirplaneState(ob.State(self))
+        self._stateInterpolation = DubinsAirplaneStateSpace.DubinsAirplaneState(
+            ob.State(self)
+        )
 
     # NOTE: In C++ this would subclass CompoundStateStateSpace::StateType
     #       which is CompoundStateSpace.CompoundStateInternal in Python.
