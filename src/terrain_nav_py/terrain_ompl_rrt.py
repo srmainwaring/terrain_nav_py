@@ -272,12 +272,18 @@ class TerrainOmplRrt:
         print(f"[TerrainOmplRrt] type(problem_def): {type(problem_def)}")
         print(f"[TerrainOmplRrt] problem_def:\n{problem_def}")
 
-        # TODO: check the bounds on the state space is set correctly.
+        # TODO: the issue here is that the bounds have not been
+        #       set correctly. Perhaps set on a copy and not propogated?
         da_space = self._problem_setup.getStateSpace()
         re3_space = da_space.getSubspace(0)
-        so2_space = da_space.getSubspace(1)
-        # print()
-
+        re3_bounds = re3_space.getBounds()
+        print(
+            f"re3_space.getBounds: "
+            f"low: {re3_bounds.low[0], re3_bounds.low[1], re3_bounds.low[2]}, "
+            f"high: {re3_bounds.high[0], re3_bounds.high[1], re3_bounds.high[2]}"
+        )
+        # so2_space = da_space.getSubspace(1)
+        # print(f"so2_space.getBounds: {so2_space.getBounds()}")
 
         # TODO: *** RUN FAILING AT THIS POINT ***
         print(f"[TerrainOmplRrt] running problem setup")
@@ -521,7 +527,7 @@ class TerrainOmplRrt:
         map_width = map.getLength()
         map_width_x = map_width[0]
         map_width_y = map_width[1]
-        # TODO: make roi_ratio a property 
+        # TODO: make roi_ratio a property
         roi_ratio = 0.5
         lower_bounds = (
             map_pos[0] - roi_ratio * map_width_x,
@@ -583,7 +589,9 @@ class TerrainOmplRrt:
 
         return False
 
-    def Solve2(self, time_budget: float, path: list[tuple[float, float, float]]) -> bool:
+    def Solve2(
+        self, time_budget: float, path: list[tuple[float, float, float]]
+    ) -> bool:
         # TODO: test
         if self._problem_setup.solve(time_budget):
             print("Found solution:")
@@ -609,7 +617,7 @@ class TerrainOmplRrt:
     ) -> float:
         # TODO: test
         # TODO: difference between getGeometricComponentStateSpace and getStateSpace
-        # NOTE: they are equivalent in Python (one is the derived type in C++) 
+        # NOTE: they are equivalent in Python (one is the derived type in C++)
         # da_space = problem_setup.getGeometricComponentStateSpace()
         da_space = problem_setup.getStateSpace()
 
