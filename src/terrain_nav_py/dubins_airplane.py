@@ -60,97 +60,85 @@ DUBINS_EPS: float = 1.0e-2
 DUBINS_ZERO: float = -1.0e-4
 
 
-# /** \brief mod2pi
-#  * Sets the input angle to the corresponding angle between 0 and 2pi.
-#  * TODO Move it to a general file as this function can be used in many different functions/classes
-#  */
 def mod2pi(x: float) -> float:
+    """
+    Sets the input angle to the corresponding angle between 0 and 2pi.
+
+    TODO Move it to a general file as this function can be used in many different functions/classes
+    """
     if x < 0 and x > DUBINS_ZERO:
         return 0
 
     return x - twopi * math.floor(x * one_div_twopi)
 
 
-# /** \brief sgn
-#  * Returns +1 for positive sign, -1 for negative sign and 0 if val=0
-#  * TODO Move it to a general file as this function can be used in many different functions/classes
-#  */
 def sgn(val) -> int:
+    """
+    Returns +1 for positive sign, -1 for negative sign and 0 if val=0
+
+    TODO Move it to a general file as this function can be used in many different functions/classes
+    """
     return (0 < val) - (val < 0)
-
-
-# DubinsAirplaneStateSpace
-# A Dubins airplane state space for (non-optimal) planning using (non-optimal) Dubins airplane paths.
-#
-# NOTE: The DubinsAirplaneStateSpace is asymmetric!!!!
-#
-# Computations are based on these two papers:
-#  [1] Time-optimal Paths for a Dubins airplane, Chitzsaz, LaValle, 2007
-#  [2] Implementing Dubins Airplane Paths on Fixed-wing UAVs, Beard, McLain, 2013
-# The intermediate altitude case is solved non-optimally to assure fast computation of the paths.
-# Therefore, the paths are called: (non-optimal) Dubins airplane paths
-#
-# An attempt to solve all paths optimally according based on [2] is in the code (optimalStSp).
-# However, there are start-goal configurations which do not work properly.
-# Other start-goal configurations (short path cases) are still solved non-optimally.
-#
-#
-# *****************************************************************************************
-# DUBINS AIRPLANE STATE SPACE for geometric planning with Dubins Curves
-# (Extension to OMPL DubinsStateSpace for 2D Dubins Car)
-# *****************************************************************************************
-# States
-#  x0 = x       (position)
-# 	x1 = y       (position)
-#  x2 = z       (position)
-#  x3 = theta   (yaw/heading angle)
-# Inputs
-#  u0 = gamma   (climb angle)
-#  u1 = phi     (roll angle)
-#
-#  Note:
-#    - The climb rate (z_dot) can be computed from the climb angle:            z_dot = tan(gamma)*V = tan(u0)*V
-#    - The yaw rate (theta_dot) can be calculated from the roll angle (phi):   theta_dot = tan(phi)*g/V = tan(u1)*g/V
-#
-# Hence the Dubins Airplane Motion Model:
-#  x_dot      = V*cos(theta)
-#  y_dot      = V*sin(theta)
-#  z_dot      = tan(u0)*V
-#  theta_dot  = tan(u1)*g/V
-#
-# Assuming bounded climb angle u0_max, we get a maximum climb/ sink rate:
-# u_{z,max} = tan(u0_max)*V
-#
-# Assuming bounded roll angle u1_max, we get a maximum yaw rate theta_dot_max or correspondingly a minimum turning
-# radius r_min = rho = 1/tan(u1_max)*V^2/g
-#
-# For the computation of (non-optimal) Dubins airplane paths, it is sufficient to know
-#  - the maximum climb/sink rate phi_max
-#  - the minimum radius r_min
-#
-#
-# TODO:
-#  - Check if condition for long path case is correct (if absolute values for sin/cos inside the square root should be
-#    taken or not)
-#  - Check if classification is correct, sometimes calcDubPathWithClassification and calcDubPathWithoutClassification
-#    do not give the same results for the long path case, current guess is that this happens due to floating point
-#    inaccuracies.
-#
 
 
 class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     """
-    Constructor
+    A Dubins airplane state space for (non-optimal) planning using (non-optimal) Dubins airplane paths.
 
-    :param t: length of first path segment of a 2D Dubins car path, defaults to 0.0
-    :type t: float
+    NOTE: The DubinsAirplaneStateSpace is asymmetric!!!!
 
-    :param turningRadius: The minimal turning radius of the airplane, defaults to 66.66667
-    :type turningRadius: float
-    :param gam: The maximum climb angle of the airplane, defaults to 0.15
-    :type gam: float
-    :param useEuclDist: If true the euclidian distance is used, else the dubins airplane distance, defaults to False
-    :type useEuclDist: float
+    Computations are based on these two papers:
+     [1] Time-optimal Paths for a Dubins airplane, Chitzsaz, LaValle, 2007
+     [2] Implementing Dubins Airplane Paths on Fixed-wing UAVs, Beard, McLain, 2013
+    The intermediate altitude case is solved non-optimally to assure fast computation of the paths.
+    Therefore, the paths are called: (non-optimal) Dubins airplane paths
+
+    An attempt to solve all paths optimally according based on [2] is in the code (optimalStSp).
+    However, there are start-goal configurations which do not work properly.
+    Other start-goal configurations (short path cases) are still solved non-optimally.
+
+
+    *****************************************************************************************
+    DUBINS AIRPLANE STATE SPACE for geometric planning with Dubins Curves
+    (Extension to OMPL DubinsStateSpace for 2D Dubins Car)
+    *****************************************************************************************
+    States
+     x0 = x       (position)
+     x1 = y       (position)
+     x2 = z       (position)
+     x3 = theta   (yaw/heading angle)
+    Inputs
+     u0 = gamma   (climb angle)
+     u1 = phi     (roll angle)
+
+     Note:
+       - The climb rate (z_dot) can be computed from the climb angle:            z_dot = tan(gamma)*V = tan(u0)*V
+       - The yaw rate (theta_dot) can be calculated from the roll angle (phi):   theta_dot = tan(phi)*g/V = tan(u1)*g/V
+
+    Hence the Dubins Airplane Motion Model:
+     x_dot      = V*cos(theta)
+     y_dot      = V*sin(theta)
+     z_dot      = tan(u0)*V
+     theta_dot  = tan(u1)*g/V
+
+    Assuming bounded climb angle u0_max, we get a maximum climb/ sink rate:
+     u_{z,max} = tan(u0_max)*V
+
+    Assuming bounded roll angle u1_max, we get a maximum yaw rate theta_dot_max
+    or correspondingly a minimum turning radius r_min = rho = 1/tan(u1_max)*V^2/g
+
+    For the computation of (non-optimal) Dubins airplane paths, it is sufficient to know
+     - the maximum climb/sink rate phi_max
+     - the minimum radius r_min
+
+
+    TODO:
+     - Check if condition for long path case is correct (if absolute values for
+       sin/cos inside the square root should be taken or not)
+     - Check if classification is correct, sometimes calcDubPathWithClassification
+       and calcDubPathWithoutClassification do not give the same results for
+       the long path case, current guess is that this happens due to
+       floating point inaccuracies.
     """
 
     def __init__(
@@ -159,6 +147,19 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         gam: float = 0.15,
         useEuclDist: bool = False,
     ):
+        """
+        Constructor
+
+        :param t: length of first path segment of a 2D Dubins car path, defaults to 0.0
+        :type t: float
+
+        :param turningRadius: The minimal turning radius of the airplane, defaults to 66.66667
+        :type turningRadius: float
+        :param gam: The maximum climb angle of the airplane, defaults to 0.15
+        :type gam: float
+        :param useEuclDist: If true the euclidian distance is used, else the dubins airplane distance, defaults to False
+        :type useEuclDist: float
+        """
         super().__init__()
 
         # Threshold for the maximum allowed squared distance to goal.
