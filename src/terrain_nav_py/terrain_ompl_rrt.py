@@ -69,6 +69,9 @@ class TerrainMap:
     def getGridMap(self) -> GridMap:
         return self._grid_map
 
+    def setGridMap(self, map: GridMap) -> None:
+        self._grid_map = map
+
 
 class TerrainOmplRrt:
     """
