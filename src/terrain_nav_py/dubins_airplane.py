@@ -565,6 +565,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         return max(eucl_dist, dub_dist)
 
+    # TODO: handle overloads (x2) of dubins, functions must be named differently
+
     # /** \brief dubins
     #   * Compute the (non-optimal) Dubins airplane path from SE(2)xR3 state state1 to SE(2)xR3 state state2
     #   *
@@ -575,8 +577,11 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     # void dubins(const ob::State* state1, const ob::State* state2, DubinsPath& dp) const;
     def dubins(self, state1: ob.State, state2: ob.State) -> DubinsPath:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] dubins")
         dp: DubinsPath = None
         return dp
+
+    # TODO: handle overloads (x3) of interpolate correctly - functions must have different names
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, const double t, ob::State* state) const override;
     def interpolate(
@@ -670,6 +675,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, path: DubinsPath, segmentStarts: SegmentStarts, t: float
     ) -> ob.State:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] interpolate")
         state: ob.State = None
         return state
 
@@ -955,6 +961,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Print the control variables.
         """
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] printCtrs")
         pass
 
     def printDurations(self) -> None:
@@ -962,6 +969,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Print the durations.
         """
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] printDurations")
         pass
 
     def resetCtrs(self) -> None:
@@ -1023,6 +1031,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         else:  # third dubins segment and end helix
             return 2
 
+    # TODO: handle overloads (x2) of dubins, functions must be named differently
+
     # /** \brief dubins
     #   * Compute the 2D dubins path using path classification for the long distance case and
     #   * no classification for the short distance case.
@@ -1035,6 +1045,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     # void dubins(double d, double alpha, double beta, DubinsPath& path) const;
     def dubins(self, d: float, alpha: float, beta: float) -> DubinsPath:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] dubins")
         path: DubinsPath = None
         return path
 
@@ -1071,6 +1082,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> DubinsPath:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] calcDubPathWithClassification")
         path: DubinsPath = None
         return path
 
@@ -1102,6 +1114,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> DubinsPath:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] calcDubPathWithoutClassification")
         path: DubinsPath = None
         return path
 
@@ -1123,6 +1136,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, dp: DubinsPath, L_2D: float, state1: ob.State, state2: ob.State
     ) -> tuple[tuple[float, bool, float, float, float], float]:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] additionalManeuver")
         pass
 
     # /** \brief classifyPath
@@ -1134,6 +1148,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     # DubinsPath::Classification classifyPath(double alpha, double beta) const;
     def classifyPath(self, alpha: float, beta: float) -> DubinsPath.Classification:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] classifyPath")
         c: DubinsPath.Classification = None
         return c
 
@@ -1150,6 +1165,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, fabsHdist: float, L: float, fabsTanGamma: float, k: int
     ) -> float:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] computeOptRratio")
         return 0.0
 
     # /** \brief interpolateWithWind
@@ -1172,6 +1188,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         t: float,
     ) -> ob.State:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] interpolateWithWind")
         state: ob.State = None
         return state
 
@@ -1187,6 +1204,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, from_state: ob.State, path: DubinsPath
     ) -> SegmentStarts:
         # TODO: implement
+        print("[DubinsAirplaneStateSpace] calculateSegmentStarts")
         segmentStarts: DubinsAirplaneStateSpace.SegmentStarts = None
         return segmentStarts
 
@@ -1445,6 +1463,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(cb - ca, d + sa - sb)
         return mod2pi(beta - theta)  # q
 
+    # TODO: handle overloads correctly - these functions need to be named differently
+    #       (and ditto for other dubinsXXX variants)
     def dubinsLSL(self, d: float, alpha: float, beta: float) -> DubinsPath:
         """
         Compute the dubins LSL path.
