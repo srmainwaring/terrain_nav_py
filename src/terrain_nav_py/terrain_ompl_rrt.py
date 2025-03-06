@@ -132,7 +132,7 @@ class TerrainOmplRrt:
         si = self._problem_setup.getSpaceInformation()
         self._planner_data = ob.PlannerData(si)
 
-    def setupProblem(
+    def setupProblem1(
         self, start_pos: tuple[float, float, float], goal: tuple[float, float, float]
     ) -> None:
         """
@@ -146,7 +146,7 @@ class TerrainOmplRrt:
         start_loiter_radius = da_space.getMinTurningRadius()
         self.setupProblem2(start_pos, goal, start_loiter_radius)
 
-    def setupProblem(
+    def setupProblem2(
         self,
         start_pos: tuple[float, float, float],
         goal: tuple[float, float, float],
@@ -230,7 +230,7 @@ class TerrainOmplRrt:
         # TODO: check cast of planner_ptr to og::RRTstar
         print(f"Planner Range: {planner_ptr.getRange()}")
 
-    def setupProblem(
+    def setupProblem3(
         self,
         start_pos: tuple[float, float, float],
         start_vel: tuple[float, float, float],
@@ -302,7 +302,7 @@ class TerrainOmplRrt:
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
 
-    def setupProblem(
+    def setupProblem4(
         self,
         start_pos: tuple[float, float, float],
         start_vel: tuple[float, float, float],
@@ -375,7 +375,7 @@ class TerrainOmplRrt:
         self._problem_setup.setGoal(self._goal_states)
         self._problem_setup.setup()
 
-    def setupProblem(
+    def setupProblem5(
         self,
         start_pos: tuple[float, float, float],
         start_vel: tuple[float, float, float],
