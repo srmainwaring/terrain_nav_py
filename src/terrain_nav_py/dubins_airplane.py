@@ -1033,10 +1033,42 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     #   */
     # void dubins(double d, double alpha, double beta, DubinsPath& path) const;
     def dubins1(self, d: float, alpha: float, beta: float) -> DubinsPath:
-        # TODO: implement
+        # TODO: test
+        # TODO: reorganise early returns?
         print("[DubinsAirplaneStateSpace] dubins")
-        path: DubinsPath = None
-        return path
+
+        if d < DUBINS_EPS and math.fabs(alpha - beta) < DUBINS_EPS:
+            path = DubinsPath(DubinsPath.TYPE_LSL, 0.0, d, 0.0)
+            return path
+        else:
+            path = DubinsPath()
+
+            sa = math.sin(alpha)
+            sb = math.sin(beta)
+            ca = math.cos(alpha)
+            cb = math.cos(beta)
+
+            # TODO: Check if that is necessary for the short path case or if
+            # it can be moved inside the bracket of the long distance cases.
+            path.setClassification(self.classifyPath(alpha, beta))
+
+            if self._enable_classification:
+                long_path_case = d > (
+                    math.sqrt(4.0 - math.pow(ca + cb, 2.0))
+                    + math.fabs(sa)
+                    + math.fabs(sb)
+                )
+                # sufficient condition for optimality of CSC path type
+                if long_path_case:
+                    self._long_ctr += 1
+                    self.calcDubPathWithClassification(
+                        path, d, alpha, beta, sa, sb, ca, cb
+                    )
+                    return path
+
+            self._short_ctr_ += 1
+            self.calcDubPathWithoutClassification(path, d, alpha, beta, sa, sb, ca, cb)
+            return path
 
     # protected:
     # /** \brief calcDubPathWithClassification
