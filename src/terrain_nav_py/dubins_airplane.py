@@ -1287,18 +1287,42 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         print("[DubinsAirplaneStateSpace] additionalManeuver")
         pass
 
-    # /** \brief classifyPath
-    #   * Classify the path based on the heading from the start and goal state.
-    #   *
-    #   * @param[in] alpha: Corrected heading of the start state
-    #   * @param[in] beta: Corrected heading of the goal state
-    #   */
-    # DubinsPath::Classification classifyPath(double alpha, double beta) const;
     def classifyPath(self, alpha: float, beta: float) -> DubinsPath.Classification:
-        # TODO: implement
+        """
+        Classify the path based on the heading from the start and goal state.
+
+        :param alpha: Corrected heading of the start state
+        :param beta: Corrected heading of the goal state
+        """
+        # TODO: test
         print("[DubinsAirplaneStateSpace] classifyPath")
-        c: DubinsPath.Classification = None
-        return c
+        row: int = 0
+        column: int = 0
+
+        if 0 <= alpha and alpha <= half_pi:
+            row = 1
+        elif half_pi < alpha and alpha <= pi:
+            row = 2
+        elif pi < alpha and alpha <= 3 * half_pi:
+            row = 3
+        elif 3 * half_pi < alpha and alpha <= twopi:
+            row = 4
+
+        if 0 <= beta and beta <= half_pi:
+            column = 1
+        elif half_pi < beta and beta <= pi:
+            column = 2
+        elif pi < beta and beta <= 3 * half_pi:
+            column = 3
+        elif 3 * half_pi < beta and beta <= twopi:
+            column = 4
+
+        # assert(row >= 1 && row <= 4 && "alpha is not in the range of [0,2pi] in classifyPath(double alpha, double beta).")
+        # assert(column >= 1 && column <= 4 &&
+        #       "beta is not in the range of [0,2pi] in classifyPath(double alpha, double beta).")
+        # assert((column - 1) + 4 * (row - 1) >= 0 && (column - 1) + 4 * (row - 1) <= 15 && "class is not in range [0,15].")
+        classification = DubinsPath.Classification((column - 1) + 4 * (row - 1))
+        return classification
 
     # /** \brief computeOptRratio
     #   * Compute the opt radius ratio for the start/end helix.
