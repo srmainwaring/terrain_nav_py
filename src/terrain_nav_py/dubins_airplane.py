@@ -1250,9 +1250,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         state.setYaw(s.getYaw())
         return state
 
-    # TODO: Check if it makes sense to use mutable class variables for the following functions to speed it up.
+    @staticmethod
     def t_lsr(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1270,8 +1269,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(-ca - cb, d + sa + sb) - math.atan2(-2.0, p)
         return mod2pi(-alpha + theta)  # t
 
+    @staticmethod
     def p_lsr(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1287,8 +1286,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
         return math.sqrt(max(tmp, 0.0))  # p
 
+    @staticmethod
     def q_lsr(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1306,8 +1305,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(-ca - cb, d + sa + sb) - math.atan2(-2.0, p)
         return mod2pi(-beta + theta)  # q
 
+    @staticmethod
     def t_rsl(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1325,8 +1324,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(ca + cb, d - sa - sb) - math.atan2(2.0, p)
         return mod2pi(alpha - theta)  # t
 
+    @staticmethod
     def p_rsl(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1342,8 +1341,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
         return math.sqrt(max(tmp, 0.0))  # p
 
+    @staticmethod
     def q_rsl(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1361,8 +1360,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(ca + cb, d - sa - sb) - math.atan2(2.0, p)
         return mod2pi(beta - theta)  # q
 
+    @staticmethod
     def t_rsr(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1378,8 +1377,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(ca - cb, d - sa + sb)
         return mod2pi(alpha - theta)  # t
 
+    @staticmethod
     def p_rsr(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1395,8 +1394,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sb - sa))
         return math.sqrt(max(tmp, 0.0))  # p
 
+    @staticmethod
     def q_rsr(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1412,8 +1411,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(ca - cb, d - sa + sb)
         return mod2pi(-beta + theta)  # q
 
+    @staticmethod
     def t_lsl(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1429,8 +1428,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         theta = math.atan2(cb - ca, d + sa - sb)
         return mod2pi(-alpha + theta)  # t
 
+    @staticmethod
     def p_lsl(
-        self,
         d: float,
         alpha: float,
         beta: float,
@@ -1446,8 +1445,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sa - sb))
         return math.sqrt(max(tmp, 0.0))  # p
 
+    @staticmethod
     def q_lsl(
-        self,
         d: float,
         alpha: float,
         beta: float,
