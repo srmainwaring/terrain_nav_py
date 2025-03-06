@@ -39,20 +39,20 @@ from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 def test_ompl_base_states():
 
     # R(3) state space
-    r3_ss = ob.RealVectorStateSpace(3)
+    re3_space = ob.RealVectorStateSpace(3)
     # State
-    r3_s = ob.State(r3_ss)
+    re3_s = ob.State(re3_space)
     # RealVectorStateInternal
-    r3_s_ref = r3_s()
+    re3_s_ref = re3_s()
     # accessors
-    assert r3_s_ref[0] == 0.0
-    r3_s_ref[0] = 1.0
-    assert r3_s_ref[0] == 1.0
+    assert re3_s_ref[0] == 0.0
+    re3_s_ref[0] = 1.0
+    assert re3_s_ref[0] == 1.0
 
     # SO(2) state space
-    so2_ss = ob.SO2StateSpace()
+    so2_space = ob.SO2StateSpace()
     # State
-    so2_s = ob.State(so2_ss)
+    so2_s = ob.State(so2_space)
     # SO2StateInternal
     so2_s_ref = so2_s()
     # accessors
@@ -61,12 +61,12 @@ def test_ompl_base_states():
     assert so2_s_ref.value == 1.0
 
     # compound state space
-    c_ss = ob.CompoundStateSpace()
-    c_ss.addSubspace(r3_ss, 1.0)
-    c_ss.addSubspace(so2_ss, 1.0)
-    c_ss.lock()
+    c_space = ob.CompoundStateSpace()
+    c_space.addSubspace(re3_space, 1.0)
+    c_space.addSubspace(so2_space, 1.0)
+    c_space.lock()
     # State
-    c_s = ob.State(c_ss)
+    c_s = ob.State(c_space)
     # CompoundStateInternal
     c_s_ref = c_s()
 
@@ -80,12 +80,12 @@ def test_ompl_base_states():
 
 def test_dubins_airplane_state():
     # compound state space
-    c_ss = ob.CompoundStateSpace()
-    c_ss.addSubspace(ob.RealVectorStateSpace(3), 1.0)
-    c_ss.addSubspace(ob.SO2StateSpace(), 1.0)
-    c_ss.lock()
+    c_space = ob.CompoundStateSpace()
+    c_space.addSubspace(ob.RealVectorStateSpace(3), 1.0)
+    c_space.addSubspace(ob.SO2StateSpace(), 1.0)
+    c_space.lock()
 
-    s = DubinsAirplaneStateSpace.DubinsAirplaneState(ob.State(c_ss))
+    s = DubinsAirplaneStateSpace.DubinsAirplaneState(ob.State(c_space))
     assert s.getX() == 0.0
     assert s.getY() == 0.0
     assert s.getZ() == 0.0
@@ -122,32 +122,32 @@ def test_dubins_airplane_state():
 
 
 def test_dubins_airplane_state_space():
-    ss = DubinsAirplaneStateSpace()
+    da_space = DubinsAirplaneStateSpace()
     # TODO: why DubinsAirplaneCompoundSpace6?
-    # assert ss.getName() == "DubinsAirplaneCompoundSpace3"
+    # assert da_space.getName() == "DubinsAirplaneCompoundSpace3"
 
     # TODO: fix type
-    assert ss.getType() == ob.StateSpaceType.STATE_SPACE_UNKNOWN
-    # assert ss.getType() == ob.StateSpaceType.STATE_SPACE_SE3
+    assert da_space.getType() == ob.StateSpaceType.STATE_SPACE_UNKNOWN
+    # assert da_space.getType() == ob.StateSpaceType.STATE_SPACE_SE3
 
     # max extent is pi for null R(3) x SO(2)
-    e = ss.getMaximumExtent()
+    e = da_space.getMaximumExtent()
     assert e == math.pi
 
-    e = ss.getEuclideanExtent()
+    e = da_space.getEuclideanExtent()
     assert e == 0.0
 
     # state1 = ob.State()
     # state2 = ob.State()
-    # count = ss.validSegmentCount(state1, state2)
-    # dist = ss.distance(state1, state2)
+    # count = da_space.validSegmentCount(state1, state2)
+    # dist = da_space.distance(state1, state2)
 
 def test_dubins_airplane_alloc_state():
 
     # state space
-    space = DubinsAirplaneStateSpace()
+    da_space = DubinsAirplaneStateSpace()
 
-    ss = og.SimpleSetup(space)
+    ss = og.SimpleSetup(da_space)
     si = ss.getSpaceInformation()
 
     # cs = ob.CompoundState(si)
