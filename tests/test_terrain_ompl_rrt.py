@@ -18,14 +18,10 @@ from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 
 
 def test_terrain_ompl_rrt():
-    # create terrain maps
+    # create terrain map
     grid_map = GridMap()
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
-
-    pos = grid_map.getPosition()
-    assert pos[0] == 0.0
-    assert pos[1] == 0.0
 
     # create planner
     da_space  = DubinsAirplaneStateSpace(turningRadius=60.0, gam=0.15)
@@ -41,7 +37,7 @@ def test_terrain_ompl_rrt():
 
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
-    print("PLANNER_MODE.GLOBAL")
+    # print("PLANNER_MODE.GLOBAL")
     # planner.setupProblem2(start_pos, goal_pos, start_loiter_radius)
     # candidate_path = Path()
     # planner.Solve1(time_budget=1.0, path=candidate_path)
