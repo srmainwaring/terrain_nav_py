@@ -581,10 +581,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         dp: DubinsPath = None
         return dp
 
-    # TODO: handle overloads (x3) of interpolate correctly - functions must have different names
-
     # virtual void interpolate(const ob::State* from, const ob::State* to, const double t, ob::State* state) const override;
-    def interpolate(
+    def interpolate1(
         self, from_state: ob.State, to_state: ob.State, t: float
     ) -> ob.State:
         """
@@ -597,12 +595,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         firstTime = True
-        (_, _, state) = self.interpolate(from_state, to_state, t, firstTime)
+        (_, _, state) = self.interpolate2(from_state, to_state, t, firstTime)
         return state
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, double t, bool& firstTime, DubinsPath& path,
     #                           SegmentStarts& segmentStarts, ob::State* state) const;
-    def interpolate(
+    def interpolate2(
         self,
         from_state: ob.State,
         to_state: ob.State,
@@ -656,7 +654,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         if math.isnan(path.length_3d()):
             state().setXYZ(sys.float_info.max, sys.float_info.max, sys.float_info.max)
         else:
-            state = self.interpolate(path, segmentStarts, t)
+            state = self.interpolate3(path, segmentStarts, t)
 
         return (path, segmentStarts, state)
 
@@ -671,7 +669,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     #   */
     # virtual void interpolate(const DubinsPath& path, const SegmentStarts& segmentStarts, double t,
     #                           ob::State* state) const;
-    def interpolate(
+    def interpolate3(
         self, path: DubinsPath, segmentStarts: SegmentStarts, t: float
     ) -> ob.State:
         # TODO: implement
