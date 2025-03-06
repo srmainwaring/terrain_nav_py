@@ -640,7 +640,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 )
 
         else:
-            # // medium altitude
+            # medium altitude
 
             dp.setAltitudeCase(DubinsPath.ALT_CASE_MEDIUM)
 
@@ -1143,7 +1143,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     # /** \brief setMeteoGrid
     #   * Set the meteo grid.
     #   */
-    # // void setMeteoGrid(const std::shared_ptr<base::MeteoGridClass>& meteoGrid);
+    # void setMeteoGrid(const std::shared_ptr<base::MeteoGridClass>& meteoGrid);
     # def setMeteoGrid(self, meteoGrid: ob.MeteoGridClass) -> None:
     #     # TODO: not used in C++
     #     pass
@@ -1151,7 +1151,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     # /** \brief getMeteoGrid
     #   * Return the meteo grid.
     #   */
-    # // std::shared_ptr<base::MeteoGridClass> getMeteoGrid() const;
+    # std::shared_ptr<base::MeteoGridClass> getMeteoGrid() const;
     # def getMeteoGrid(self) -> ob.MeteoGridClass:
     #     # TODO: not used in C++
     #     pass
