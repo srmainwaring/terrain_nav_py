@@ -758,10 +758,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return state: The interpolated state.
         """
         # TODO: test
-        # path: DubinsPath = None
-        # segmentStarts: DubinsAirplaneStateSpace.SegmentStarts = None
-        # state: ob.State = None
-        # return (path, segmentStarts, state)
 
         # compute the path if interpolate is called the first time.
         if firstTime:
@@ -1232,7 +1228,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         Print the control variables.
         """
-        # TODO: implement
+        # TODO: will not implement
         print("[DubinsAirplaneStateSpace] printCtrs")
         pass
 
@@ -1240,7 +1236,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         Print the durations.
         """
-        # TODO: implement
+        # TODO: will not implement
         print("[DubinsAirplaneStateSpace] printDurations")
         pass
 
@@ -1307,7 +1303,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         Compute the 2D dubins path using path classification for the long distance case and
         no classification for the short distance case.
-        
+
         :param d: euclidean distance between start and goal state
         :param alpha: Corrected heading of the start state
         :param beta: Corrected heading of the goal state
