@@ -850,7 +850,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 self._interpol_phiStart = self._stateInterpolation.getYaw()
 
                 path_type = path.getType()[self.convert_idx(self._interpol_iter)]
-                if path_type == DubinsPath.DUBINS_LEFT:
+                if path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
                     self._interpol_dPhi = (
                         self._interpol_seg
                         * path.getInverseRadiusRatio(self._interpol_iter)
@@ -904,7 +904,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                         self._stateInterpolation.setYaw(
                             self._interpol_phiStart - self._interpol_dPhi
                         )
-                elif path_type == DubinsPath.DUBINS_RIGHT:
+                elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
                     self._interpol_dPhi = (
                         self._interpol_seg
                         * path.getInverseRadiusRatio(self._interpol_iter)
@@ -958,7 +958,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                         self._stateInterpolation.setYaw(
                             self._interpol_phiStart + self._interpol_dPhi
                         )
-                elif path_type == DubinsPath.DUBINS_STRAIGHT:
+                elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
                     if self._interpol_iter != 2:
                         self._stateInterpolation.addToX(
                             self._interpol_seg * math.cos(self._interpol_phiStart)
@@ -1433,10 +1433,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # TODO: Computational speed up could be achieved here by ordering the
         # if-cases according to their relative probability (if known a priori)
         classification = path.getClassification()
-        if classification == DubinsPath.CLASS_A11:
+        if classification == DubinsPath.Classification.CLASS_A11:
             # class a_11: optimal path is RSL
             path = DubinsAirplaneStateSpace.dubinsRSL(d, alpha, beta, sa, sb, ca, cb)
-        elif classification == DubinsPath.CLASS_A12:
+        elif classification == DubinsPath.Classification.CLASS_A12:
             # class a_12: depending on S_12, optimal path is either RSR (S_12<0) or RSL (S_12>0)
             if (
                 DubinsAirplaneStateSpace.t_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
@@ -1481,7 +1481,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     path = DubinsAirplaneStateSpace.dubinsRSL(
                         d, alpha, beta, sa, sb, ca, cb
                     )
-        elif classification == DubinsPath.CLASS_A13:
+        elif classification == DubinsPath.Classification.CLASS_A13:
             # class a_13: depending on S_13, optimal path is either RSR (S_13<0) or LSR (S_13>0)
             if (
                 DubinsAirplaneStateSpace.t_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
@@ -1496,7 +1496,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsRSR(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A14:
+        elif classification == DubinsPath.Classification.CLASS_A14:
             # class a_14: depending on S^{1,2}_14,
             # optimal path is LSR (S^1_14>0) or RSL (S^2_14>0) or RSR otherwise
             if (
@@ -1520,7 +1520,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsRSR(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A21:
+        elif classification == DubinsPath.Classification.CLASS_A21:
             # class a_21 (top. equiv. a_12): depending on S_21, optimal path is either LSL
             # (S_21<0) or RSL (S_12>0)
             if (
@@ -1564,7 +1564,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     path = DubinsAirplaneStateSpace.dubinsLSR(
                         d, alpha, beta, sa, sb, ca, cb
                     )
-        elif classification == DubinsPath.CLASS_A22:
+        elif classification == DubinsPath.Classification.CLASS_A22:
             # class a_22 (top. equiv. a_33): depending on alpha, beta, S^{1,2}_22,
             # optimal path is  LSL (alpha>beta && S^1_22<0) or RSL (alpha>beta && S^1_22>0)
             #                  RSR (alpha<beta && S^2_22<0) or RSL (alpha<beta && S^2_22>0)
@@ -1609,9 +1609,11 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsRSL(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A23:  # class a_23: RSR is optimal
+        elif (
+            classification == DubinsPath.Classification.CLASS_A23
+        ):  # class a_23: RSR is optimal
             path = DubinsAirplaneStateSpace.dubinsRSR(d, alpha, beta, sa, sb, ca, cb)
-        elif classification == DubinsPath.CLASS_A24:
+        elif classification == DubinsPath.Classification.CLASS_A24:
             # class a_24: depending on S_24, optimal path is RSR (S_24<0) or RSL (S_24>0)
             if (
                 DubinsAirplaneStateSpace.q_rsr(d, alpha, beta, sa, sb, ca, cb) - pi
@@ -1626,7 +1628,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsRSL(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A31:
+        elif classification == DubinsPath.Classification.CLASS_A31:
             # class a_31 (top. equiv. to a_13): depending on S_31, optimal path is LSL (S_31<0)
             # or LSR (S_31>0)
             if (
@@ -1642,10 +1644,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsLSR(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A32:
+        elif classification == DubinsPath.Classification.CLASS_A32:
             # class a_32 (top. equiv. to a_32): optimal path is LSL
             path = DubinsAirplaneStateSpace.dubinsLSL(d, alpha, beta, sa, sb, ca, cb)
-        elif classification == DubinsPath.CLASS_A33:
+        elif classification == DubinsPath.Classification.CLASS_A33:
             # class a_33 (top. equiv. to a_33): depending on a, b, S^{1,2}_33,
             # optimal path is  RSR (alpha<beta && S^1_33<0) or LSR (alpha>beta && S^1_33>0)
             #                  LSL (alpha<beta && S^2_33<0) or LSR (alpha>beta && S^2_33>0)
@@ -1688,7 +1690,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsLSR(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A34:
+        elif classification == DubinsPath.Classification.CLASS_A34:
             # class a_34 (top. equiv. to a_12): depending on S_34, optimal path is RSR
             # (S_34<0) or LSR (S_34>0)
             if (
@@ -1733,7 +1735,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     path = DubinsAirplaneStateSpace.dubinsRSL(
                         d, alpha, beta, sa, sb, ca, cb
                     )
-        elif classification == DubinsPath.CLASS_A41:
+        elif classification == DubinsPath.Classification.CLASS_A41:
             # class a_41 (top. equiv. to a_14): depending on S^{1,2}_41,
             # optimal path is RSL (S^1_41>0) or LSR (S^2_41>0) or LSL otherwise
             if (
@@ -1757,7 +1759,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsLSL(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A42:
+        elif classification == DubinsPath.Classification.CLASS_A42:
             # class a_42 (top. equiv. to a_13): depending on S_42, optimal path is LSL (S_42<0)
             # or RSL (S_42>0)
             if (
@@ -1773,7 +1775,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsRSL(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif classification == DubinsPath.CLASS_A43:
+        elif classification == DubinsPath.Classification.CLASS_A43:
             # class a_43 (top. equiv. to a_34): depending on S_43, optimal path is LSL
             # (S_43<0) or LSR (S_43>0)
             if (
@@ -1819,7 +1821,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     path = DubinsAirplaneStateSpace.dubinsRSL(
                         d, alpha, beta, sa, sb, ca, cb
                     )
-        elif classification == DubinsPath.CLASS_A44:
+        elif classification == DubinsPath.Classification.CLASS_A44:
             # class a_44: optimal path is LSR
             path = DubinsAirplaneStateSpace.dubinsLSR(d, alpha, beta, sa, sb, ca, cb)
         else:
@@ -2248,7 +2250,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             )
 
             path_type = path.getType()[self.convert_idx(self._interpol_iter)]
-            if path_type == DubinsPath.DUBINS_LEFT:
+            if path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
                 self._interpol_dPhi = self._interpol_v * path.getInverseRadiusRatio(
                     self._interpol_iter
                 )
@@ -2293,7 +2295,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     self._stateInterpolation.setYaw(
                         self._interpol_phiStart - self._interpol_dPhi
                     )
-            elif path_type == DubinsPath.DUBINS_RIGHT:
+            elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
                 self._interpol_dPhi = self._interpol_v * path.getInverseRadiusRatio(
                     self._interpol_iter
                 )
@@ -2338,7 +2340,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     self._stateInterpolation.setYaw(
                         self._interpol_phiStart + self._interpol_dPhi
                     )
-            elif path_type == DubinsPath.DUBINS_STRAIGHT:
+            elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
                 if self._interpol_iter != 2:
                     self._stateInterpolation.addToX(
                         self._interpol_v * math.cos(self._interpol_phiStart)
