@@ -637,7 +637,8 @@ class TerrainOmplRrt:
         resolution: float = 0.05,
     ) -> None:
         # TODO: test
-        trajectory_segments.segments.clear()
+        # trajectory_segments.segments.clear()
+        trajectory_segments.reset_segments()
 
         state_vector = path.getStates()
 
