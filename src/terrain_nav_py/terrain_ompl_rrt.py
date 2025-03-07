@@ -621,11 +621,11 @@ class TerrainOmplRrt:
         #     dubins_path
         #         .getType()[problem_setup->getStateSpace()->as<fw_planning::spaces::DubinsAirplaneStateSpace>()->convert_idx(
         #             start_idx)]) {
-        if dubins_path_type == DubinsPath.DUBINS_LEFT:
+        if dubins_path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
             segment_curvature = maximum_curvature
-        elif dubins_path_type == DubinsPath.DUBINS_RIGHT:
+        elif dubins_path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
             segment_curvature = -maximum_curvature
-        elif dubins_path_type == DubinsPath.DUBINS_STRAIGHT:
+        elif dubins_path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
             segment_curvature = 0.0
 
         return segment_curvature
