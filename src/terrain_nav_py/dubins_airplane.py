@@ -552,7 +552,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return self.euclidean_distance(state1, state2)
         else:
             self._dp = self.dubins2(state1, state2)
-            dist = self._rho * self._dp.length_3D()
+            dist = self._rho * self._dp.length_3d()
             return dist
 
     def euclidean_distance(self, state1: ob.State, state2: ob.State) -> float:
