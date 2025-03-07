@@ -256,32 +256,31 @@ class TerrainOmplRrt:
         print(f"[TerrainOmplRrt] setting problem goals")
         self._problem_setup.setGoal(self._goal_states)
 
-        # TODO: DEBUG inspect the problem definition
+        # TODO: DEBUG inspect problem definition
         problem_def = self._problem_setup.getProblemDefinition()
         print(f"[TerrainOmplRrt] type(problem_def): {type(problem_def)}")
-        print(f"[TerrainOmplRrt] problem_def:\n{problem_def}")
+        # print(f"[TerrainOmplRrt] problem_def:\n{problem_def}")
 
-        # TODO: the issue here is that the bounds have not been
-        #       set correctly. Perhaps set on a copy and not propogated?
+        # TODO: DEBUG inspect bounds
         da_space = self._problem_setup.getStateSpace()
         re3_space = da_space.getSubspace(0)
         re3_bounds = re3_space.getBounds()
         print(
-            f"re3_space.getBounds: "
-            f"low: {re3_bounds.low[0], re3_bounds.low[1], re3_bounds.low[2]}, "
+            f"[TerrainOmplRrt] re3_space.getBounds: "
+            f"low: {re3_bounds.low[0], re3_bounds.low[1], re3_bounds.low[2]}"
+        )
+        print(
+            f"[TerrainOmplRrt] re3_space.getBounds: "
             f"high: {re3_bounds.high[0], re3_bounds.high[1], re3_bounds.high[2]}"
         )
-        # so2_space = da_space.getSubspace(1)
-        # print(f"so2_space.getBounds: {so2_space.getBounds()}")
 
-        # TODO: *** RUN FAILING AT THIS POINT ***
         print(f"[TerrainOmplRrt] running problem setup")
         self._problem_setup.setup()
 
         print(f"[TerrainOmplRrt] get planner from problem")
-        planner_ptr = self._problem_setup.getPlanner()
-        # TODO: check cast of planner_ptr to og::RRTstar
-        print(f"Planner Range: {planner_ptr.getRange()}")
+        planner = self._problem_setup.getPlanner()
+        print(f"[TerrainOmplRrt] type(planner): {type(planner)}")
+        print(f"[TerrainOmplRrt] planner range: {planner.getRange()}")
 
     # setup using start position and velocity and goal position and loiter radius
     def setupProblem3(
