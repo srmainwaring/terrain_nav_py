@@ -1365,7 +1365,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             path = DubinsPath(DubinsPath.Index.TYPE_LSL, 0.0, d, 0.0)
             return path
         else:
-            path = DubinsPath()
+            # path = DubinsPath()
 
             sa = math.sin(alpha)
             sb = math.sin(beta)
@@ -1374,7 +1374,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
             # TODO: Check if that is necessary for the short path case or if
             # it can be moved inside the bracket of the long distance cases.
-            path.setClassification(self.classifyPath(alpha, beta))
+            classification = self.classifyPath(alpha, beta)
+            # path.setClassification(classification)
+
 
             if self._enable_classification:
                 long_path_case = d > (
@@ -1386,7 +1388,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 if long_path_case:
                     self._long_ctr += 1
                     path = self.calcDubPathWithClassification(
-                        d, alpha, beta, sa, sb, ca, cb
+                        classification, d, alpha, beta, sa, sb, ca, cb
                     )
                     return path
 
@@ -1396,6 +1398,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
     def calcDubPathWithClassification(
         self,
+        classification: DubinsPath.Classification,
         d: float,
         alpha: float,
         beta: float,
@@ -1417,6 +1420,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 Note that classification of the Dubins set will not be
         correct anymore for some cases.
 
+        :param classification: the dubins path classification
         :param d: euclidean distance between start and goal state
         :param alpha: Corrected heading of the start state
         :param beta: Corrected heading of the goal state
@@ -1428,11 +1432,11 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         print(f"[DubinsAirplaneStateSpace] calcDubPathWithClassification")
-        path = DubinsPath()
+        # path = DubinsPath()
 
         # TODO: Computational speed up could be achieved here by ordering the
         # if-cases according to their relative probability (if known a priori)
-        classification = path.getClassification()
+        # classification = path.getClassification()
         if classification == DubinsPath.Classification.CLASS_A11:
             # class a_11: optimal path is RSL
             path = DubinsAirplaneStateSpace.dubinsRSL_fast(d, alpha, beta, sa, sb, ca, cb)
@@ -2160,7 +2164,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # assert(column >= 1 && column <= 4 &&
         #       "beta is not in the range of [0,2pi] in classifyPath(double alpha, double beta).")
         # assert((column - 1) + 4 * (row - 1) >= 0 && (column - 1) + 4 * (row - 1) <= 15 && "class is not in range [0,15].")
-        classification = DubinsPath.Classification((column - 1) + 4 * (row - 1))
+        value = (column - 1) + 4 * (row - 1)
+        classification = DubinsPath.Classification(value)
         return classification
 
     def computeOptRratio(
