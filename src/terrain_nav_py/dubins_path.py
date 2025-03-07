@@ -287,7 +287,9 @@ class DubinsPath:
         #  15: a_44
         #  16, the class is not assigned
         #
-        self._classification: DubinsPath.Classification = DubinsPath.Classification.NOT_ASSIGNED
+        self._classification: DubinsPath.Classification = (
+            DubinsPath.Classification.NOT_ASSIGNED
+        )
 
         # Same information as in type_:
         #   0: LSL
