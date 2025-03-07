@@ -830,7 +830,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return state: Interpolated state.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] interpolate")
+        # print(f"[DubinsAirplaneStateSpace] interpolate")
 
         self._interpol_seg = t * path.length_2d()
         if path.getGamma() == self._gammaMax:
@@ -1431,7 +1431,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return path: The computed dubins path.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] calcDubPathWithClassification")
+        # print(f"[DubinsAirplaneStateSpace] calcDubPathWithClassification")
         # path = DubinsPath()
 
         # TODO: Computational speed up could be achieved here by ordering the
@@ -2138,7 +2138,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param beta: Corrected heading of the goal state
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] classifyPath")
+        # print(f"[DubinsAirplaneStateSpace] classifyPath")
         row: int = 0
         column: int = 0
 
@@ -2180,7 +2180,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param k: Number of circles in the helix.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] computeOptRratio")
+        # print(f"[DubinsAirplaneStateSpace] computeOptRratio")
         return (fabsHdist - L * fabsTanGamma) / (twopi * fabsTanGamma * k)
 
     def interpolateWithWind(
@@ -2216,7 +2216,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :returns segmentStarts: Computed starts of the segments of the dubins airplane path.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] calculateSegmentStarts")
+        # print(f"[DubinsAirplaneStateSpace] calculateSegmentStarts")
         segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
 
         if math.isnan(path.length_2d()):
