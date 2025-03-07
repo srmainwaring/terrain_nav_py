@@ -219,6 +219,13 @@ class PathSegment:
         """
         self._states.append(state)
 
+    def state_count(self) -> int:
+        """
+        Number of states
+        """
+        # TODO: test
+        return len(self._states)
+
     # TODO: check tangent is a unit vector
     @staticmethod
     def get_arc_centre(
