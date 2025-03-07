@@ -988,9 +988,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     self._stateInterpolation.getZ() * self._rho
                     + segmentStarts.segmentStarts[self._interpol_iter].z
                 )
-                # TODO: check indexing of the compound state yields the SO(2) state.
                 so2_space = self.getSubspace(1)
-                so2_space.enforceBounds(self._stateInterpolation.getState()[1])
+                so2_state = self._stateInterpolation.getCompoundState()[1]
+                so2_space.enforceBounds(so2_state)
                 da_state.setYaw(self._stateInterpolation.getYaw())
                 self._interpol_seg = 0.0
                 return state
@@ -2244,7 +2244,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 self._stateInterpolation.getZ() * self._rho + da_from_state.getZ()
             )
             so2_space = self.getSubspace(1)
-            so2_space.enforceBounds(self._stateInterpolation.getState()[1])
+            so2_state = self._stateInterpolation.getCompoundState()[1]
+            # TODO: remove debug
+            # print(f"[DubinsAirplaneStateSpace] type(so2_space): {type(so2_space)}")
+            # print(f"[DubinsAirplaneStateSpace] type(so2_state): {type(so2_state)}")
+
+            so2_space.enforceBounds(so2_state)
             segmentStarts.segmentStarts[self._interpol_iter].yaw = (
                 self._stateInterpolation.getYaw()
             )
