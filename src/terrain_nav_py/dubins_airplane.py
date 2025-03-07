@@ -334,6 +334,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             """
             return self._abstract_state
 
+        def getCompoundState(self) -> ob.CompoundStateInternal:
+            """
+            Get the wrapped Compound State
+            """
+            return self._internal_state
+
         #   double getX() const;
         def getX(self) -> float:
             """
@@ -429,6 +435,15 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             Add a value to the z position of the state
             """
             self._internal_state[0][2] += value
+
+        def __str__(self):
+            msg = "[{:.4f}, {:.4f}, {:.4f}; {:.4f}]".format(
+                self._internal_state[0][0],
+                self._internal_state[0][1],
+                self._internal_state[0][2],
+                self._internal_state[1].value,
+            )
+            return msg
 
         #   /** \brief getPosValuePointer
         #     * Get a pointer to the position values.
