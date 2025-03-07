@@ -488,8 +488,8 @@ class TerrainOmplRrt:
         :param upper_bound:
         """
         # TODO: test
-        self._lower_bound_ = lower_bound
-        self._upper_bound_ = upper_bound
+        self._lower_bound = lower_bound
+        self._upper_bound = upper_bound
 
     def setBoundsFromMap(self, map: GridMap) -> None:
         """
