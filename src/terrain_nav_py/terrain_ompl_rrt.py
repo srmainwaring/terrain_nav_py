@@ -706,7 +706,7 @@ class TerrainOmplRrt:
                         segment_state = path_segment.State()
                         # self._problem_setup.getStateSpace()->as<fw_planning::spaces::DubinsAirplaneStateSpace>()->interpolate(
                         #     dubins_path, segmentStarts, t, state)
-                        da_space.interpolate(dubins_path, segmentStarts, t, state)
+                        state = da_space.interpolate3(dubins_path, segmentStarts, t)
 
                         position = TerrainOmplRrt.dubinsairplanePosition(state)
                         yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
@@ -719,12 +719,14 @@ class TerrainOmplRrt:
                             0.0,
                             math.sin(yaw / 2.0),
                         )
-                        trajectory.states.append(segment_state)
+                        # TODO: original accesses internal property directly
+                        # trajectory.states.append(segment_state)
+                        trajectory.append_state(segment_state)
                         track_progress = t
 
                     # Append end state
-                    if ((start_idx + 1) > (segmentStarts.segmentStarts.size() - 1)) or (
-                        (start_idx + 1) > (segmentStarts.segmentStarts.size() - 2)
+                    if ((start_idx + 1) > (len(segmentStarts.segmentStarts) - 1)) or (
+                        (start_idx + 1) > (len(segmentStarts.segmentStarts) - 2)
                         and dubins_path.getSegmentLength(start_idx + 1) == 0.0
                     ):
                         # Append segment with last state
@@ -742,12 +744,14 @@ class TerrainOmplRrt:
                             0.0,
                             math.sin(end_yaw / 2.0),
                         )
-                        trajectory.states.emplace_back(end_state)
+                        # TODO: original accesses internal property
+                        trajectory.append_state(end_state)
 
                     progress = track_progress
                     # Do not append trajectory if the segment is too short
-                    if len(trajectory.states) > 1:
-                        trajectory_segments.segments.append(trajectory)
+                    if trajectory.state_count() > 1:
+                        # TODO: original accesses internal property
+                        trajectory_segments.append_segment(trajectory)
 
     def solutionPathToTrajectoryPoints(
         self,
