@@ -629,12 +629,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # set the climbing angle
         if fabs_dz * self._tanGammaMaxInv <= L:
             # low altitude
-            dp.setAltitudeCase(DubinsPath.ALT_CASE_LOW)
+            dp.setAltitudeCase(DubinsPath.AltitudeCase.ALT_CASE_LOW)
             dp.setGamma(math.atan2(dz, L))
 
         elif fabs_dz * self._tanGammaMaxInv >= (L + twopi):
             # /high altitude
-            dp.setAltitudeCase(DubinsPath.ALT_CASE_HIGH)
+            dp.setAltitudeCase(DubinsPath.AltitudeCase.ALT_CASE_HIGH)
             k: int = math.floor((fabs_dz * self._tanGammaMaxInv - L) * one_div_twopi)
 
             if dz >= 0:
@@ -657,7 +657,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         else:
             # medium altitude
 
-            dp.setAltitudeCase(DubinsPath.ALT_CASE_MEDIUM)
+            dp.setAltitudeCase(DubinsPath.AltitudeCase.ALT_CASE_MEDIUM)
 
             if self._optimalStSp:
                 # additionalManeuver -> tuple[float, bool, float, float, float, float]
@@ -1347,7 +1347,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         print(f"[DubinsAirplaneStateSpace] dubins")
 
         if d < DUBINS_EPS and math.fabs(alpha - beta) < DUBINS_EPS:
-            path = DubinsPath(DubinsPath.TYPE_LSL, 0.0, d, 0.0)
+            path = DubinsPath(DubinsPath.Index.TYPE_LSL, 0.0, d, 0.0)
             return path
         else:
             path = DubinsPath()
@@ -1949,7 +1949,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         # seperate by path case
         path_type = dp.getIdx()
-        if path_type == DubinsPath.TYPE_LSL:
+        if path_type == DubinsPath.Index.TYPE_LSL:
             # The sub-optimal 2D dubins path is LSL so the optimal path is L + RSL
             for phi in np.arange(0.0, twopi, step):
                 # get a state on the circle with the angle phi
@@ -2629,7 +2629,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # assert(math.fabs(p * math.cos(alpha + t) - sa + sb - d) < DUBINS_EPS)
             # assert(math.fabs(p * math.sin(alpha + t) + ca - cb) < DUBINS_EPS)
             # assert(mod2pi(alpha + t + q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
-            return DubinsPath(DubinsPath.TYPE_LSL, t, p, q)
+            return DubinsPath(DubinsPath.Index.TYPE_LSL, t, p, q)
         return DubinsPath()
 
     @staticmethod
@@ -2667,7 +2667,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # assert(math.fabs(p * math.cos(alpha - t) + sa - sb - d) < DUBINS_EPS)
             # assert(math.fabs(p * math.sin(alpha - t) - ca + cb) < DUBINS_EPS)
             # assert(mod2pi(alpha - t - q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
-            return DubinsPath(DubinsPath.TYPE_RSR, t, p, q)
+            return DubinsPath(DubinsPath.Index.TYPE_RSR, t, p, q)
         return DubinsPath()
 
     @staticmethod
@@ -2705,7 +2705,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # assert(math.fabs(p * math.cos(alpha - t) - 2.0 * math.sin(alpha - t) + sa + sb - d) < DUBINS_EPS)
             # assert(math.fabs(p * math.sin(alpha - t) + 2.0 * math.cos(alpha - t) - ca - cb) < DUBINS_EPS)
             # assert(mod2pi(alpha - t + q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
-            return DubinsPath(DubinsPath.TYPE_RSL, t, p, q)
+            return DubinsPath(DubinsPath.Index.TYPE_RSL, t, p, q)
         return DubinsPath()
 
     @staticmethod
@@ -2743,7 +2743,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # assert(math.fabs(p * math.cos(alpha + t) + 2.0 * math.sin(alpha + t) - sa - sb - d) < DUBINS_EPS)
             # assert(math.fabs(p * math.sin(alpha + t) - 2.0 * math.cos(alpha + t) + ca + cb) < DUBINS_EPS)
             # assert(mod2pi(alpha + t - q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
-            return DubinsPath(DubinsPath.TYPE_LSR, t, p, q)
+            return DubinsPath(DubinsPath.Index.TYPE_LSR, t, p, q)
         return DubinsPath()
 
     @staticmethod
@@ -2781,7 +2781,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # assert(math.fabs(2.0 * math.sin(alpha - t + p) - 2.0 * math.sin(alpha - t) - d + sa - sb) < DUBINS_EPS)
             # assert(math.fabs(-2.0 * math.cos(alpha - t + p) + 2.0 * math.cos(alpha - t) - ca + cb) < DUBINS_EPS)
             # assert(mod2pi(alpha - t + p - q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
-            return DubinsPath(DubinsPath.TYPE_RLR, t, p, q)
+            return DubinsPath(DubinsPath.Index.TYPE_RLR, t, p, q)
         return DubinsPath()
 
     @staticmethod
@@ -2819,5 +2819,5 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # assert(math.fabs(-2.0 * math.sin(alpha + t - p) + 2.0 * math.sin(alpha + t) - d - sa + sb) < DUBINS_EPS)
             # assert(math.fabs(2.0 * math.cos(alpha + t - p) - 2.0 * math.cos(alpha + t) + ca - cb) < DUBINS_EPS)
             # assert(mod2pi(alpha + t - p + q - beta + 0.5 * DUBINS_EPS) < DUBINS_EPS)
-            return DubinsPath(DubinsPath.TYPE_LRL, t, p, q)
+            return DubinsPath(DubinsPath.Index.TYPE_LRL, t, p, q)
         return DubinsPath()
