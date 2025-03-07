@@ -1344,7 +1344,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         # TODO: reorganise early returns?
-        print(f"[DubinsAirplaneStateSpace] dubins")
+        # print(f"[DubinsAirplaneStateSpace] dubins1")
 
         if d < DUBINS_EPS and math.fabs(alpha - beta) < DUBINS_EPS:
             path = DubinsPath(DubinsPath.Index.TYPE_LSL, 0.0, d, 0.0)
