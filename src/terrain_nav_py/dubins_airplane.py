@@ -2214,10 +2214,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         print(f"[DubinsAirplaneStateSpace] calculateSegmentStarts")
         segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
 
-        if math.isnan(path.length_2D()):
+        if math.isnan(path.length_2d()):
             return None
 
-        self._interpol_seg = path.length_2D()
+        self._interpol_seg = path.length_2d()
         if path.getGamma() == self._gammaMax:
             self._interpol_tanGamma = self._tanGammaMax
         elif path.getGamma() == -self._gammaMax:
