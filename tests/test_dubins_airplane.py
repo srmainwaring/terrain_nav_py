@@ -37,7 +37,7 @@ from ompl import geometric as og
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
 
-def test_ompl_base_states():
+def test_ompl_compound_state_space_states():
 
     # R(3) state space
     re3_space = ob.RealVectorStateSpace(3)
