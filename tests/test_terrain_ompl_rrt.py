@@ -53,7 +53,7 @@ def test_terrain_ompl_rrt():
     terrain_map.setGridMap(grid_map)
 
     # create planner
-    da_space  = DubinsAirplaneStateSpace(turningRadius=60.0, gam=0.15)
+    da_space = DubinsAirplaneStateSpace(turningRadius=60.0, gam=0.15)
     planner = TerrainOmplRrt(da_space)
     planner.setMap(terrain_map)
     planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
@@ -66,19 +66,19 @@ def test_terrain_ompl_rrt():
 
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
-    # print("PLANNER_MODE.GLOBAL")
-    # planner.setupProblem2(start_pos, goal_pos, start_loiter_radius)
+    print("PLANNER_MODE.GLOBAL")
+    planner.setupProblem2(start_pos, goal_pos, start_loiter_radius)
     # candidate_path = Path()
     # planner.Solve1(time_budget=1.0, path=candidate_path)
 
     # PLANNER_MODE.EMERGENCY_ABORT
-    # set up problem start position and velocity and rally points 
+    # set up problem start position and velocity and rally points
     # planner.setupProblem4(start_pos, start_vel, rally_points)
     # planner_solution_path = Path()
     # planner.Solve(time_budget=1.0, path=planner_solution_path)
 
     # PLANNER_MODE.RETURN
-    # set up problem start position and velocity and home position and radius 
+    # set up problem start position and velocity and home position and radius
     # planner.setupProblem3(start_pos, start_vel, home_pos, home_pos_radius)
     # planner_solution_path = Path()
     # planner.Solve(time_budget=1.0, path=planner_solution_path)
