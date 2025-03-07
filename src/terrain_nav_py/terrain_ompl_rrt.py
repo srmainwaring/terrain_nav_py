@@ -373,7 +373,7 @@ class TerrainOmplRrt:
         # TODO: test
         if goal_positions.empty():
             # TODO: should raise exception?
-            print("Failed to configure problem: Goal position list empty")
+            print(f"[TerrainOmplRrt] Failed to configure problem: Goal position list empty")
             return
 
         self.configureProblem()
@@ -560,6 +560,7 @@ class TerrainOmplRrt:
         :return false: Did not find an exact solution
         """
         # TODO: test
+        print(f"[TerrainOmplRrt] run solver")
         if self._problem_setup.solve(time_budget):
             # self._problem_setup.getSolutionPath().print(std::cout)
             # self._problem_setup.simplifySolution()
@@ -568,10 +569,10 @@ class TerrainOmplRrt:
             self._solve_duration = self._problem_setup.getLastPlanComputationTime()
 
         else:
-            print("Solution Not found")
+            print(f"[TerrainOmplRrt] Solution Not found")
 
         if self._problem_setup.haveExactSolutionPath():
-            print("Found Exact solution!")
+            print(f"[TerrainOmplRrt] Found Exact solution!")
             self.solutionPathToPath(self._problem_setup.getSolutionPath(), path)
             return True
 
@@ -582,7 +583,7 @@ class TerrainOmplRrt:
     ) -> bool:
         # TODO: test
         if self._problem_setup.solve(time_budget):
-            print("Found solution:")
+            print(f"[TerrainOmplRrt] Found solution:")
             # self._problem_setup.getSolutionPath().print(std::cout);
             # self._problem_setup.simplifySolution();
             # self._problem_setup.getSolutionPath().print(std::cout);
@@ -590,7 +591,7 @@ class TerrainOmplRrt:
             self._solve_duration = self._problem_setup.getLastPlanComputationTime()
 
         else:
-            print("Solution Not found")
+            print(f"[TerrainOmplRrt] Solution Not found")
 
         if self._problem_setup.haveExactSolutionPath():
             self.solutionPathToTrajectoryPoints(
