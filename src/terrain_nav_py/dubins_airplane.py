@@ -622,7 +622,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         th1 = da_state1.getYaw()
 
         # extract state 2
-        da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
+        da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state2)
         x2 = da_state2.getX()
         y2 = da_state2.getY()
         z2 = da_state2.getZ()
