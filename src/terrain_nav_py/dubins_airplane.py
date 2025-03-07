@@ -314,109 +314,121 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             """
             Constructor
             """
-            self._state = state
+            self._abstract_state = None
+            self._internal_state = None
+
+            if isinstance(state, ob.State):
+                self._abstract_state = state
+                self._internal_state = self._abstract_state()
+            elif isinstance(state, ob.CompoundStateInternal):
+                self._internal_state = state
+            else:
+                raise ValueError(
+                    "[DubinsAirplaneState] state must be either ob.State "
+                    "or ob.CompoundStateInternal "
+                )
 
         def getState(self) -> ob.State:
             """
             Get the wrapped abstract State
             """
-            return self._state
+            return self._abstract_state
 
         #   double getX() const;
         def getX(self) -> float:
             """
             Get the X component of the state
             """
-            return self._state()[0][0]
+            return self._internal_state[0][0]
 
         #   double getY() const;
         def getY(self) -> float:
             """
             Get the Y component of the state
             """
-            return self._state()[0][1]
+            return self._internal_state[0][1]
 
         #   double getZ() const;
         def getZ(self) -> float:
             """
             Get the Z component of the state
             """
-            return self._state()[0][2]
+            return self._internal_state[0][2]
 
         #   double getYaw() const;
         def getYaw(self) -> float:
             """
             Get the heading/yaw component of the state
             """
-            return self._state()[1].value
+            return self._internal_state[1].value
 
         #   void setX(double x);
         def setX(self, value: float) -> None:
             """
             Set the X component of the state
             """
-            self._state()[0][0] = value
+            self._internal_state[0][0] = value
 
         #   void setY(double y);
         def setY(self, value: float) -> None:
             """
             Set the Y component of the state
             """
-            self._state()[0][1] = value
+            self._internal_state[0][1] = value
 
         #   void setZ(double z);
         def setZ(self, value: float) -> None:
             """
             Set the Z component of the state
             """
-            self._state()[0][2] = value
+            self._internal_state[0][2] = value
 
         #   void setYaw(double yaw);
         def setYaw(self, value: float) -> None:
             """
             Set the Z component of the state
             """
-            self._state()[1].value = value
+            self._internal_state[1].value = value
 
         #   void setXYZ(double x, double y, double z);
         def setXYZ(self, x: float, y: float, z: float) -> None:
             """
             Set the X, Y and Z components of the state
             """
-            self._state()[0][0] = x
-            self._state()[0][1] = y
-            self._state()[0][2] = z
+            self._internal_state[0][0] = x
+            self._internal_state[0][1] = y
+            self._internal_state[0][2] = z
 
         #   void setXYZYaw(double x, double y, double z, double yaw);
         def setXYZYaw(self, x: float, y: float, z: float, yaw: float) -> None:
             """
             Set the X, Y, Z and Yaw components of the state
             """
-            self._state()[0][0] = x
-            self._state()[0][1] = y
-            self._state()[0][2] = z
-            self._state()[1].value = yaw
+            self._internal_state[0][0] = x
+            self._internal_state[0][1] = y
+            self._internal_state[0][2] = z
+            self._internal_state[1].value = yaw
 
         #   void addToX(double val);
         def addToX(self, value: float) -> None:
             """
             Add a value to the x position of the state
             """
-            self._state()[0][0] += value
+            self._internal_state[0][0] += value
 
         #   void addToY(double val);
         def addToY(self, value: float) -> None:
             """
             Add a value to the y position of the state
             """
-            self._state()[0][1] += value
+            self._internal_state[0][1] += value
 
         #   void addToZ(double val);
         def addToZ(self, value: float) -> None:
             """
             Add a value to the z position of the state
             """
-            self._state()[0][2] += value
+            self._internal_state[0][2] += value
 
         #   /** \brief getPosValuePointer
         #     * Get a pointer to the position values.
