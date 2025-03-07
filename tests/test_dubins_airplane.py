@@ -36,6 +36,7 @@ from ompl import geometric as og
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
+
 def test_ompl_base_states():
 
     # R(3) state space
@@ -142,6 +143,7 @@ def test_dubins_airplane_state_space():
     # count = da_space.validSegmentCount(state1, state2)
     # dist = da_space.distance(state1, state2)
 
+
 def test_dubins_airplane_alloc_state():
 
     # state space
@@ -152,4 +154,3 @@ def test_dubins_airplane_alloc_state():
 
     # cs = ob.CompoundState(si)
     # print(type(cs))
-
