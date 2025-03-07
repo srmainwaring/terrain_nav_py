@@ -585,7 +585,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return dp: Computed dubins path.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] dubins")
+        print(f"[DubinsAirplaneStateSpace] dubins")
 
         # extract state 1
         da_state1 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
@@ -803,7 +803,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return state: Interpolated state.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] interpolate")
+        print(f"[DubinsAirplaneStateSpace] interpolate")
 
         self._interpol_seg = t * path.length_2d()
         if path.getGamma() == self._gammaMax:
@@ -1206,8 +1206,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         the range of the space in which sampling is performed.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] setBounds")
-        # self(0).setBounds(bounds)
+        print(f"[DubinsAirplaneStateSpace] setBounds")
+        print(f"[DubinsAirplaneStateSpace] type(bound): {type(bounds)}")
         re3_space = self.getSubspace(0)
         re3_space.setBounds(bounds)
 
@@ -1216,7 +1216,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Set the bounds of the state space.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] getBounds")
+        print(f"[DubinsAirplaneStateSpace] getBounds")
         # return self(0).getBounds()
         re3_space = self.getSubspace(0)
         return re3_space.getBounds()
@@ -1250,7 +1250,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Print the control variables.
         """
         # TODO: will not implement
-        print("[DubinsAirplaneStateSpace] printCtrs")
+        print(f"[DubinsAirplaneStateSpace] printCtrs")
         pass
 
     def printDurations(self) -> None:
@@ -1258,7 +1258,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Print the durations.
         """
         # TODO: will not implement
-        print("[DubinsAirplaneStateSpace] printDurations")
+        print(f"[DubinsAirplaneStateSpace] printDurations")
         pass
 
     def resetCtrs(self) -> None:
@@ -1332,7 +1332,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         # TODO: test
         # TODO: reorganise early returns?
-        print("[DubinsAirplaneStateSpace] dubins")
+        print(f"[DubinsAirplaneStateSpace] dubins")
 
         if d < DUBINS_EPS and math.fabs(alpha - beta) < DUBINS_EPS:
             path = DubinsPath(DubinsPath.TYPE_LSL, 0.0, d, 0.0)
@@ -1400,7 +1400,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return path: The computed dubins path.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] calcDubPathWithClassification")
+        print(f"[DubinsAirplaneStateSpace] calcDubPathWithClassification")
         path = DubinsPath()
 
         # TODO: Computational speed up could be achieved here by ordering the
@@ -1829,7 +1829,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param cb: Precomputed cos(beta)
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] calcDubPathWithoutClassification")
+        print(f"[DubinsAirplaneStateSpace] calcDubPathWithoutClassification")
         path = DubinsAirplaneStateSpace.dubinsLSL(d, alpha, beta, sa, sb, ca, cb)
         minLength = path.length_2d()
 
@@ -1883,7 +1883,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return tuple[float, bool, float, float, float, float]: (rho, foundSol, t_min, p_min, q_min, L_2D)
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] additionalManeuver")
+        print(f"[DubinsAirplaneStateSpace] additionalManeuver")
         foundSol = False
 
         # extract state 1
@@ -2105,7 +2105,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param beta: Corrected heading of the goal state
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] classifyPath")
+        print(f"[DubinsAirplaneStateSpace] classifyPath")
         row: int = 0
         column: int = 0
 
@@ -2146,7 +2146,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param k: Number of circles in the helix.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] computeOptRratio")
+        print(f"[DubinsAirplaneStateSpace] computeOptRratio")
         return (fabsHdist - L * fabsTanGamma) / (twopi * fabsTanGamma * k)
 
     def interpolateWithWind(
@@ -2168,7 +2168,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return state: Interpolated state.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] interpolateWithWind")
+        print(f"[DubinsAirplaneStateSpace] interpolateWithWind")
         return self.interpolate3(path, segmentStarts, t)
 
     def calculateSegmentStarts(
@@ -2182,7 +2182,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :returns segmentStarts: Computed starts of the segments of the dubins airplane path.
         """
         # TODO: test
-        print("[DubinsAirplaneStateSpace] calculateSegmentStarts")
+        print(f"[DubinsAirplaneStateSpace] calculateSegmentStarts")
         segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
 
         if math.isnan(path.length_2D()):
