@@ -137,13 +137,16 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         :type state: ob.State
         """
         # TODO test
+        # print(f"[TerrainValidityChecker] check valid")
+        # print(f"[TerrainValidityChecker] type(state): {type(state)}")
+        # print(f"[TerrainValidityChecker] type(state[0]): {type(state[0])}")
+        # print(f"[TerrainValidityChecker] type(state[1]): {type(state[1])}")
 
         # NOTE: use wrapper for access to internal state.
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         position = (da_state.getX(), da_state.getY(), da_state.getZ())
 
-        # DEBUG
-        # print(f"position: {position}")
+        # print(f"[TerrainValidityChecker] position: {position}")
         return not self.checkCollision(position)
 
     def checkCollision(self, position: tuple[float, float, float]) -> bool:
