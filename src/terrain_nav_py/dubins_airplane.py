@@ -597,7 +597,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return dp: Computed dubins path.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] dubins")
+        # print(f"[DubinsAirplaneStateSpace] dubins2")
 
         # extract state 1
         da_state1 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
