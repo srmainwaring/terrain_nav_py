@@ -373,7 +373,9 @@ class TerrainOmplRrt:
         # TODO: test
         if goal_positions.empty():
             # TODO: should raise exception?
-            print(f"[TerrainOmplRrt] Failed to configure problem: Goal position list empty")
+            print(
+                f"[TerrainOmplRrt] Failed to configure problem: Goal position list empty"
+            )
             return
 
         self.configureProblem()
@@ -637,6 +639,7 @@ class TerrainOmplRrt:
         resolution: float = 0.05,
     ) -> None:
         # TODO: test
+        print(f"[TerrainOmplRrt] convert solution path to Path")
         # trajectory_segments.segments.clear()
         trajectory_segments.reset_segments()
 
@@ -647,6 +650,13 @@ class TerrainOmplRrt:
             from_state = state_vector[idx]  # Start of the segment
             to_state = state_vector[idx + 1]  # End of the segment
             da_space = self._problem_setup.getStateSpace()
+
+            print(
+                f"[TerrainOmplRrt] from_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)}"
+            )
+            print(
+                f"[TerrainOmplRrt] to_state:   {DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)}"
+            )
 
             # TODO: see if pass-by-reference semantics works (better?)
             # dubins_path = DubinsPath()
@@ -666,6 +676,8 @@ class TerrainOmplRrt:
             segment_end_state = ob.State(da_space)
 
             total_length = dubins_path.length_2d()
+            print(f"[TerrainOmplRrt] total_length: {total_length}")
+
             dt = resolution / total_length
             progress = 0.0
             # for (size_t start_idx = 0; start_idx < segmentStarts.segmentStarts.size(); start_idx++) {
