@@ -1022,7 +1022,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         #  compute the path if interpolate is called the first time.
         path = self.dubins2(from_state, to_state)
         #  compute the segment starts
-        segmentStarts = self.calculateSegmentStarts(from_state, path, segmentStarts)
+        segmentStarts = self.calculateSegmentStarts(from_state, path)
 
         return (path, segmentStarts)
 
@@ -1385,13 +1385,13 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 # sufficient condition for optimality of CSC path type
                 if long_path_case:
                     self._long_ctr += 1
-                    self.calcDubPathWithClassification(
-                        path, d, alpha, beta, sa, sb, ca, cb
+                    path = self.calcDubPathWithClassification(
+                        d, alpha, beta, sa, sb, ca, cb
                     )
                     return path
 
-            self._short_ctr_ += 1
-            self.calcDubPathWithoutClassification(path, d, alpha, beta, sa, sb, ca, cb)
+            self._short_ctr += 1
+            path = self.calcDubPathWithoutClassification(d, alpha, beta, sa, sb, ca, cb)
             return path
 
     def calcDubPathWithClassification(
