@@ -648,11 +648,17 @@ class TerrainOmplRrt:
             to_state = state_vector[idx + 1]  # End of the segment
             da_space = self._problem_setup.getStateSpace()
 
-            dubins_path = DubinsPath()
-            da_space.dubins(from_state, to_state, dubins_path)
+            # TODO: see if pass-by-reference semantics works (better?)
+            # dubins_path = DubinsPath()
+            # da_space.dubins2(from_state, to_state, dubins_path)
+            dubins_path = da_space.dubins2(from_state, to_state)
 
-            segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
-            da_space.calculateSegments(from_state, to_state, dubins_path, segmentStarts)
+            # TODO: see if pass-by-reference semantics works (better?)
+            # segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
+            # da_space.calculateSegments(from_state, to_state, dubins_path, segmentStarts)
+            (dubins_path, segmentStarts) = da_space.calculateSegments(
+                from_state, to_state
+            )
 
             # segment_start_state: ob.State = self._problem_setup.getStateSpace()->allocState();
             # segment_end_state: ob.State = self._problem_setup.getStateSpace()->allocState();
