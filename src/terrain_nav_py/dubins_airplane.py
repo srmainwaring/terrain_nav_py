@@ -730,11 +730,11 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 if dz >= 0:
                     dp.setStartHelix(k, 1.0)
                     dp.setGamma(math.atan2(dz, L + dp.getSegmentLength(0)))
-                    # need to use dp.length_2D since length changed in line before!
+                    # need to use dp.length_2d since length changed in line before!
                 else:
                     dp.setEndHelix(k, 1.0)
                     dp.setGamma(math.atan2(dz, L + dp.getSegmentLength(5)))
-                    # need to use dp.length_2D since length changed in line before!
+                    # need to use dp.length_2d since length changed in line before!
 
         # CSC cases
         if dp.getIdx() < 4:
@@ -1863,31 +1863,31 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         minLength = path.length_2d()
 
         tmp2 = DubinsAirplaneStateSpace.dubinsRSR(d, alpha, beta, sa, sb, ca, cb)
-        len = tmp2.length_2D()
+        len = tmp2.length_2d()
         if len < minLength:
             minLength = len
             path = tmp2
 
         tmp2 = DubinsAirplaneStateSpace.dubinsRSL(d, alpha, beta, sa, sb, ca, cb)
-        len = tmp2.length_2D()
+        len = tmp2.length_2d()
         if len < minLength:
             minLength = len
             path = tmp2
 
         tmp2 = DubinsAirplaneStateSpace.dubinsLSR(d, alpha, beta, sa, sb, ca, cb)
-        len = tmp2.length_2D()
+        len = tmp2.length_2d()
         if len < minLength:
             minLength = len
             path = tmp2
 
         tmp2 = DubinsAirplaneStateSpace.dubinsRLR(d, alpha, beta, sa, sb, ca, cb)
-        len = tmp2.length_2D()
+        len = tmp2.length_2d()
         if len < minLength:
             minLength = len
             path = tmp2
 
         tmp2 = DubinsAirplaneStateSpace.dubinsLRL(d, alpha, beta, sa, sb, ca, cb)
-        len = tmp2.length_2D()
+        len = tmp2.length_2d()
         if len < minLength:
             path = tmp2
 
@@ -1988,7 +1988,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 beta_c = mod2pi(th2 - th_c)
 
                 dp_tmp = DubinsAirplaneStateSpace.dubinsRSL(d_c, alpha_c, beta_c)
-                L_2D = dp_tmp.length_2D() + phi
+                L_2D = dp_tmp.length_2d() + phi
 
                 error_abs = math.fabs(L_desired2D - L_2D)
                 if error_abs < error_min_abs:
@@ -2021,7 +2021,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 beta_c = mod2pi(th2 - th_c)
 
                 dp_tmp = DubinsAirplaneStateSpace.dubinsLSR(d_c, alpha_c, beta_c)
-                L_2D = dp_tmp.length_2D() + phi
+                L_2D = dp_tmp.length_2d() + phi
 
                 error_abs = math.fabs(L_desired2D - L_2D)
                 if error_abs < error_min_abs:
@@ -2054,7 +2054,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 beta_c = mod2pi(th2 - th_c)
 
                 dp_tmp = DubinsAirplaneStateSpace.dubinsLSL(d_c, alpha_c, beta_c)
-                L_2D = dp_tmp.length_2D() + phi
+                L_2D = dp_tmp.length_2d() + phi
 
                 error_abs = math.fabs(L_desired2D - L_2D)
 
@@ -2088,7 +2088,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 beta_c = mod2pi(th2 - th_c)
 
                 dp_tmp = DubinsAirplaneStateSpace.dubinsRSR(d_c, alpha_c, beta_c)
-                L_2D = dp_tmp.length_2D() + phi
+                L_2D = dp_tmp.length_2d() + phi
 
                 error_abs = math.fabs(L_desired2D - L_2D)
                 if error_abs < error_min_abs:
