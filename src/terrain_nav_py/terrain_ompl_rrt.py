@@ -48,29 +48,19 @@ from ompl import geometric as og
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.dubins_path import DubinsPath
 
+from terrain_nav_py.grid_map import GridMap
+
+from terrain_nav_py.ompl_setup import OmplSetup
+
 from terrain_nav_py import path_segment
 from terrain_nav_py.path_segment import wrap_pi
-from terrain_nav_py.path_segment import wrap_2pi
 
 from terrain_nav_py.path import Path
 from terrain_nav_py.path import PathSegment
 
-from terrain_nav_py.ompl_setup import OmplSetup
+from terrain_nav_py.terrain_map import TerrainMap
 
-from terrain_nav_py.terrain_ompl import GridMap
 from terrain_nav_py.terrain_ompl import TerrainStateSampler
-
-
-# Mock interface for TerrainMap
-class TerrainMap:
-    def __init__(self):
-        self._grid_map = GridMap()
-
-    def getGridMap(self) -> GridMap:
-        return self._grid_map
-
-    def setGridMap(self, map: GridMap) -> None:
-        self._grid_map = map
 
 
 class TerrainOmplRrt:
