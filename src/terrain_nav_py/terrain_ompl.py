@@ -37,88 +37,13 @@
 Terrain planner state validity checker and sampler
 """
 
-import copy
 import math
-import sys
 
 from ompl import base as ob
 from ompl import util as ou
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
-
-
-# Mock interface for GridMap
-class GridMap:
-
-    class Index:
-        def __init__(self):
-            self.value = 0
-
-    class Iterator:
-        def __init__(self, map):
-            self._start = GridMap.Index()
-            self._index = GridMap.Index()
-            self._size = map.size()
-            self._is_past_end = False
-
-        def __iter__(self):
-            return self
-
-        def __next__(self):
-            current = copy.deepcopy(self._index)
-
-            if self._index.value == self._size:
-                self._is_past_end = True
-
-            if not self._is_past_end:
-                self._index.value += 1
-            else:
-                raise StopIteration
-
-            return current
-
-    def __init__(self):
-        self._position = (0.0, 0.0)
-        self._length = (1000.0, 1000.0)
-        self._elevation = 0.0
-        self._distance_surface = 0.0
-        self._max_elevation = 120.0
-        self._size = 10
-
-    def __iter__(self):
-        return GridMap.Iterator(self)
-
-    def size(self):
-        return self._size
-
-    def getPosition(self) -> tuple[float, float]:
-        return self._position
-
-    def getLength(self) -> tuple[float, float]:
-        return self._length
-
-    def isInside(self, position: tuple[float, float]) -> bool:
-        return True
-
-    def atPosition(self, layer: str, position: tuple[float, float]) -> float:
-        if layer == "elevation":
-            return self._elevation
-        elif layer == "distance_surface":
-            return self._distance_surface
-        elif layer == "max_elevation":
-            return self._max_elevation
-        else:
-            return float("nan")
-
-    def at(self, layer: str, index: Index) -> float:
-        if layer == "elevation":
-            return self._elevation
-        elif layer == "distance_surface":
-            return self._distance_surface
-        elif layer == "max_elevation":
-            return self._max_elevation
-        else:
-            return float("nan")
+from terrain_nav_py.grid_map import GridMap
 
 
 class TerrainValidityChecker(ob.StateValidityChecker):

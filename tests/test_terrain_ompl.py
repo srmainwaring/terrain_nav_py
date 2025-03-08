@@ -27,16 +27,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import math
-import pytest
-import sys
-
 from ompl import base as ob
 from ompl import geometric as og
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
-from terrain_nav_py.terrain_ompl import GridMap
+from terrain_nav_py.grid_map import GridMap
+
 from terrain_nav_py.terrain_ompl import TerrainValidityChecker
 from terrain_nav_py.terrain_ompl import TerrainStateSampler
 
