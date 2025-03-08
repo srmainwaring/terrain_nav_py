@@ -34,10 +34,13 @@ TerrainMap
 from terrain_nav_py.grid_map import GridMap
 
 
-# Mock interface for TerrainMap
 class TerrainMap:
+    """
+    Manage a terrain map.
+    """
+
     def __init__(self):
-        self._grid_map = GridMap()
+        self._grid_map = None
 
     def getGridMap(self) -> GridMap:
         return self._grid_map
