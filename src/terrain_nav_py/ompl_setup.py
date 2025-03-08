@@ -38,12 +38,12 @@ Terrain planner OMPL setup
 """
 
 from enum import IntEnum
-from typing import Self
 
 from ompl import base as ob
 from ompl import geometric as og
 
-from terrain_nav_py.terrain_ompl import GridMap
+from terrain_nav_py.grid_map import GridMap
+
 from terrain_nav_py.terrain_ompl import TerrainValidityChecker
 
 
