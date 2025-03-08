@@ -42,7 +42,6 @@ Data structures used by the DubinsAirPlane model.
 import math
 
 from enum import IntEnum
-from typing import Self
 
 
 class DubinsPath:
