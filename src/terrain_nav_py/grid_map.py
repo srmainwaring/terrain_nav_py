@@ -33,9 +33,16 @@ GridMap
 
 import copy
 
+import numpy as np
 
-# Mock interface for GridMap
+from MAVProxy.modules.lib import mp_elevation
+from MAVProxy.modules.lib import mp_util
+
+
 class GridMap:
+    """
+    Interface for GridMap
+    """
 
     class Index:
         def __init__(self):
@@ -79,15 +86,27 @@ class GridMap:
         return self._size
 
     def getPosition(self) -> tuple[float, float]:
+        """
+        The 2d position of the grid map in the grid map frame.
+        """
         return self._position
 
     def getLength(self) -> tuple[float, float]:
+        """
+        The length (2d) of the grid map sides.
+        """
         return self._length
 
     def isInside(self, position: tuple[float, float]) -> bool:
+        """
+        Check if a 2d position is inside the grid map boundary.
+        """
         return True
 
     def atPosition(self, layer: str, position: tuple[float, float]) -> float:
+        """
+        Return the layer value at the given cartesian position.
+        """
         if layer == "elevation":
             return self._elevation
         elif layer == "distance_surface":
@@ -98,6 +117,9 @@ class GridMap:
             return float("nan")
 
     def at(self, layer: str, index: Index) -> float:
+        """
+        Return the layer value at the given index.
+        """
         if layer == "elevation":
             return self._elevation
         elif layer == "distance_surface":
@@ -106,3 +128,80 @@ class GridMap:
             return self._max_elevation
         else:
             return float("nan")
+
+
+class GridMapSRTM(GridMap):
+    """
+    A GridMap using SRTM terrain data accessed using MAVProxy tools.
+    """
+
+    def __init__(self, home_lat, home_lon):
+        super().__init__()
+
+        self._home_lat = home_lat
+        self._home_lon = home_lon
+        self._grid_spacing = 30
+        self._grid_extent = 10000
+        self._terrain_source = "SRTM1"
+        self._terrain_offline = False
+        self._elevation_model = mp_elevation.ElevationModel(
+            database=self._terrain_source, offline=self._terrain_offline
+        )
+
+        # precalculated grid (for iteration)
+        self._x = np.arange(
+            -0.5 * self._grid_extent, 0.5 * self._grid_extent, self._grid_spacing
+        )
+        self._y = np.arange(
+            -0.5 * self._grid_extent, 0.5 * self._grid_extent, self._grid_spacing
+        )
+
+        # set super class properties
+        self._size = len(self._x) * len(self._y)
+        self._length = (self._grid_extent, self._grid_extent)
+        self._position = (0.0, 0.0)
+        self._distance_surface = 0.0
+        self._max_elevation = 120.0
+
+    def isInside(self, position: tuple[float, float]) -> bool:
+        """
+        Check if a 2d position is inside the grid map boundary.
+        """
+        x = position[0]
+        y = position[1]
+        is_valid = (
+            -0.5 * self._grid_extent <= x and x <= 0.5 * self._grid_extent
+        ) and (-0.5 * self._grid_extent <= y and y <= 0.5 * self._grid_extent)
+        return is_valid
+
+    def atPosition(self, layer: str, position: tuple[float, float]) -> float:
+        """
+        Get cell data at the
+        Return the layer value at the given cartesian position.
+        """
+        north = position[0]
+        east = position[1]
+        (lat2, lon2) = (lat2, lon2) = mp_util.gps_offset(
+            self._home_lat, self._home_lon, east, north
+        )
+        alt = self._elevation_model.GetElevation(lat2, lon2)
+
+        if layer == "elevation":
+            return alt
+        elif layer == "distance_surface":
+            return alt + self._distance_surface
+        elif layer == "max_elevation":
+            return alt + self._max_elevation
+        else:
+            return float("nan")
+
+    def at(self, layer: str, index: GridMap.Index) -> float:
+        """
+        Return the layer value at the given index.
+        """
+        size_y = len(self._y)
+        i_x = index.value // size_y
+        i_y = index.value % size_y
+        x = self._x[i_x]
+        y = self._y[i_y]
+        return self.atPosition(layer, (x, y))
