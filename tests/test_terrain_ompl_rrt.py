@@ -77,23 +77,23 @@ def test_terrain_ompl_rrt():
     # planner_solution_path = Path()
     # planner.Solve(time_budget=1.0, path=planner_solution_path)
 
-    # solution path - og.PathGeometric
-    solution_path = planner._problem_setup.getSolutionPath()
-    state1 = solution_path.getState(0)
-    state2 = solution_path.getState(solution_path.getStateCount() - 1)
-    states = solution_path.getStates()
-    pos1 = TerrainOmplRrt.dubinsairplanePosition(state1)
-    yaw1 = TerrainOmplRrt.dubinsairplaneYaw(state1)
-    pos2 = TerrainOmplRrt.dubinsairplanePosition(state2)
-    yaw2 = TerrainOmplRrt.dubinsairplaneYaw(state2)
-    print(f"Planner solution path (og.PathGeometric)")
-    # print(type(solution_path))
-    print(f"path length: {solution_path.length():.2f}")
-    print(f"pos1: {pos1}, yaw1: {yaw1}")
-    print(f"pos2: {pos2}, yaw2: {yaw2}")
-
-    # plots
-    plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states)
+    # only display plots if run as script
+    if __name__ == "__main__":
+        # solution path - og.PathGeometric
+        solution_path = planner._problem_setup.getSolutionPath()
+        state1 = solution_path.getState(0)
+        state2 = solution_path.getState(solution_path.getStateCount() - 1)
+        states = solution_path.getStates()
+        pos1 = TerrainOmplRrt.dubinsairplanePosition(state1)
+        yaw1 = TerrainOmplRrt.dubinsairplaneYaw(state1)
+        pos2 = TerrainOmplRrt.dubinsairplanePosition(state2)
+        yaw2 = TerrainOmplRrt.dubinsairplaneYaw(state2)
+        print(f"Planner solution path (og.PathGeometric)")
+        # print(type(solution_path))
+        print(f"path length: {solution_path.length():.2f}")
+        print(f"pos1: {pos1}, yaw1: {yaw1}")
+        print(f"pos2: {pos2}, yaw2: {yaw2}")
+        plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states)
 
 
 def plot_path(start_pos, goal_pos, loiter_radius, path=None, states=None):
