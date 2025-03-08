@@ -32,6 +32,7 @@ import math
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
 from terrain_nav_py.grid_map import GridMap
+from terrain_nav_py.grid_map import GridMapSRTM
 
 from terrain_nav_py.path import Path
 
@@ -42,7 +43,8 @@ from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 
 def test_terrain_ompl_rrt():
     # create terrain map
-    grid_map = GridMap()
+    # grid_map = GridMap()
+    grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
@@ -53,10 +55,14 @@ def test_terrain_ompl_rrt():
     planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
 
     # initialise from map
-    start_pos = (10.0, 20.0, 60.0)
-    goal_pos = (200.0, 400.0, 100.0)
+    start_pos = [10.0, 20.0, 60.0]
+    goal_pos = [4200.0, -3000.0, 60.0]
     loiter_radius = 40.0
     planner.setBoundsFromMap(terrain_map.getGridMap())
+
+    # adjust the start and goal altitudes
+    start_pos[2] += grid_map.atPosition("elevation", start_pos)
+    goal_pos[2] += grid_map.atPosition("elevation", goal_pos)
 
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
@@ -81,22 +87,25 @@ def test_terrain_ompl_rrt():
     if __name__ == "__main__":
         # solution path - og.PathGeometric
         solution_path = planner._problem_setup.getSolutionPath()
-        state1 = solution_path.getState(0)
-        state2 = solution_path.getState(solution_path.getStateCount() - 1)
         states = solution_path.getStates()
-        pos1 = TerrainOmplRrt.dubinsairplanePosition(state1)
-        yaw1 = TerrainOmplRrt.dubinsairplaneYaw(state1)
-        pos2 = TerrainOmplRrt.dubinsairplanePosition(state2)
-        yaw2 = TerrainOmplRrt.dubinsairplaneYaw(state2)
+        # state1 = solution_path.getState(0)
+        # state2 = solution_path.getState(solution_path.getStateCount() - 1)
+        # pos1 = TerrainOmplRrt.dubinsairplanePosition(state1)
+        # yaw1 = TerrainOmplRrt.dubinsairplaneYaw(state1)
+        # pos2 = TerrainOmplRrt.dubinsairplanePosition(state2)
+        # yaw2 = TerrainOmplRrt.dubinsairplaneYaw(state2)
         print(f"Planner solution path (og.PathGeometric)")
         # print(type(solution_path))
         print(f"path length: {solution_path.length():.2f}")
-        print(f"pos1: {pos1}, yaw1: {yaw1}")
-        print(f"pos2: {pos2}, yaw2: {yaw2}")
-        plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states)
+        print(f"states count: {len(states)}")
+        # print(f"pos1: {pos1}, yaw1: {yaw1}")
+        # print(f"pos2: {pos2}, yaw2: {yaw2}")
+        plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map)
 
 
-def plot_path(start_pos, goal_pos, loiter_radius, path=None, states=None):
+def plot_path(
+    start_pos, goal_pos, loiter_radius, path=None, states=None, grid_map=None
+):
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -124,17 +133,46 @@ def plot_path(start_pos, goal_pos, loiter_radius, path=None, states=None):
         z = position[2]
         ax.scatter(x, y, z, marker="v", s=48, c="red")
         ax.text(position[0], position[1], position[2], label)
-        print(position)
+        # TODO: remove debug prints 
+        # print(position)
 
     def plot_states(ax, states):
         for i, state in enumerate(states):
             plot_state(ax, state, f"state{i}")
 
+    def plot_terrain(ax, grid_map):
+        length = grid_map.getLength()
+        length_x = length[0]
+        length_y = length[1]
+        grid_spacing = 30
+        x = np.arange(-0.5 * length_x, 0.5 * length_x, grid_spacing)
+        y = np.arange(-0.5 * length_y, 0.5 * length_y, grid_spacing)
+        x_grid, y_grid = np.meshgrid(x, y)
+
+        def terrain_surface(x, y):
+            alt = []
+            for east in y:
+                alt_y = []
+                for north in x:
+                    alt_y.append(grid_map.atPosition("elevation", (north, east)))
+                alt.append(alt_y)
+            return alt
+
+        z_grid = np.array(terrain_surface(x, y))
+        # ax.contour(x_grid, y_grid, z_grid, levels=10)
+        ax.plot_wireframe(x_grid, y_grid, z_grid, linewidth=1, linestyle="solid", alpha=0.3, color="grey")
+        # aspect ratio is 1:1:1 in data space
+        ax.set_box_aspect((np.ptp(x_grid), np.ptp(y_grid), 5 * np.ptp(z_grid)))
+
     # setup plot
     ax = plt.figure().add_subplot(projection="3d")
-    ax.set_xlim(-400.0, 400.0)
-    ax.set_ylim(-400.0, 400.0)
-    # ax.set_zlim(0.0, 150.0)
+    ax.set_xlim(-5000.0, 5000.0)
+    ax.set_ylim(-5000.0, 5000.0)
+    ax.set_zlim(0.0, 500.0)
+    ax.set_xlabel("north (m)")
+    ax.set_ylabel("east (m)")
+    ax.set_title("Terrain Navigation, terrain source: SRTM1")
+    ax.invert_yaxis()
 
     # start circle
     plot_circle(ax, start_pos, loiter_radius, "start")
@@ -143,12 +181,16 @@ def plot_path(start_pos, goal_pos, loiter_radius, path=None, states=None):
     plot_circle(ax, goal_pos, loiter_radius, "goal")
 
     # path
-    if path is not None:
-        plot_path(ax, path)
+    # if path is not None:
+    #     plot_path(ax, path)
 
     # states
     if states is not None:
         plot_states(ax, states)
+
+    # map
+    if grid_map is not None:
+        plot_terrain(ax, grid_map)
 
     plt.show()
 
