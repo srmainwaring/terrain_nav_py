@@ -1377,7 +1377,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             classification = self.classifyPath(alpha, beta)
             # path.setClassification(classification)
 
-
             if self._enable_classification:
                 long_path_case = d > (
                     math.sqrt(4.0 - math.pow(ca + cb, 2.0))
@@ -1439,7 +1438,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # classification = path.getClassification()
         if classification == DubinsPath.Classification.CLASS_A11:
             # class a_11: optimal path is RSL
-            path = DubinsAirplaneStateSpace.dubinsRSL_fast(d, alpha, beta, sa, sb, ca, cb)
+            path = DubinsAirplaneStateSpace.dubinsRSL_fast(
+                d, alpha, beta, sa, sb, ca, cb
+            )
         elif classification == DubinsPath.Classification.CLASS_A12:
             # class a_12: depending on S_12, optimal path is either RSR (S_12<0) or RSL (S_12>0)
             if (
@@ -1616,7 +1617,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         elif (
             classification == DubinsPath.Classification.CLASS_A23
         ):  # class a_23: RSR is optimal
-            path = DubinsAirplaneStateSpace.dubinsRSR_fast(d, alpha, beta, sa, sb, ca, cb)
+            path = DubinsAirplaneStateSpace.dubinsRSR_fast(
+                d, alpha, beta, sa, sb, ca, cb
+            )
         elif classification == DubinsPath.Classification.CLASS_A24:
             # class a_24: depending on S_24, optimal path is RSR (S_24<0) or RSL (S_24>0)
             if (
@@ -1650,7 +1653,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 )
         elif classification == DubinsPath.Classification.CLASS_A32:
             # class a_32 (top. equiv. to a_32): optimal path is LSL
-            path = DubinsAirplaneStateSpace.dubinsLSL_fast(d, alpha, beta, sa, sb, ca, cb)
+            path = DubinsAirplaneStateSpace.dubinsLSL_fast(
+                d, alpha, beta, sa, sb, ca, cb
+            )
         elif classification == DubinsPath.Classification.CLASS_A33:
             # class a_33 (top. equiv. to a_33): depending on a, b, S^{1,2}_33,
             # optimal path is  RSR (alpha<beta && S^1_33<0) or LSR (alpha>beta && S^1_33>0)
@@ -1827,7 +1832,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     )
         elif classification == DubinsPath.Classification.CLASS_A44:
             # class a_44: optimal path is LSR
-            path = DubinsAirplaneStateSpace.dubinsLSR_fast(d, alpha, beta, sa, sb, ca, cb)
+            path = DubinsAirplaneStateSpace.dubinsLSR_fast(
+                d, alpha, beta, sa, sb, ca, cb
+            )
         else:
             raise RuntimeError(
                 f"default (a not in set{0,1,...,15}), path.a: {path.getClassification()} ,d: {d}"
