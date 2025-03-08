@@ -28,21 +28,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
-import pytest
-import sys
-
-from ompl import base as ob
-from ompl import geometric as og
-
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
-from terrain_nav_py.path_segment import PathSegment
+from terrain_nav_py.grid_map import GridMap
+
 from terrain_nav_py.path import Path
 
-from terrain_nav_py.terrain_ompl import GridMap
+from terrain_nav_py.terrain_map import TerrainMap
 
-from terrain_nav_py.terrain_ompl_rrt import TerrainMap
 from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 
 
