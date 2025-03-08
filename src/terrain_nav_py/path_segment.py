@@ -38,7 +38,6 @@ Generate paths for guided path navigation
 """
 
 import math
-from typing import Self
 
 # Use spatial objects defined in pymavlink
 from pymavlink.quaternion import Quaternion
