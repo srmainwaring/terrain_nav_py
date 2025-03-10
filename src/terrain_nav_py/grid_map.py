@@ -133,6 +133,8 @@ class GridMap:
 class GridMapSRTM(GridMap):
     """
     A GridMap using SRTM terrain data accessed using MAVProxy tools.
+
+    NOTE: the planner follows ROS conventions and must use ENU coordinates.
     """
 
     def __init__(self, home_lat, home_lon):
@@ -141,27 +143,54 @@ class GridMapSRTM(GridMap):
         self._home_lat = home_lat
         self._home_lon = home_lon
         self._grid_spacing = 30
-        self._grid_extent = 10000
+        self._grid_length = 10000
         self._terrain_source = "SRTM1"
         self._terrain_offline = False
         self._elevation_model = mp_elevation.ElevationModel(
             database=self._terrain_source, offline=self._terrain_offline
         )
 
-        # precalculated grid (for iteration)
-        self._x = np.arange(
-            -0.5 * self._grid_extent, 0.5 * self._grid_extent, self._grid_spacing
-        )
-        self._y = np.arange(
-            -0.5 * self._grid_extent, 0.5 * self._grid_extent, self._grid_spacing
-        )
+        # precalculated grid x: east, y: north
+        self._x = np.array([])
+        self._y = np.array([])
 
         # set super class properties
-        self._size = len(self._x) * len(self._y)
-        self._length = (self._grid_extent, self._grid_extent)
         self._position = (0.0, 0.0)
         self._distance_surface = 0.0
         self._max_elevation = 120.0
+
+        # ensure grid is updated
+        self._updateGrid()
+
+    def _updateGrid(self) -> None:
+        """
+        Internal method to update the precalculated grid positions
+        """
+        # update precalculated grid positions
+        self._x = np.arange(
+            -0.5 * self._grid_length, 0.5 * self._grid_length, self._grid_spacing
+        )
+        self._y = np.arange(
+            -0.5 * self._grid_length, 0.5 * self._grid_length, self._grid_spacing
+        )
+
+        # update super class properties
+        self._size = len(self._x) * len(self._y)
+        self._length = (self._grid_length, self._grid_length)
+
+    def setGridSpacing(self, value: float) -> None:
+        """
+        Set the grid spacing (m)
+        """
+        self._grid_spacing = value
+        self._updateGrid()
+
+    def setGridLength(self, value: float) -> None:
+        """
+        Set the grid length (m)
+        """
+        self._grid_length = value
+        self._updateGrid()
 
     def isInside(self, position: tuple[float, float]) -> bool:
         """
@@ -170,8 +199,8 @@ class GridMapSRTM(GridMap):
         x = position[0]
         y = position[1]
         is_valid = (
-            -0.5 * self._grid_extent <= x and x <= 0.5 * self._grid_extent
-        ) and (-0.5 * self._grid_extent <= y and y <= 0.5 * self._grid_extent)
+            -0.5 * self._grid_length <= x and x <= 0.5 * self._grid_length
+        ) and (-0.5 * self._grid_length <= y and y <= 0.5 * self._grid_length)
         return is_valid
 
     def atPosition(self, layer: str, position: tuple[float, float]) -> float:
@@ -179,8 +208,8 @@ class GridMapSRTM(GridMap):
         Get cell data at the
         Return the layer value at the given cartesian position.
         """
-        north = position[0]
-        east = position[1]
+        east = position[0]
+        north = position[1]
         (lat2, lon2) = (lat2, lon2) = mp_util.gps_offset(
             self._home_lat, self._home_lon, east, north
         )
