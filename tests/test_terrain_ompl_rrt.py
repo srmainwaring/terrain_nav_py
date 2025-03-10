@@ -49,14 +49,17 @@ def test_terrain_ompl_rrt():
     terrain_map.setGridMap(grid_map)
 
     # create planner
-    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.06)
+    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.15)
     planner = TerrainOmplRrt(da_space)
     planner.setMap(terrain_map)
     planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
 
-    # initialise from map
-    start_pos = [10.0, 20.0, 60.0]
-    goal_pos = [4200.0, -3000.0, 60.0]
+    # initialise from map (ENU)
+    start_pos = [20.0, 10.0, 60.0]
+    # goal_pos = [-3000.0, 4200.0, 60.0]
+    # goal_pos = [-1500.0, 2200.0, 60.0]
+    # goal_pos = [-4000.0, 100.0, 60.0]
+    goal_pos = [-4500.0, 4000.0, 60.0]
     loiter_radius = 40.0
     planner.setBoundsFromMap(terrain_map.getGridMap())
 
@@ -107,7 +110,9 @@ def test_terrain_ompl_rrt():
         print(f"states count: {len(states)}")
         # print(f"pos1: {pos1}, yaw1: {yaw1}")
         # print(f"pos2: {pos2}, yaw2: {yaw2}")
-        plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map)
+        plot_path(
+            start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map
+        )
 
 
 def plot_path(
@@ -148,6 +153,7 @@ def plot_path(
             plot_state(ax, state, f"state{i}")
 
     def plot_terrain(ax, grid_map):
+        # World frame is ENU, (x, y) = (east, north)
         length = grid_map.getLength()
         length_x = length[0]
         length_y = length[1]
@@ -158,10 +164,10 @@ def plot_path(
 
         def terrain_surface(x, y):
             alt = []
-            for east in y:
+            for north in y:
                 alt_y = []
-                for north in x:
-                    alt_y.append(grid_map.atPosition("elevation", (north, east)))
+                for east in x:
+                    alt_y.append(grid_map.atPosition("elevation", (east, north)))
                 alt.append(alt_y)
             return alt
 
@@ -176,10 +182,9 @@ def plot_path(
     ax.set_xlim(-5000.0, 5000.0)
     ax.set_ylim(-5000.0, 5000.0)
     ax.set_zlim(0.0, 500.0)
-    ax.set_xlabel("north (m)")
-    ax.set_ylabel("east (m)")
-    ax.set_title("Terrain Navigation, terrain source: SRTM1")
-    ax.invert_yaxis()
+    ax.set_xlabel("east (m)")
+    ax.set_ylabel("north (m)")
+    ax.set_title("Terrain Planner (source: SRTM1)")
 
     # start circle
     plot_circle(ax, start_pos, loiter_radius, "start")
@@ -198,6 +203,9 @@ def plot_path(
     # map
     if grid_map is not None:
         plot_terrain(ax, grid_map)
+        length = grid_map.getLength()
+        ax.set_xlim(-0.5 * length[0], 0.5 * length[0])
+        ax.set_ylim(-0.5 * length[1], 0.5 * length[1])
 
     plt.show()
 
