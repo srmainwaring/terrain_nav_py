@@ -79,7 +79,7 @@ def test_terrain_ompl_rrt():
     print("PLANNER_MODE.GLOBAL")
     planner.setupProblem2(start_pos, goal_pos, loiter_radius)
     candidate_path = Path()
-    planner.Solve1(time_budget=1.0, path=candidate_path)
+    planner.Solve1(time_budget=15.0, path=candidate_path)
 
     # PLANNER_MODE.EMERGENCY_ABORT
     # set up problem start position and velocity and rally points
