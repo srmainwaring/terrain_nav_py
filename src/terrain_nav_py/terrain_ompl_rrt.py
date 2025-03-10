@@ -670,8 +670,8 @@ class TerrainOmplRrt:
                     segment_progress = (
                         dubins_path.getSegmentLength(start_idx) / total_length
                     )
-                    # Read segment start and end statess
-                    TerrainOmplRrt.segmentStart2omplState(
+                    # Read segment start and end states
+                    TerrainOmplRrt.segmentStart2OmplState(
                         segmentStarts.segmentStarts[start_idx], segment_start_state
                     )
                     if (start_idx + 1) > (len(segmentStarts.segmentStarts) - 1):
@@ -681,7 +681,7 @@ class TerrainOmplRrt:
                     ) and dubins_path.getSegmentLength(start_idx + 1) == 0.0:
                         segment_end_state = to_state
                     else:
-                        TerrainOmplRrt.segmentStart2omplState(
+                        TerrainOmplRrt.segmentStart2OmplState(
                             segmentStarts.segmentStarts[start_idx + 1],
                             segment_end_state,
                         )
@@ -692,7 +692,6 @@ class TerrainOmplRrt:
                         self._problem_setup, dubins_path, start_idx
                     )
                     trajectory.flightpath_angle = dubins_path.getGamma()
-                    yaw = 0.0
                     track_progress = 0.0
                     t_samples = np.arange(progress, progress + segment_progress, dt)
                     for t in t_samples:
@@ -752,8 +751,8 @@ class TerrainOmplRrt:
 
         state_vector = path.getStates()
 
-        for state_ptr in state_vector:
-            position = TerrainOmplRrt.dubinsairplanePosition(state_ptr)
+        for state in state_vector:
+            position = TerrainOmplRrt.dubinsairplanePosition(state)
             trajectory_points.append(position)
 
         return trajectory_points
@@ -798,21 +797,21 @@ class TerrainOmplRrt:
         return self._solve_duration
 
     @staticmethod
-    def dubinsairplanePosition(state_ptr: ob.State) -> tuple[float, float, float]:
+    def dubinsairplanePosition(state: ob.State) -> tuple[float, float, float]:
         # TODO: test
-        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state_ptr)
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         position = (da_state.getX(), da_state.getY(), da_state.getZ())
         return position
 
     @staticmethod
-    def dubinsairplaneYaw(state_ptr: ob.State) -> float:
+    def dubinsairplaneYaw(state: ob.State) -> float:
         # TODO: test
-        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state_ptr)
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         yaw = da_state.getYaw()
         return yaw
 
     @staticmethod
-    def segmentStart2omplState(
+    def segmentStart2OmplState(
         start: DubinsAirplaneStateSpace.SegmentStarts.Start, state: ob.State
     ) -> None:
         # TODO: test

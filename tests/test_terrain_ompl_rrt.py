@@ -79,7 +79,7 @@ def test_terrain_ompl_rrt():
     print("PLANNER_MODE.GLOBAL")
     planner.setupProblem2(start_pos, goal_pos, loiter_radius)
     candidate_path = Path()
-    planner.Solve1(time_budget=1.0, path=candidate_path)
+    planner.Solve1(time_budget=15.0, path=candidate_path)
 
     # PLANNER_MODE.EMERGENCY_ABORT
     # set up problem start position and velocity and rally points
@@ -132,10 +132,38 @@ def plot_path(
     def plot_path(ax, path):
         position = path.position()
         position = np.array(position)
+        # check the state vector is not empty
+        if position.size == 0:
+            return
         x = position[:, 0]
         y = position[:, 1]
         z = position[:, 2]
         ax.scatter(x, y, z, linestyle="solid", marker=".", s=1, c="green")
+
+        # plot velocity vectors along the path
+        velocity = path.velocity()
+        velocity = np.array(velocity)
+
+        print(f"position.shape: {position.shape}")
+        print(f"velocity.shape: {velocity.shape}")
+
+        scale = 0.25 * loiter_radius
+        stride = 10
+        vx = velocity[:, 0]
+        vy = velocity[:, 1]
+        vz = velocity[:, 2]
+        u = scale * vx
+        v = scale * vy
+        w = vz
+        ax.quiver(
+            x[::stride],
+            y[::stride],
+            z[::stride],
+            u[::stride],
+            v[::stride],
+            w[::stride],
+            color="blue",
+        )
 
     def plot_state(ax, state, label=""):
         position = TerrainOmplRrt.dubinsairplanePosition(state)
@@ -145,8 +173,13 @@ def plot_path(
         z = position[2]
         ax.scatter(x, y, z, marker="v", s=48, c="red")
         ax.text(position[0], position[1], position[2], label)
-        # TODO: remove debug prints 
-        # print(position)
+
+        # plot tangent
+        scale = 0.5 * loiter_radius
+        u = scale * np.cos(yaw)
+        v = scale * np.sin(yaw)
+        w = 0.0
+        ax.quiver(x, y, z, u, v, w, color="red")
 
     def plot_states(ax, states):
         for i, state in enumerate(states):
@@ -172,8 +205,17 @@ def plot_path(
             return alt
 
         z_grid = np.array(terrain_surface(x, y))
-        # ax.contour(x_grid, y_grid, z_grid, levels=10)
-        ax.plot_wireframe(x_grid, y_grid, z_grid, linewidth=1, linestyle="solid", alpha=0.3, color="grey")
+        ax.contour(x_grid, y_grid, z_grid, levels=10, alpha=0.3)
+        ax.plot_wireframe(
+            x_grid,
+            y_grid,
+            z_grid,
+            linewidth=1,
+            linestyle="solid",
+            alpha=0.3,
+            color="grey",
+        )
+        # ax.plot_surface(x_grid, y_grid, z_grid, alpha=0.3, color="grey")
         # aspect ratio is 1:1:1 in data space
         ax.set_box_aspect((np.ptp(x_grid), np.ptp(y_grid), 5 * np.ptp(z_grid)))
 
@@ -193,8 +235,8 @@ def plot_path(
     plot_circle(ax, goal_pos, loiter_radius, "goal")
 
     # path
-    # if path is not None:
-    #     plot_path(ax, path)
+    if path is not None:
+        plot_path(ax, path)
 
     # states
     if states is not None:
