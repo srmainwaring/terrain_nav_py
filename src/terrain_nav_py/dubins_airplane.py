@@ -661,6 +661,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     dp, L, state1, state2
                 )
 
+                # TODO: prefer to not use the enum value
                 if dp.getIdx() < 4:
                     # CSC cases
                     # phi_i = t_min;
@@ -710,6 +711,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     # need to use dp.length_2d since length changed in line before!
 
         # CSC cases
+        # TODO: prefer to not use the enum value
         if dp.getIdx() < 4:
             self._csc_ctr += 1
         else:
@@ -1355,17 +1357,15 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
             # TODO: Check if that is necessary for the short path case or if
             # it can be moved inside the bracket of the long distance cases.
-            classification = self.classifyPath(alpha, beta)
-            # path.setClassification(classification)
-
             if self._enable_classification:
                 long_path_case = d > (
                     math.sqrt(4.0 - math.pow(ca + cb, 2.0))
                     + math.fabs(sa)
                     + math.fabs(sb)
                 )
-                # sufficient condition for optimality of CSC path type
+                # Sufficient condition for optimality of CSC path type
                 if long_path_case:
+                    classification = self.classifyPath(alpha, beta)
                     self._long_ctr += 1
                     path = self.calcDubPathWithClassification(
                         classification, d, alpha, beta, sa, sb, ca, cb
@@ -1597,9 +1597,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 path = DubinsAirplaneStateSpace.dubinsRSL_fast(
                     d, alpha, beta, sa, sb, ca, cb
                 )
-        elif (
-            classification == DubinsPath.Classification.CLASS_A23
-        ):  # class a_23: RSR is optimal
+        elif classification == DubinsPath.Classification.CLASS_A23:
+            # class a_23: RSR is optimal
             path = DubinsAirplaneStateSpace.dubinsRSR_fast(
                 d, alpha, beta, sa, sb, ca, cb
             )
