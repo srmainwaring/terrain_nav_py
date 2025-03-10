@@ -46,7 +46,7 @@ from enum import IntEnum
 
 class DubinsPath:
     """
-    Complete description of a (non-optimal) Dubins airplane path
+    Complete description of a (non-optimal) Dubins airplane path.
     """
 
     class DubinsPathSegmentType(IntEnum):
@@ -129,7 +129,7 @@ class DubinsPath:
 
     class Index(IntEnum):
         """
-        Type of the dubins path.
+        Type of the Dubins path.
         """
 
         TYPE_LSL = 0
@@ -222,32 +222,33 @@ class DubinsPath:
         """
         Constructor
 
-        :param t: length of first path segment of a 2D Dubins car path, defaults to 0.0
+        :param t: Length of first path segment of a 2D Dubins car path, defaults to 0.0
         :type t: float
-        :param p: length of second path segment of a 2D Dubins car path, defaults to NaN
+        :param p: Length of second path segment of a 2D Dubins car path, defaults to NaN
         :type p: float
-        :param q: length of third path segment of a 2D Dubins car path, defaults to 0.0
+        :param q: Length of third path segment of a 2D Dubins car path, defaults to 0.0
         :type q: float
         """
-        # DubinsPath.Index.TYPE_LRL
 
-        # Path segment types
+        # The path segment type
         self._type = DubinsPath.dubinsPathType[type]
 
         # On x-y plane projected path segment lengths, normalized by minimum
-        # radius rho_ ( (.)*rho_ gives length of projection of path segments
-        # in meters) length_[1,3,4]: length of 2D Dubins car path segments
-        # length_[0,5]: length of start/ end helix for optimality in high
-        # altitude case length_[2]: length of intermediate maneuver (at start)
-        # for optimality in intermediate altitude case
+        # radius `_rho`
+        # _rho            length of projection of path segments in meters
+        # _length[1,3,4]: length of 2D Dubins car path segments
+        # _length[0,5]:   length of start/ end helix for optimality in high
+        #                 altitude case
+        # _length[2]:     length of intermediate maneuver (at start) for
+        #                 optimality in intermediate altitude case
         self._length = [0.0, t, 0.0, p, q, 0.0]
 
-        # The 2D length of the curve based on the values in the length_ array.
+        # The 2D length of the curve based on the values in the _length array.
         self._length_2d: float = t + p + q
 
-        # Radius ratio (R_opt/rho_) for each segment.
-        # For high altitude case, the radius may be bigger than rho_ in order to
-        # guarantee optimal paths
+        # Radius ratio `(R_opt/_rho)`` for each segment.
+        # For high altitude case, the radius may be bigger than `_rho`
+        # in order to guarantee optimal paths
         self._radiusRatio = [r, r, r, r, r, r]
 
         # The inverse value of the radius ratio.
@@ -290,7 +291,7 @@ class DubinsPath:
             DubinsPath.Classification.NOT_ASSIGNED
         )
 
-        # Same information as in type_:
+        # Same information as in _type:
         #   0: LSL
         #   1: RSR
         #   2: RSL
@@ -302,89 +303,129 @@ class DubinsPath:
 
         # Altitude case of the path:
         #     low (0)
-        #     (medium (1), never appears for this state space)
+        #     medium (1) (never appears for this state space)
         #     high (2)
         #
         self._lmh: DubinsPath.AltitudeCase = DubinsPath.AltitudeCase.ALT_CASE_LOW
 
         # Indicates if the path consists of three parts (CCC and CSC) with a
-        # value of 0 or of four parts CCSC with a value of 1
+        # value of `False` or of four parts CCSC with a value of `True`
         self._additionalManeuver: bool = False
 
-        # True if an optimal path was found, false if no or a suboptimal path was found.
+        # `True` if an optimal path was found, `False` if no or a suboptimal path was found.
         self._foundOptimalPath: bool = True
 
     def length_2d(self) -> float:
         """
-        A function returning the length (normalized by minimum radius rho_) of the projection of the
-        3D (non-optimal) Dubins airplane path on the x-y plane of the world frame.
+        A function returning the length (normalized by minimum radius) of the
+        projection of the 3D (non-optimal) Dubins airplane path on the x-y plane
+        of the world frame.
+
+        :return: The projected 2D length
+        :rtype: float
         """
         return self._length_2d
 
     def length_3d(self) -> float:
         """
-        A function returning the length (normalized by minimum radius) of the 3D (non-optimal) Dubins airplane
-        path.
+        A function returning the length (normalized by minimum radius) of the
+        3D (non-optimal) Dubins airplane path.
+
+        :return: The 3D path length normalised by the minumum radius
+        :rtype: float
         """
         return self.length_2d() * self._one_div_cos_abs_gamma
 
     def getFoundOptimalPath(self) -> bool:
         """
-        Return foundOptimalPath_
+        Return whether this path is optimal.
+
+        :return: `True` if this is an optimal path
+        :rtype: bool
         """
         return self._foundOptimalPath
 
     def setFoundOptimalPath(self, found_optimal_path: bool) -> None:
         """
-        Set foundOptimalPath_
+        Set if this is an optimal path.
+
+        :param found_optimal_path: `True` if this is an optimal path
+        :type found_optimal_path: bool
         """
         self._foundOptimalPath = found_optimal_path
 
     def getAdditionalManeuver(self) -> bool:
         """
-        Return additionalManeuver_
+        Return whether this path includes an additional maneuver.
+
+        :return: `True` if the path includes an additional maneuver
+        :rtype: bool
         """
         return self._additionalManeuver
 
     def setAdditionalManeuver(self, additional_maneuver: bool) -> None:
         """
-        Set additionalManeuver_
+        Set whether an additional maneuver is included.
+
+        :param additional_maneuver: `True` if the path includes an additional maneuver
+        :type additional_maneuver: bool
         """
         self._additionalManeuver = additional_maneuver
 
     def getAltitudeCase(self) -> AltitudeCase:
         """
-        Return lmh_
+        Return the enum for the altitude case.
+
+        :return: The type of altitude case (Low, Medium, High)
+        :rtype: AltitudeCase:
         """
         return self._lmh
 
     def setAltitudeCase(self, altitude_case: AltitudeCase) -> None:
         """
-        Set lmh_
+        Set the enum for the altitude case.
+
+        :param altitude_case: The type of altitude case (Low, Medium, High)
+        :type altitude_case: AltitudeCase
         """
         self._lmh = altitude_case
 
     def getIdx(self) -> Index:
         """
-        Return idx_
+        Return the index of the Dubins path type.
+
+        :return: The index of the Dubins path type
+        :rtype: Index:
         """
         return self._idx
 
     def setClassification(self, classification: Classification) -> None:
         """
-        Set classification_
+        Set the Dubins airplane path classification.
+
+        :param classification: The Dubins airplane path classification
+        :type classification: Classification
         """
         self._classification = classification
 
     def getClassification(self) -> Classification:
         """
-        Return classification_
+        Return the Dubins airplane path classification.
+
+        :return: The Dubins airplane path classification
+        :rtype: Classification:
         """
         return self._classification
 
     def setStartHelix(self, num_helix: int, radius_ratio: float) -> None:
         """
-        Set a start helix with num_helix full circles and a radius ratio of radius_ratio.
+        Set a start helix with `num_helix` full circles and a
+        radius ratio of `radius_ratio`.
+
+        :param num_helix: The number of full circles in the helix
+        :type num_helix: int
+        :param radius_ratio: The helix radius ratio
+        :type radius_ratio: float
         """
         self._k_start = num_helix
         self._radiusRatio[0] = radius_ratio
@@ -401,7 +442,13 @@ class DubinsPath:
 
     def setEndHelix(self, num_helix: int, radius_ratio: float) -> None:
         """
-        Set a end helix with num_helix full circles and a radius ratio of radius_ratio.
+        Set an end helix with `num_helix` full circles and a
+        radius ratio of `radius_ratio`.
+
+        :param num_helix: The number of full circles in the helix
+        :type num_helix: int
+        :param radius_ratio: The helix radius ratio
+        :type radius_ratio: float
         """
         self._k_end = num_helix
         self._radiusRatio[5] = radius_ratio
@@ -418,38 +465,68 @@ class DubinsPath:
 
     def setGamma(self, gamma: float) -> None:
         """
-        Set gamma_
+        Set the flight path angle `gamma` in radians.
+
+        :param gamma: The flight path angle in radians
+        :type gamma: float
         """
         self._gamma = gamma
         self._one_div_cos_abs_gamma = 1.0 / math.cos(math.fabs(self._gamma))
 
     def getGamma(self) -> float:
         """
-        Return gamma_
+        Return `gamma`, the flight path angle.
+
+        :return: The flight path angle in radians
+        :rtype: float:
         """
         return self._gamma
 
     def getRadiusRatio(self, idx: int) -> float:
         """
-        Return radiusRatio_ of the corresponding index, the index must be between 0 and 5.
+        Return the radius ratio for the corresponding index,
+        the index must be between 0 and 5.
+
+        :param idx: The Dubins path index
+        :type idx: int
+        :return: The radius ratio for the corresponding index
+        :rtype: float:
         """
         return self._radiusRatio[idx]
 
     def getInverseRadiusRatio(self, idx: int) -> float:
         """
-        Return radiusRatioInverse_ of the corresponding index, the index must be between 0 and 5.
+        Return the inverse of the radius ratio for the corresponding index,
+        the index must be between 0 and 5.
+
+        :param idx: The Dubins path index
+        :type idx: int
+        :return: The inverse radius ratio for the corresponding index
+        :rtype: float:
         """
         return self._radiusRatioInverse[idx]
 
     def getSegmentLength(self, idx: int) -> float:
         """
-        Return length_ of the corresponding index, the index must be between 0 and 5.
+        Return the length of segment for the corresponding index,
+        the index must be between 0 and 5.
+
+        :param idx: The index of the segment
+        :type idx:
+        :return: The segment length
+        :rtype: float
         """
         return self._length[idx]
 
     def setSegmentLength(self, length: float, idx: int) -> None:
         """
-        Set length_ of the corresponding index, the index must be between 0 and 5.
+        Set the length of the segment at the corresponding index,
+        the index must be between 0 and 5.
+
+        :param length: The length of the segment
+        :type float:
+        :param idx: The index of the segment
+        :type int:
         """
         self._length[idx] = length
         self._length_2D = (
@@ -463,6 +540,9 @@ class DubinsPath:
 
     def getType(self) -> DubinsPathSegmentType:
         """
-        Return type_
+        Return the Dubins path segment type.
+
+        :return: Dubins path segment type
+        :rtype: DubinsPathSegmentType
         """
         return self._type
