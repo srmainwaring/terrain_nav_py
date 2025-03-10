@@ -150,31 +150,28 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         Constructor
 
-        :param t: length of first path segment of a 2D Dubins car path, defaults to 0.0
-        :type t: float
-
         :param turningRadius: The minimal turning radius of the airplane, defaults to 66.66667
         :type turningRadius: float
         :param gam: The maximum climb angle of the airplane, defaults to 0.15
         :type gam: float
-        :param useEuclDist: If true the euclidian distance is used, else the dubins airplane distance, defaults to False
+        :param useEuclDist: If true the euclidian distance is used, else the Dubins airplane distance, defaults to False
         :type useEuclDist: float
         """
         super().__init__()
 
         # Threshold for the maximum allowed squared distance to goal.
-        # Used for the computation of the dubins path in the wind where the
+        # Used for the computation of the Dubins path in the wind where the
         # optimal path is determined iteratively.
         #
-        # NOTE: A too low number might lead to slow computation of the dubins path.
+        # NOTE: A too low number might lead to slow computation of the Dubins path.
         #
         self.THRESHOLD_DISTANCE_GOAL_SQUARED: float = math.sqrt(3.0)
 
-        # Maximum number of allowed iterations in the dubins path
+        # Maximum number of allowed iterations in the Dubins path
         # computation with wind.
         #
         # NOTE: A too low number speeds up the computation in general but leads
-        #       to more failed attemps of dubins path computation.
+        #       to more failed attemps of Dubins path computation.
         #   */
         self.MAX_ITER: int = 12
 
@@ -204,7 +201,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # Use optimal State Space. Optimal State Space is not working properly yet
         self._optimalStSp: bool = False
 
-        # Print a error message if the dubins path with wind failed to compute
+        # Print a error message if the Dubins path with wind failed to compute
         # a multiple of dubinsWindPrintXthError times.
         self._dubinsWindPrintXthError: int = 1000000
 
@@ -235,21 +232,21 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         #  Number of cases a short type path is computed as the optimal path between two states.
         self._short_ctr: int = 0
 
-        # Number of times the computation of a dubins path with wind failed.
+        # Number of times the computation of a Dubins path with wind failed.
         # NOTE: Just used for testing/debugging.
         self._dp_failed_ctr: int = 0
 
-        # Number of times the computation of a dubins path with wind failed because of too strong
+        # Number of times the computation of a Dubins path with wind failed because of too strong
         # wind in xy direction.
         # NOTE: Just used for testing/debugging.
         self._dp_failed_xy_wind_ctr: int = 0
 
-        # Number of times the computation of a dubins path with wind failed because of too strong
+        # Number of times the computation of a Dubins path with wind failed because of too strong
         # wind in z direction.
         # NOTE: Just used for testing/debugging.
         self._dp_failed_z_wind_ctr: int = 0
 
-        # Number of times the computation of a dubins path with wind was successful.
+        # Number of times the computation of a Dubins path with wind was successful.
         # NOTE: Just used for testing/debugging.
         self._dp_success_ctr: int = 0
 
@@ -307,7 +304,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     #
     class DubinsAirplaneState:
         """
-        The state in the DA2 state space, consisting of
+        The state in the Dubins airplane state space,
+        comprising RE(3) x SO(2) sub states.
         """
 
         def __init__(self, state: ob.State):
@@ -445,34 +443,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             )
             return msg
 
-        #   /** \brief getPosValuePointer
-        #     * Get a pointer to the position values.
-        #     */
-        #   const double* getPosValuePointer() const;
-
-        #   /** \brief printState
-        #     * Print the state together with a message.
-        #     */
-        #   void printState(const std::string& msg = "") const;
-        # };
-
-    # struct SegmentStarts {
-    #   struct Start {
-    #     double x;
-    #     double y;
-    #     double z;
-    #     double yaw;
-    #     Start() : x(0.0), y(0.0), z(0.0), yaw(0.0) {}
-    #     Start(const Start& that) : x(that.x), y(that.y), z(that.z), yaw(that.yaw) {}
-    #   };
-    #
-    #   std::array<Start, 6> segmentStarts;
-    #   SegmentStarts() : segmentStarts{{Start(), Start(), Start(), Start(), Start(), Start()}} {}
-    #   SegmentStarts(const SegmentStarts& that) : segmentStarts(that.segmentStarts) {}
-    # };
+    # TODO: is a custom copy method required?
     class SegmentStarts:
         """
-        Struct to store the segment starts of a dubins path.
+        Struct to store the segment starts of a Dubins path.
         """
 
         class Start:
@@ -534,7 +508,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         Count how many segments of the "longest valid length" fit on the motion from state1 to state2.
 
-        Used to determine the number of states for collision detection. Always returns the dubins airplane
+        Used to determine the number of states for collision detection. Always returns the Dubins airplane
         distance even though useEuclideanDistance == true.
         """
         # TODO: test
@@ -550,7 +524,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     math.ceil(dist / longestValidSegment_)
                 )
         else:
-            #  still compute the dubins airplane distance.
+            #  still compute the Dubins airplane distance.
             self._useEuclideanDistance = False
             nd = longestValidSegmentCountFactor_ * int(
                 math.ceil(self.distance(state1, state2) / longestValidSegment_)
@@ -572,7 +546,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
     def euclidean_distance(self, state1: ob.State, state2: ob.State) -> float:
         """
-        Returns distance with is an approximation to the dubins airplane path between \a state1 and \a state2.
+        Returns distance with is an approximation to the Dubins airplane path between \a state1 and \a state2.
         """
         # TODO: test
         # TODO: coerce state correctly
@@ -609,7 +583,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         :param state1: Start state
         :param state2: Goal state
-        :return dp: Computed dubins path.
+        :return: Calculated Dubins path
+        :rtype: DubinsPath
         """
         # TODO: test
         # print(f"[DubinsAirplaneStateSpace] dubins2")
@@ -671,7 +646,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         else:
             # medium altitude
-
             dp.setAltitudeCase(DubinsPath.AltitudeCase.ALT_CASE_MEDIUM)
 
             if self._optimalStSp:
@@ -683,7 +657,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 # tuple[3] -> p_min
                 # tuple[4] -> q_min
                 # tuple[5] -> L_2D
-
                 (rho, foundSol, t_min, p_min, q_min, L_2D) = self.additionalManeuver(
                     dp, L, state1, state2
                 )
@@ -749,12 +722,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, from_state: ob.State, to_state: ob.State, t: float
     ) -> ob.State:
         """
-        Calculates the state in between from and to after a fraction of t of the length of the path
+        Calculates the state in between `from_state` and `to_state` after
+        a fraction of `t` of the length of the path.
 
-        :param from_state: Start state.
-        :param to_state: End state.
-        :param t: Fraction of the length of the path.
-        :return state: The interpolated state.
+        :param from_state: Start state
+        :param to_state: End state
+        :param t: Fraction of the length of the path
+        :return: The interpolated state
+        :rtype: ompl.base.State
         """
         # TODO: test
         firstTime = True
@@ -781,11 +756,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         :param from: Start state
         :param to: End state
-        :param t: Fraction of the length of the path.
+        :param t: Fraction of the length of the path
         :param firstTime: Indicates if the interpolation is done the first time for this path
-        :return path: The computed path between start and end state.
-        :return segmentStarts: The computed segment starts of the dubins path.
-        :return state: The interpolated state.
+        :return: The computed path between start and end state
+        :rtype: DubinsPath
+        :return: The computed segment starts of the Dubins path
+        :rtype: SegmentStarts
+        :return: The interpolated state
+        :rtype: ompl.base.State
         """
         # TODO: test
 
@@ -796,7 +774,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             # compute the segment starts
             segmentStarts = self.calculateSegmentStarts(from_state, path)
 
-            #  this must be after the computation of the dubins path
+            #  this must be after the computation of the Dubins path
             # (otherwise a state of an invalid path is returned.
             if t >= 1.0:
                 if to_state != state:
@@ -821,13 +799,18 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, path: DubinsPath, segmentStarts: SegmentStarts, t: float
     ) -> ob.State:
         """
-        Calculates the state in between from_state and to_state after a fraction
-        of t of the length of the known (non-optimal) Dubins airplane path path.
+        Calculates the state in between `from_state` and `to_state` after
+        a fraction of `t` of the length of the known (non-optimal)
+        Dubins airplane path path.
 
-        :param path: Known dubins airplane path.
-        :param[in] segmentStarts: Known starts of the segments of the dubins airplane path.
-        :param[in] t: Fraction of the length of the path.
-        :return state: Interpolated state.
+        :param path: Known Dubins airplane path
+        :type path: DubinsPath
+        :param segmentStarts: Known starts of the segments of the Dubins airplane path
+        :type segmentStarts: SegmentStarts
+        :param t: Fraction of the length of the path
+        :type t: float
+        :return: Interpolated state
+        :rtype: ompl.base.State
         """
         # TODO: test
         # print(f"[DubinsAirplaneStateSpace] interpolate")
@@ -1002,24 +985,22 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace::interpolate3"
         )
 
-    # void calculateSegments(const ob::State* from, const ob::State* to, DubinsPath& path,
-    #                         SegmentStarts& segmentStarts) const;
     def calculateSegments(
         self, from_state: ob.State, to_state: ob.State
     ) -> tuple[DubinsPath, SegmentStarts]:
         """
-        Calculates the state in between from and to after a fraction of t of the length of the path.
-
-        This function is called by interpolate(from_state, to_state, t) and is
-        used in the DubinsMotionValidator for more efficient state validation
+        Calculates the state in between `from_state` and `to_state` after
+        a fraction of `t` of the length of the path.
 
         :param from_state: Start state
         :param to_state: End state
-        :returns path: The computed path between start and end state.
-        :returns segmentStarts: The computed segment starts of the dubins path.
+        :return: The computed path between start and end state
+        :rtype: DubinsPath
+        :return: The computed segment starts of the Dubins path
+        :rtype: SegmentStarts
         """
         # TODO: test
-        #  compute the path if interpolate is called the first time.
+        #  compute the path
         path = self.dubins2(from_state, to_state)
         #  compute the segment starts
         segmentStarts = self.calculateSegmentStarts(from_state, path)
@@ -1102,7 +1083,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
     def setEnableSetClassification(self, enable: bool) -> None:
         """
-        Set enable set of the dubins set classification
+        Set `True` to use Dubins set classification.
         """
         # TODO: test
         self._enable_classification = enable
@@ -1123,26 +1104,26 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
     def setUseOptStSp(self, useOptStSp: bool) -> None:
         """
-        Set the value of optimalStSp which defines whether the optimal dubins airplane
-        path are computed or the suboptimal ones.
+        Set the value of optimalStSp which defines whether the optimal
+        Dubins airplane paths are computed or the suboptimal ones.
 
-        NOTE: The optimal dubins airplane paths do not work at the moment.
+        NOTE: The optimal Dubins airplane paths do not work at the moment.
         """
         # TODO: test
         self._optimalStSp = useOptStSp
 
     def setUseEuclideanDistance(self, useEuclDist: bool) -> None:
         """
-        Set the value of useEuclideanDistance which defines whether the euclidean distance
-        is computed or the dubins airplane distance.
+        Set `True` to use the euclidean distance instead of the
+        Dubins airplane distance.
         """
         # TODO: test
         self._useEuclideanDistance = useEuclDist
 
     def getUseEuclideanDistance(self) -> bool:
         """
-        Return if the euclidean distance is computed instead of the
-        dubins airplane distance (useEuclideanDistance_).
+        Return `True` if the euclidean distance is computed instead of the
+        Dubins airplane distance.
         """
         # TODO: test
         return self._useEuclideanDistance
@@ -1336,37 +1317,37 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # assert(i < 6 and "In convert_idx, i > 5")
         if i == 0:  # start helix
             return 0
-        elif i == 1:  # first dubins segment
-            # intermediate maneuver, return same direction as first dubins segment before
+        elif i == 1:  # first Dubins segment
+            # intermediate maneuver, return same direction as first Dubins segment before
             # In interpolate function, will handle this and turn the other way.
             return 0
         elif i == 2:
             return 0
-        elif i == 3:  # second dubins segment
+        elif i == 3:  # second Dubins segment
             return 1
-        else:  # third dubins segment and end helix
+        else:  # third Dubins segment and end helix
             return 2
 
     def dubins1(self, d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the 2D dubins path using path classification for the long distance case and
-        no classification for the short distance case.
+        Compute the 2D Dubins path using path classification for the
+        long distance case and no classification for the short distance case.
 
         :param d: euclidean distance between start and goal state
+        :type d: float
         :param alpha: Corrected heading of the start state
+        :type alpha: float
         :param beta: Corrected heading of the goal state
-        :return path: The computed dubins path.
+        :type beta: float
+        :return: The calculated Dubins path
+        :rtype: DubinsPath
         """
         # TODO: test
-        # TODO: reorganise early returns?
         # print(f"[DubinsAirplaneStateSpace] dubins1")
-
         if d < DUBINS_EPS and math.fabs(alpha - beta) < DUBINS_EPS:
             path = DubinsPath(DubinsPath.Index.TYPE_LSL, 0.0, d, 0.0)
             return path
         else:
-            # path = DubinsPath()
-
             sa = math.sin(alpha)
             sb = math.sin(beta)
             ca = math.cos(alpha)
@@ -1407,19 +1388,20 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> DubinsPath:
         """
-        Compute the dubins airplane path with path classification.
+        Compute the Dubins airplane path with path classification.
 
         TODO Currently, classifies only samples that far enough from each other
             ("long paths")! Does not work properly when OPTIMAL Dubins AIRPLANE
             State Space is used! For intermediate case, there are cases
-            with d > ... and still CCC may be optimal (not 100% sure) Bigger parts of work:
+            with d > ... and still CCC may be optimal (not 100% sure)
+            Bigger parts of work:
               - Implement classification for short path case
                 (see "Classification of the Dubins set, Shkel & Lumelsky, 2001)
               - Implement fast and fully optimal Dubins state space.
-                Note that classification of the Dubins set will not be
-        correct anymore for some cases.
+            Note that classification of the Dubins set will not be
+            correct anymore for some cases.
 
-        :param classification: the dubins path classification
+        :param classification: the Dubins path classification
         :param d: euclidean distance between start and goal state
         :param alpha: Corrected heading of the start state
         :param beta: Corrected heading of the goal state
@@ -1427,7 +1409,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param sb: Precomputed sin(beta)
         :param ca: Precomputed cos(alpha)
         :param cb: Precomputed cos(beta)
-        :return path: The computed dubins path.
+        :return: The calculated Dubins path
+        :rtype: DubinsPath
         """
         # TODO: test
         # print(f"[DubinsAirplaneStateSpace] calcDubPathWithClassification")
@@ -1854,12 +1837,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> DubinsPath:
         """
-        Compute the dubins airplane path without path classification.
+        Compute the Dubins airplane path without path classification.
 
         That means computing the paths for all six cases and returning the shortest
         path. Slower than calcDubPathWithClassification.
 
-        :param path: The computed dubins path.
+        :param path: The computed Dubins path.
         :param d: euclidean distance between start and goal state
         :param alpha: Corrected heading of the start state
         :param beta: Corrected heading of the goal state
@@ -1920,7 +1903,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         airplane path are possible!
         TODO: fix this function
 
-        :return tuple[float, bool, float, float, float, float]: (rho, foundSol, t_min, p_min, q_min, L_2D)
+        :return: (rho, foundSol, t_min, p_min, q_min, L_2D)
+        :rtype: tuple[float, bool, float, float, float, float]
         """
         # TODO: test
         print(f"[DubinsAirplaneStateSpace] additionalManeuver")
@@ -1978,7 +1962,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # seperate by path case
         path_type = dp.getIdx()
         if path_type == DubinsPath.Index.TYPE_LSL:
-            # The sub-optimal 2D dubins path is LSL so the optimal path is L + RSL
+            # The sub-optimal 2D Dubins path is LSL so the optimal path is L + RSL
             for phi in np.arange(0.0, twopi, step):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
@@ -2011,7 +1995,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     q_min = dp_tmp.getSegmentLength(4)
             return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
         elif path_type == DubinsPath.TYPE_RSR:
-            # The 2D dubins path is RSR so the optimal 3D path is R + LSR
+            # The 2D Dubins path is RSR so the optimal 3D path is R + LSR
             for phi in np.arange(0.0, twopi, step):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
@@ -2044,7 +2028,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     q_min = dp_tmp.getSegmentLength(4)
             return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
         elif path_type == DubinsPath.TYPE_RSL:
-            # The 2D dubins path is RSL so the optimal 3D path is R + LSL
+            # The 2D Dubins path is RSL so the optimal 3D path is R + LSL
             for phi in np.arange(0.0, twopi, step):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
@@ -2078,7 +2062,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     q_min = dp_tmp.getSegmentLength(4)
             return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
         elif path_type == DubinsPath.TYPE_LSR:
-            # The 2D dubins path is LSR so the optimal 3D path is L + RSR
+            # The 2D Dubins path is LSR so the optimal 3D path is L + RSR
             for phi in np.arange(0.0, twopi, step):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
@@ -2202,11 +2186,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         fraction of t of the length of the known (non-optimal) Dubins airplane
         path with wind.
 
-        :param from: Start state of the path.
-        :param path: Known dubins airplane path.
-        :param segmentStarts: Known starts of the segments of the dubins airplane path.
-        :param t: Fraction of the length of the path.
-        :return state: Interpolated state.
+        :param from: Start state of the path
+        :param path: Known Dubins airplane path
+        :param segmentStarts: Known starts of the segments of the Dubins airplane path
+        :param t: Fraction of the length of the path
+        :return: Interpolated state
+        :rtype: ompl.base.State
         """
         # TODO: test
         print(f"[DubinsAirplaneStateSpace] interpolateWithWind")
@@ -2218,9 +2203,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         """
         Calculates the segment starts of the input
 
-        :param from: Start state of the path.
-        :param path: Known dubins airplane path.
-        :returns segmentStarts: Computed starts of the segments of the dubins airplane path.
+        :param from: Start state of the path
+        :param path: Known Dubins airplane path
+        :return: Computed starts of the segments of the Dubins airplane path.
+        :rtype: SegmentStarts
         """
         # TODO: test
         # print(f"[DubinsAirplaneStateSpace] calculateSegmentStarts")
@@ -2370,7 +2356,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     )
                 else:
                     raise RuntimeError(
-                        "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace::calculateSegmentStarts"
+                        "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace.calculateSegmentStarts"
                     )
         return segmentStarts
 
@@ -2427,7 +2413,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
@@ -2446,7 +2432,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
@@ -2463,7 +2449,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = -2.0 + d * d + 2.0 * (ca * cb + sa * sb + d * (sa + sb))
@@ -2482,7 +2468,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
@@ -2501,7 +2487,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
@@ -2518,7 +2504,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = d * d - 2.0 + 2.0 * (ca * cb + sa * sb - d * (sa + sb))
@@ -2537,7 +2523,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         theta = math.atan2(ca - cb, d - sa + sb)
@@ -2554,7 +2540,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sb - sa))
@@ -2571,7 +2557,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         theta = math.atan2(ca - cb, d - sa + sb)
@@ -2588,7 +2574,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         theta = math.atan2(cb - ca, d + sa - sb)
@@ -2605,7 +2591,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         tmp = 2.0 + d * d - 2.0 * (ca * cb + sa * sb - d * (sa - sb))
@@ -2622,7 +2608,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         cb: float,
     ) -> float:
         """
-        Function to compute a value for classifying the dubins curve.
+        Function to compute a value for classifying the Dubins curve.
         """
         # TODO: test
         theta = math.atan2(cb - ca, d + sa - sb)
@@ -2631,7 +2617,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     @staticmethod
     def dubinsLSL(d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the dubins LSL path.
+        Compute the Dubins LSL path.
         """
         # TODO: test
         ca = math.cos(alpha)
@@ -2669,7 +2655,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     @staticmethod
     def dubinsRSR(d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the dubins RSR path.
+        Compute the Dubins RSR path.
         """
         # TODO: test
         ca = math.cos(alpha)
@@ -2707,7 +2693,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     @staticmethod
     def dubinsRSL(d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the dubins RSL path.
+        Compute the Dubins RSL path.
         """
         # TODO: test
         ca = math.cos(alpha)
@@ -2745,7 +2731,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     @staticmethod
     def dubinsLSR(d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the dubins LSR path.
+        Compute the Dubins LSR path.
         """
         # TODO: test
         ca = math.cos(alpha)
@@ -2783,7 +2769,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     @staticmethod
     def dubinsRLR(d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the dubins RLR path.
+        Compute the Dubins RLR path.
         """
         # TODO: test
         ca = math.cos(alpha)
@@ -2821,7 +2807,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
     @staticmethod
     def dubinsLRL(d: float, alpha: float, beta: float) -> DubinsPath:
         """
-        Compute the dubins LRL path.
+        Compute the Dubins LRL path.
         """
         # TODO: test
         ca = math.cos(alpha)
