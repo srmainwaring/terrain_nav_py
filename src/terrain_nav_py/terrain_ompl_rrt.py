@@ -269,7 +269,7 @@ class TerrainOmplRrt:
 
         print(f"[TerrainOmplRrt] get planner from problem")
         planner = self._problem_setup.getPlanner()
-        print(f"[TerrainOmplRrt] type(planner): {type(planner)}")
+        # print(f"[TerrainOmplRrt] type(planner): {type(planner)}")
         print(f"[TerrainOmplRrt] planner range: {planner.getRange()}")
 
     # setup using start position and velocity and goal position and loiter radius
@@ -630,38 +630,33 @@ class TerrainOmplRrt:
     ) -> None:
         # TODO: test
         print(f"[TerrainOmplRrt] convert solution path to Path")
-        # trajectory_segments.segments.clear()
         trajectory_segments.reset_segments()
 
         state_vector = path.getStates()
 
-        # for (size_t idx = 0; idx < state_vector.size() - 1; idx++) {
         for idx in range(len(state_vector) - 1):
-            from_state = state_vector[idx]  # Start of the segment
-            to_state = state_vector[idx + 1]  # End of the segment
+            # start and end of current segment
+            from_state = state_vector[idx]
+            to_state = state_vector[idx + 1]
+
+            # state space
             da_space = self._problem_setup.getStateSpace()
 
-            print(
-                f"[TerrainOmplRrt] from_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)}"
-            )
-            print(
-                f"[TerrainOmplRrt] to_state:   {DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)}"
-            )
+            # TODO: remove debug prints
+            debug_print = True
+            if debug_print:
+                da_from_state = DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)
+                da_to_state = DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)
+                print(f"[TerrainOmplRrt] from_state: {da_from_state}")
+                print(f"[TerrainOmplRrt] to_state:   {da_to_state}")
 
-            # TODO: see if pass-by-reference semantics works (better?)
-            # dubins_path = DubinsPath()
-            # da_space.dubins2(from_state, to_state, dubins_path)
-            dubins_path = da_space.dubins2(from_state, to_state)
-
-            # TODO: see if pass-by-reference semantics works (better?)
-            # segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
-            # da_space.calculateSegments(from_state, to_state, dubins_path, segmentStarts)
+            # NOTE: do not need to calculate the Dubins paths here
+            #       as calculateSegments also calls dubins2
+            # dubins_path = da_space.dubins2(from_state, to_state)
             (dubins_path, segmentStarts) = da_space.calculateSegments(
                 from_state, to_state
             )
 
-            # segment_start_state: ob.State = self._problem_setup.getStateSpace()->allocState();
-            # segment_end_state: ob.State = self._problem_setup.getStateSpace()->allocState();
             segment_start_state = ob.State(da_space)
             segment_end_state = ob.State(da_space)
 
@@ -670,7 +665,6 @@ class TerrainOmplRrt:
 
             dt = resolution / total_length
             progress = 0.0
-            # for (size_t start_idx = 0; start_idx < segmentStarts.segmentStarts.size(); start_idx++) {
             for start_idx in range(len(segmentStarts.segmentStarts)):
                 if dubins_path.getSegmentLength(start_idx) > 0.0:
                     segment_progress = (
@@ -697,17 +691,12 @@ class TerrainOmplRrt:
                     trajectory.curvature = self.getSegmentCurvature(
                         self._problem_setup, dubins_path, start_idx
                     )
-                    # ompl::base::State* state = self._problem_setup.getStateSpace()->allocState()
-                    state = ob.State(da_space)
                     trajectory.flightpath_angle = dubins_path.getGamma()
                     yaw = 0.0
                     track_progress = 0.0
                     t_samples = np.arange(progress, progress + segment_progress, dt)
-                    # for (double t = progress; t <= progress + segment_progress; t = t + dt):
                     for t in t_samples:
                         segment_state = path_segment.State()
-                        # self._problem_setup.getStateSpace()->as<fw_planning::spaces::DubinsAirplaneStateSpace>()->interpolate(
-                        #     dubins_path, segmentStarts, t, state)
                         state = da_space.interpolate3(dubins_path, segmentStarts, t)
 
                         position = TerrainOmplRrt.dubinsairplanePosition(state)
@@ -721,8 +710,6 @@ class TerrainOmplRrt:
                             0.0,
                             math.sin(yaw / 2.0),
                         )
-                        # TODO: original accesses internal property directly
-                        # trajectory.states.append(segment_state)
                         trajectory.append_state(segment_state)
                         track_progress = t
 
@@ -746,13 +733,11 @@ class TerrainOmplRrt:
                             0.0,
                             math.sin(end_yaw / 2.0),
                         )
-                        # TODO: original accesses internal property
                         trajectory.append_state(end_state)
 
                     progress = track_progress
                     # Do not append trajectory if the segment is too short
                     if trajectory.state_count() > 1:
-                        # TODO: original accesses internal property
                         trajectory_segments.append_segment(trajectory)
 
     def solutionPathToTrajectoryPoints(

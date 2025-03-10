@@ -64,6 +64,13 @@ def test_terrain_ompl_rrt():
     start_pos[2] += grid_map.atPosition("elevation", start_pos)
     goal_pos[2] += grid_map.atPosition("elevation", goal_pos)
 
+    # TODO: check the start and goal states are valid. This requires a
+    #       correctly calculated distance surface: a surface where at each
+    # point a circle of radius r will not intersect with the elevation layer.
+
+    # NOTE: if the time budget is insufficient, the solution tree may not
+    #       include a goal state, and an approximate solution will be found.
+
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
     print("PLANNER_MODE.GLOBAL")
