@@ -203,9 +203,9 @@ class TerrainOmplRrt:
             )
             start_ompl.setZ(start_pos[2])
             start_yaw = (
-                theta - 2.0 * math.pi
+                theta - 0.5 * math.pi
                 if start_loiter_radius > 0.0
-                else theta + 2.0 * math.pi
+                else theta + 0.5 * math.pi
             )
             start_yaw = wrap_pi(start_yaw)
             start_ompl.setYaw(start_yaw)
@@ -229,13 +229,13 @@ class TerrainOmplRrt:
             goal_ompl.setX(goal[0] + radius * math.cos(theta))
             goal_ompl.setY(goal[1] + radius * math.sin(theta))
             goal_ompl.setZ(goal[2])
-            goal_yaw = theta + 2.0 * math.pi
+            goal_yaw = theta + 0.5 * math.pi
             goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
             # TODO scoped vs abstract state
             # self._goal_states.addState(goal_ompl)
             self._goal_states.addState(goal_state)
-            goal_yaw = theta - 2.0 * math.pi
+            goal_yaw = theta - 0.5 * math.pi
             goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
             # Add additional state for bidirectional tangents
@@ -328,13 +328,13 @@ class TerrainOmplRrt:
             goal_ompl.setX(goal[0] + radius * math.cos(theta))
             goal_ompl.setY(goal[1] + radius * math.sin(theta))
             goal_ompl.setZ(goal[2])
-            goal_yaw = theta + 2.0 * math.pi
+            goal_yaw = theta + 0.5 * math.pi
             goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
             # TODO scoped vs abstract state
             # self._goal_states.addState(goal_ompl)
             self._goal_states.addState(goal_state)
-            goal_yaw = theta - 2.0 * math.pi
+            goal_yaw = theta - 0.5 * math.pi
             goal_yaw = wrap_pi(goal_yaw)
             goal_ompl.setYaw(goal_yaw)
             # Add additional state for bidirectional tangents
@@ -404,13 +404,13 @@ class TerrainOmplRrt:
                 goal_ompl.setX(goal[0] + radius * math.cos(theta))
                 goal_ompl.setY(goal[1] + radius * math.sin(theta))
                 goal_ompl.setZ(goal[2])
-                goal_yaw = theta + 2.0 * math.pi
+                goal_yaw = theta + 0.5 * math.pi
                 goal_yaw = wrap_pi(goal_yaw)
                 goal_ompl.setYaw(goal_yaw)
                 # TODO scoped vs abstract state
                 # self._goal_states.addState(goal_ompl)
                 self._goal_states.addState(goal_state)
-                goal_yaw = theta - 2.0 * math.pi
+                goal_yaw = theta - 0.5 * math.pi
                 goal_yaw = wrap_pi(goal_yaw)
                 goal_ompl.setYaw(goal_yaw)
                 # Add additional state for bidirectional tangents
