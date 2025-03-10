@@ -132,6 +132,9 @@ def plot_path(
     def plot_path(ax, path):
         position = path.position()
         position = np.array(position)
+        # check the state vector is not empty
+        if position.size == 0:
+            return
         x = position[:, 0]
         y = position[:, 1]
         z = position[:, 2]
@@ -145,8 +148,6 @@ def plot_path(
         z = position[2]
         ax.scatter(x, y, z, marker="v", s=48, c="red")
         ax.text(position[0], position[1], position[2], label)
-        # TODO: remove debug prints 
-        # print(position)
 
     def plot_states(ax, states):
         for i, state in enumerate(states):
@@ -172,8 +173,17 @@ def plot_path(
             return alt
 
         z_grid = np.array(terrain_surface(x, y))
-        # ax.contour(x_grid, y_grid, z_grid, levels=10)
-        ax.plot_wireframe(x_grid, y_grid, z_grid, linewidth=1, linestyle="solid", alpha=0.3, color="grey")
+        ax.contour(x_grid, y_grid, z_grid, levels=10, alpha=0.3)
+        ax.plot_wireframe(
+            x_grid,
+            y_grid,
+            z_grid,
+            linewidth=1,
+            linestyle="solid",
+            alpha=0.3,
+            color="grey",
+        )
+        # ax.plot_surface(x_grid, y_grid, z_grid, alpha=0.3, color="grey")
         # aspect ratio is 1:1:1 in data space
         ax.set_box_aspect((np.ptp(x_grid), np.ptp(y_grid), 5 * np.ptp(z_grid)))
 
@@ -193,8 +203,8 @@ def plot_path(
     plot_circle(ax, goal_pos, loiter_radius, "goal")
 
     # path
-    # if path is not None:
-    #     plot_path(ax, path)
+    if path is not None:
+        plot_path(ax, path)
 
     # states
     if states is not None:
