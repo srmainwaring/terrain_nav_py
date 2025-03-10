@@ -140,6 +140,31 @@ def plot_path(
         z = position[:, 2]
         ax.scatter(x, y, z, linestyle="solid", marker=".", s=1, c="green")
 
+        # plot velocity vectors along the path
+        velocity = path.velocity()
+        velocity = np.array(velocity)
+
+        print(f"position.shape: {position.shape}")
+        print(f"velocity.shape: {velocity.shape}")
+
+        scale = 0.25 * loiter_radius
+        stride = 10
+        vx = velocity[:, 0]
+        vy = velocity[:, 1]
+        vz = velocity[:, 2]
+        u = scale * vx
+        v = scale * vy
+        w = vz
+        ax.quiver(
+            x[::stride],
+            y[::stride],
+            z[::stride],
+            u[::stride],
+            v[::stride],
+            w[::stride],
+            color="blue",
+        )
+
     def plot_state(ax, state, label=""):
         position = TerrainOmplRrt.dubinsairplanePosition(state)
         yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
@@ -148,6 +173,13 @@ def plot_path(
         z = position[2]
         ax.scatter(x, y, z, marker="v", s=48, c="red")
         ax.text(position[0], position[1], position[2], label)
+
+        # plot tangent
+        scale = 0.5 * loiter_radius
+        u = scale * np.cos(yaw)
+        v = scale * np.sin(yaw)
+        w = 0.0
+        ax.quiver(x, y, z, u, v, w, color="red")
 
     def plot_states(ax, states):
         for i, state in enumerate(states):
