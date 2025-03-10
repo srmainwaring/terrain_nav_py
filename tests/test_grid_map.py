@@ -66,35 +66,17 @@ def test_load_mavproxy_elevation_module():
 
     def terrain_surface(lat, lon, x, y):
         """
-        Calculate terrain altitudes for the NED offsets (x, y)
+        Calculate terrain altitudes for the ENU offsets (x, y)
         centred on (lat, lon).
         """
         alt = []
-        for east in y:
+        for north in y:
             alt_y = []
-            for north in x:
+            for east in x:
                 (lat2, lon2) = mp_util.gps_offset(lat, lon, east, north)
                 alt_y.append(elevation_model.GetElevation(lat2, lon2))
             alt.append(alt_y)
         return alt
-
-    def ned_to_latlon(contours, lat, lon):
-        """
-        Convert contour polygons in NED coordinates offset from (lat, lon)
-        to polygons in orthometric coordinates.
-        """
-        contours_latlon = []
-        for polygons in contours:
-            polygons_latlon = []
-            for polygon in polygons:
-                polygon_latlon = []
-                for point in polygon:
-                    (north, east) = point
-                    (lat2, lon2) = mp_util.gps_offset(lat, lon, east, north)
-                    polygon_latlon.append([lat2, lon2])
-                polygons_latlon.append(polygon_latlon)
-            contours_latlon.append(polygons_latlon)
-        return contours_latlon
 
     # generate surface
     z_grid = np.array(terrain_surface(home_lat, home_lon, x, y))
@@ -126,10 +108,10 @@ def test_grid_map_srtm():
     assert grid_map.getLength()[0] == 10000
     assert grid_map.getLength()[1] == 10000
 
-    # terrain at a position (NED)
+    # terrain at a position (ENU)
     position = (200, 100)
     (lat, lon) = mp_util.gps_offset(
-        home_lat, home_lon, east=position[1], north=position[0]
+        home_lat, home_lon, east=position[0], north=position[1]
     )
     expected_alt = elevation_model.GetElevation(lat, lon)
     assert expected_alt != 0.0
