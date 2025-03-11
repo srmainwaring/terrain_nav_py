@@ -45,6 +45,8 @@ def test_terrain_ompl_rrt():
     # create terrain map
     # grid_map = GridMap()
     grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
+    grid_map.setGridLength(2500)
+
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
@@ -60,6 +62,17 @@ def test_terrain_ompl_rrt():
     # goal_pos = [-1500.0, 2200.0, 60.0]
     # goal_pos = [-4000.0, 100.0, 60.0]
     goal_pos = [-4500.0, 4000.0, 60.0]
+    # grid_map.setGridLength(10000)
+
+    # example
+    # start_pos = [0.0, 0.0, 60.0]
+    # goal_pos = [-1000.0, 500.0, 60.0]
+    # grid_map.setGridLength(2500)
+
+    start_pos = [0.0, 0.0, 60.0]
+    goal_pos = [-400.0, 400.0, 60.0]
+    grid_map.setGridLength(800)
+
     loiter_radius = 40.0
     planner.setBoundsFromMap(terrain_map.getGridMap())
 
