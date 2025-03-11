@@ -250,9 +250,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # NOTE: Just used for testing/debugging.
         self._dp_success_ctr: int = 0
 
-        # Variable to store an intermediate result (state) in the interpolate function.
-        self._stateInterpolation: DubinsAirplaneStateSpace.DubinsAirplaneState = None
-
         # Variable to store an intermediate result (meteo data) in the compute wind drift function.
         self._CWD_meteoData = None
 
@@ -268,15 +265,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # Duration spent doing the calculation for the wind drift.
         self._duration_get_wind_drift: float = 0.0
 
-        # variables use to store intermediate result in the interpolation function
-        self._interpol_seg: float = 0.0
-        self._interpol_tanGamma: float = 0.0
-        self._interpol_phiStart: float = 0.0
-        self._interpol_dPhi: float = 0.0
-        self._interpol_v: float = 0.0
-        self._interpol_iter: int = 0
-        self._interpol_tmp: float = 0.0
-
         self.addSubspace(ob.RealVectorStateSpace(3), 1.0)
         self.addSubspace(ob.SO2StateSpace(), 1.0)
         self.lock()
@@ -287,10 +275,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # TODO: type is not being set (protected member of base class)
         # TODO: check if protected members of subclass are exposed to Python.
         self._type = ob.StateSpaceType.STATE_SPACE_SE3
-
-        self._stateInterpolation = DubinsAirplaneStateSpace.DubinsAirplaneState(
-            ob.State(self)
-        )
 
     # NOTE: In C++ this would subclass CompoundStateStateSpace::StateType
     #       which is CompoundStateSpace.CompoundStateInternal in Python.
@@ -819,145 +803,110 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: ompl.base.State
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] interpolate")
-
-        self._interpol_seg = t * path.length_2d()
+        interpol_seg = t * path.length_2d()
         if path.getGamma() == self._gammaMax:
-            self._interpol_tanGamma = self._tanGammaMax
+            interpol_tanGamma = self._tanGammaMax
         elif path.getGamma() == -self._gammaMax:
-            self._interpol_tanGamma = -self._tanGammaMax
+            interpol_tanGamma = -self._tanGammaMax
         else:
-            self._interpol_tanGamma = math.tan(path.getGamma())
+            interpol_tanGamma = math.tan(path.getGamma())
 
-        for self._interpol_iter in range(6):
-            if self._interpol_seg < path.getSegmentLength(self._interpol_iter) or (
-                self._interpol_iter == 5
+        interpol_state = ob.State(self)
+        da_interpol_state = DubinsAirplaneStateSpace.DubinsAirplaneState(interpol_state)
+
+        for interpol_iter in range(6):
+            if interpol_seg < path.getSegmentLength(interpol_iter) or (
+                interpol_iter == 5
             ):
-                self._stateInterpolation.setXYZYaw(
-                    0.0, 0.0, 0.0, segmentStarts.segmentStarts[self._interpol_iter].yaw
+                da_interpol_state.setXYZYaw(
+                    0.0, 0.0, 0.0, segmentStarts.segmentStarts[interpol_iter].yaw
                 )
-                self._interpol_phiStart = self._stateInterpolation.getYaw()
+                interpol_phiStart = da_interpol_state.getYaw()
 
-                path_type = path.getType()[self.convert_idx(self._interpol_iter)]
+                path_type = path.getType()[self.convert_idx(interpol_iter)]
                 if path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
-                    self._interpol_dPhi = (
-                        self._interpol_seg
-                        * path.getInverseRadiusRatio(self._interpol_iter)
+                    interpol_dPhi = interpol_seg * path.getInverseRadiusRatio(
+                        interpol_iter
                     )
-                    if self._interpol_iter != 2:
-                        self._interpol_tmp = (
+                    if interpol_iter != 2:
+                        interpol_tmp = (
                             2.0
-                            * path.getRadiusRatio(self._interpol_iter)
-                            * math.sin(0.5 * self._interpol_dPhi)
+                            * path.getRadiusRatio(interpol_iter)
+                            * math.sin(0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToX(
-                            self._interpol_tmp
-                            * math.cos(
-                                self._interpol_phiStart + 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToX(
+                            interpol_tmp
+                            * math.cos(interpol_phiStart + 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToY(
-                            self._interpol_tmp
-                            * math.sin(
-                                self._interpol_phiStart + 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToY(
+                            interpol_tmp
+                            * math.sin(interpol_phiStart + 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToZ(
-                            self._interpol_seg * self._interpol_tanGamma
-                        )
-                        self._stateInterpolation.setYaw(
-                            self._interpol_phiStart + self._interpol_dPhi
-                        )
+                        da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
+                        da_interpol_state.setYaw(interpol_phiStart + interpol_dPhi)
                     else:
                         # DUBINS_RIGHT case for intermediate spiral
-                        self._interpol_tmp = (
+                        interpol_tmp = (
                             2.0
-                            * path.getRadiusRatio(self._interpol_iter)
-                            * math.sin(0.5 * self._interpol_dPhi)
+                            * path.getRadiusRatio(interpol_iter)
+                            * math.sin(0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToX(
-                            self._interpol_tmp
-                            * math.cos(
-                                self._interpol_phiStart - 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToX(
+                            interpol_tmp
+                            * math.cos(interpol_phiStart - 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToY(
-                            self._interpol_tmp
-                            * math.sin(
-                                self._interpol_phiStart - 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToY(
+                            interpol_tmp
+                            * math.sin(interpol_phiStart - 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToZ(
-                            self._interpol_seg * self._interpol_tanGamma
-                        )
-                        self._stateInterpolation.setYaw(
-                            self._interpol_phiStart - self._interpol_dPhi
-                        )
+                        da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
+                        da_interpol_state.setYaw(interpol_phiStart - interpol_dPhi)
                 elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
-                    self._interpol_dPhi = (
-                        self._interpol_seg
-                        * path.getInverseRadiusRatio(self._interpol_iter)
+                    interpol_dPhi = interpol_seg * path.getInverseRadiusRatio(
+                        interpol_iter
                     )
-                    if self._interpol_iter != 2:
-                        self._interpol_tmp = (
+                    if interpol_iter != 2:
+                        interpol_tmp = (
                             2.0
-                            * path.getRadiusRatio(self._interpol_iter)
-                            * math.sin(0.5 * self._interpol_dPhi)
+                            * path.getRadiusRatio(interpol_iter)
+                            * math.sin(0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToX(
-                            self._interpol_tmp
-                            * math.cos(
-                                self._interpol_phiStart - 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToX(
+                            interpol_tmp
+                            * math.cos(interpol_phiStart - 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToY(
-                            self._interpol_tmp
-                            * math.sin(
-                                self._interpol_phiStart - 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToY(
+                            interpol_tmp
+                            * math.sin(interpol_phiStart - 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToZ(
-                            self._interpol_seg * self._interpol_tanGamma
-                        )
-                        self._stateInterpolation.setYaw(
-                            self._interpol_phiStart - self._interpol_dPhi
-                        )
+                        da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
+                        da_interpol_state.setYaw(interpol_phiStart - interpol_dPhi)
                     else:
                         # DUBINS_LEFT case for intermediate spiral
-                        self._interpol_tmp = (
+                        interpol_tmp = (
                             2.0
-                            * path.getRadiusRatio(self._interpol_iter)
-                            * math.sin(0.5 * self._interpol_dPhi)
+                            * path.getRadiusRatio(interpol_iter)
+                            * math.sin(0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToX(
-                            self._interpol_tmp
-                            * math.cos(
-                                self._interpol_phiStart + 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToX(
+                            interpol_tmp
+                            * math.cos(interpol_phiStart + 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToY(
-                            self._interpol_tmp
-                            * math.sin(
-                                self._interpol_phiStart + 0.5 * self._interpol_dPhi
-                            )
+                        da_interpol_state.addToY(
+                            interpol_tmp
+                            * math.sin(interpol_phiStart + 0.5 * interpol_dPhi)
                         )
-                        self._stateInterpolation.addToZ(
-                            self._interpol_seg * self._interpol_tanGamma
-                        )
-                        self._stateInterpolation.setYaw(
-                            self._interpol_phiStart + self._interpol_dPhi
-                        )
+                        da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
+                        da_interpol_state.setYaw(interpol_phiStart + interpol_dPhi)
                 elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
-                    if self._interpol_iter != 2:
-                        self._stateInterpolation.addToX(
-                            self._interpol_seg * math.cos(self._interpol_phiStart)
+                    if interpol_iter != 2:
+                        da_interpol_state.addToX(
+                            interpol_seg * math.cos(interpol_phiStart)
                         )
-                        self._stateInterpolation.addToY(
-                            self._interpol_seg * math.sin(self._interpol_phiStart)
+                        da_interpol_state.addToY(
+                            interpol_seg * math.sin(interpol_phiStart)
                         )
-                        self._stateInterpolation.addToZ(
-                            self._interpol_seg * self._interpol_tanGamma
-                        )
+                        da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
                     else:
                         raise RuntimeError(
                             "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace.interpolate3"
@@ -966,26 +915,26 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 state = ob.State(self)
                 da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
                 da_state.setX(
-                    self._stateInterpolation.getX() * self._rho
-                    + segmentStarts.segmentStarts[self._interpol_iter].x
+                    da_interpol_state.getX() * self._rho
+                    + segmentStarts.segmentStarts[interpol_iter].x
                 )
                 da_state.setY(
-                    self._stateInterpolation.getY() * self._rho
-                    + segmentStarts.segmentStarts[self._interpol_iter].y
+                    da_interpol_state.getY() * self._rho
+                    + segmentStarts.segmentStarts[interpol_iter].y
                 )
                 da_state.setZ(
-                    self._stateInterpolation.getZ() * self._rho
-                    + segmentStarts.segmentStarts[self._interpol_iter].z
+                    da_interpol_state.getZ() * self._rho
+                    + segmentStarts.segmentStarts[interpol_iter].z
                 )
                 so2_space = self.getSubspace(1)
-                so2_state = self._stateInterpolation.getCompoundState()[1]
+                so2_state = da_interpol_state.getCompoundState()[1]
                 so2_space.enforceBounds(so2_state)
-                da_state.setYaw(self._stateInterpolation.getYaw())
-                self._interpol_seg = 0.0
+                da_state.setYaw(da_interpol_state.getYaw())
+                interpol_seg = 0.0
                 return state
 
             else:
-                self._interpol_seg -= path.getSegmentLength(self._interpol_iter)
+                interpol_seg -= path.getSegmentLength(interpol_iter)
 
         raise RuntimeError(
             "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace::interpolate3"
@@ -2216,151 +2165,112 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: SegmentStarts
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] calculateSegmentStarts")
         segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
 
         if math.isnan(path.length_2d()):
-            return None
+            return segmentStarts
 
-        self._interpol_seg = path.length_2d()
+        interpol_seg = path.length_2d()
         if path.getGamma() == self._gammaMax:
-            self._interpol_tanGamma = self._tanGammaMax
+            interpol_tanGamma = self._tanGammaMax
         elif path.getGamma() == -self._gammaMax:
-            self._interpol_tanGamma = -self._tanGammaMax
+            interpol_tanGamma = -self._tanGammaMax
         else:
-            self._interpol_tanGamma = math.tan(path.getGamma())
+            interpol_tanGamma = math.tan(path.getGamma())
 
         da_from_state = DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)
-        self._stateInterpolation.setXYZYaw(0.0, 0.0, 0.0, da_from_state.getYaw())
-        for self._interpol_iter in range(6):
-            self._interpol_v = min(
-                self._interpol_seg, path.getSegmentLength(self._interpol_iter)
-            )
-            self._interpol_phiStart = self._stateInterpolation.getYaw()
-            self._interpol_seg -= self._interpol_v
 
-            segmentStarts.segmentStarts[self._interpol_iter].x = (
-                self._stateInterpolation.getX() * self._rho + da_from_state.getX()
+        interpol_state = ob.State(self)
+        da_interpol_state = DubinsAirplaneStateSpace.DubinsAirplaneState(interpol_state)
+        da_interpol_state.setXYZYaw(0.0, 0.0, 0.0, da_from_state.getYaw())
+
+        for interpol_iter in range(6):
+            interpol_v = min(interpol_seg, path.getSegmentLength(interpol_iter))
+            interpol_phiStart = da_interpol_state.getYaw()
+            interpol_seg -= interpol_v
+
+            segmentStarts.segmentStarts[interpol_iter].x = (
+                da_interpol_state.getX() * self._rho + da_from_state.getX()
             )
-            segmentStarts.segmentStarts[self._interpol_iter].y = (
-                self._stateInterpolation.getY() * self._rho + da_from_state.getY()
+            segmentStarts.segmentStarts[interpol_iter].y = (
+                da_interpol_state.getY() * self._rho + da_from_state.getY()
             )
-            segmentStarts.segmentStarts[self._interpol_iter].z = (
-                self._stateInterpolation.getZ() * self._rho + da_from_state.getZ()
+            segmentStarts.segmentStarts[interpol_iter].z = (
+                da_interpol_state.getZ() * self._rho + da_from_state.getZ()
             )
             so2_space = self.getSubspace(1)
-            so2_state = self._stateInterpolation.getCompoundState()[1]
-            # TODO: remove debug
-            # print(f"[DubinsAirplaneStateSpace] type(so2_space): {type(so2_space)}")
-            # print(f"[DubinsAirplaneStateSpace] type(so2_state): {type(so2_state)}")
-
+            so2_state = da_interpol_state.getCompoundState()[1]
             so2_space.enforceBounds(so2_state)
-            segmentStarts.segmentStarts[self._interpol_iter].yaw = (
-                self._stateInterpolation.getYaw()
-            )
+            segmentStarts.segmentStarts[interpol_iter].yaw = da_interpol_state.getYaw()
 
-            path_type = path.getType()[self.convert_idx(self._interpol_iter)]
+            path_type = path.getType()[self.convert_idx(interpol_iter)]
             if path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
-                self._interpol_dPhi = self._interpol_v * path.getInverseRadiusRatio(
-                    self._interpol_iter
-                )
-                if self._interpol_iter != 2:
-                    self._interpol_tmp = (
+                interpol_dPhi = interpol_v * path.getInverseRadiusRatio(interpol_iter)
+                if interpol_iter != 2:
+                    interpol_tmp = (
                         2.0
-                        * path.getRadiusRatio(self._interpol_iter)
-                        * math.sin(0.5 * self._interpol_dPhi)
+                        * path.getRadiusRatio(interpol_iter)
+                        * math.sin(0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToX(
-                        self._interpol_tmp
-                        * math.cos(self._interpol_phiStart + 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToX(
+                        interpol_tmp * math.cos(interpol_phiStart + 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToY(
-                        self._interpol_tmp
-                        * math.sin(self._interpol_phiStart + 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToY(
+                        interpol_tmp * math.sin(interpol_phiStart + 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToZ(
-                        self._interpol_v * self._interpol_tanGamma
-                    )
-                    self._stateInterpolation.setYaw(
-                        self._interpol_phiStart + self._interpol_dPhi
-                    )
+                    da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
+                    da_interpol_state.setYaw(interpol_phiStart + interpol_dPhi)
                 else:
                     # DUBINS_RIGHT case for intermediate spiral
-                    self._interpol_tmp = (
+                    interpol_tmp = (
                         2.0
-                        * path.getRadiusRatio(self._interpol_iter)
-                        * math.sin(0.5 * self._interpol_dPhi)
+                        * path.getRadiusRatio(interpol_iter)
+                        * math.sin(0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToX(
-                        self._interpol_tmp
-                        * math.cos(self._interpol_phiStart - 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToX(
+                        interpol_tmp * math.cos(interpol_phiStart - 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToY(
-                        self._interpol_tmp
-                        * math.sin(self._interpol_phiStart - 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToY(
+                        interpol_tmp * math.sin(interpol_phiStart - 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToZ(
-                        self._interpol_v * self._interpol_tanGamma
-                    )
-                    self._stateInterpolation.setYaw(
-                        self._interpol_phiStart - self._interpol_dPhi
-                    )
+                    da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
+                    da_interpol_state.setYaw(interpol_phiStart - interpol_dPhi)
             elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
-                self._interpol_dPhi = self._interpol_v * path.getInverseRadiusRatio(
-                    self._interpol_iter
-                )
-                if self._interpol_iter != 2:
-                    self._interpol_tmp = (
+                interpol_dPhi = interpol_v * path.getInverseRadiusRatio(interpol_iter)
+                if interpol_iter != 2:
+                    interpol_tmp = (
                         2.0
-                        * path.getRadiusRatio(self._interpol_iter)
-                        * math.sin(0.5 * self._interpol_dPhi)
+                        * path.getRadiusRatio(interpol_iter)
+                        * math.sin(0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToX(
-                        self._interpol_tmp
-                        * math.cos(self._interpol_phiStart - 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToX(
+                        interpol_tmp * math.cos(interpol_phiStart - 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToY(
-                        self._interpol_tmp
-                        * math.sin(self._interpol_phiStart - 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToY(
+                        interpol_tmp * math.sin(interpol_phiStart - 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToZ(
-                        self._interpol_v * self._interpol_tanGamma
-                    )
-                    self._stateInterpolation.setYaw(
-                        self._interpol_phiStart - self._interpol_dPhi
-                    )
+                    da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
+                    da_interpol_state.setYaw(interpol_phiStart - interpol_dPhi)
                 else:
                     # DUBINS_LEFT case for intermediate spiral
-                    self._interpol_tmp = (
+                    interpol_tmp = (
                         2.0
-                        * path.getRadiusRatio(self._interpol_iter)
-                        * math.sin(0.5 * self._interpol_dPhi)
+                        * path.getRadiusRatio(interpol_iter)
+                        * math.sin(0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToX(
-                        self._interpol_tmp
-                        * math.cos(self._interpol_phiStart + 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToX(
+                        interpol_tmp * math.cos(interpol_phiStart + 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToY(
-                        self._interpol_tmp
-                        * math.sin(self._interpol_phiStart + 0.5 * self._interpol_dPhi)
+                    da_interpol_state.addToY(
+                        interpol_tmp * math.sin(interpol_phiStart + 0.5 * interpol_dPhi)
                     )
-                    self._stateInterpolation.addToZ(
-                        self._interpol_v * self._interpol_tanGamma
-                    )
-                    self._stateInterpolation.setYaw(
-                        self._interpol_phiStart + self._interpol_dPhi
-                    )
+                    da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
+                    da_interpol_state.setYaw(interpol_phiStart + interpol_dPhi)
             elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
-                if self._interpol_iter != 2:
-                    self._stateInterpolation.addToX(
-                        self._interpol_v * math.cos(self._interpol_phiStart)
-                    )
-                    self._stateInterpolation.addToY(
-                        self._interpol_v * math.sin(self._interpol_phiStart)
-                    )
-                    self._stateInterpolation.addToZ(
-                        self._interpol_v * self._interpol_tanGamma
-                    )
+                if interpol_iter != 2:
+                    da_interpol_state.addToX(interpol_v * math.cos(interpol_phiStart))
+                    da_interpol_state.addToY(interpol_v * math.sin(interpol_phiStart))
+                    da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
                 else:
                     raise RuntimeError(
                         "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace.calculateSegmentStarts"
