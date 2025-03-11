@@ -29,6 +29,8 @@
 
 import math
 
+from ompl import util as ou
+
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
 from terrain_nav_py.grid_map import GridMap
@@ -42,6 +44,9 @@ from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 
 
 def test_terrain_ompl_rrt():
+    # set local seed to ensure reproducible results
+    ou.RNG().setLocalSeed(1)
+
     # create terrain map
     # grid_map = GridMap()
     grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
