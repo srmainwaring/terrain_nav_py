@@ -2208,9 +2208,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         self, from_state: ob.State, path: DubinsPath
     ) -> SegmentStarts:
         """
-        Calculates the segment starts of the input
+        Calculates the segment starts of the input Dubins path
 
-        :param from: Start state of the path
+        :param from_state: Start state of the path
         :param path: Known Dubins airplane path
         :return: Computed starts of the segments of the Dubins airplane path.
         :rtype: SegmentStarts
