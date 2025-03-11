@@ -111,6 +111,7 @@ class TerrainOmplRrt:
             grid_map, self._check_max_altitude
         )
 
+        # NOTE: C++ version is not using the TerrainStateSampler
         # self._problem_setup.getStateSpace()->setStateSamplerAllocator(
         #      std::bind(&TerrainOmplRrt::allocTerrainStateSampler, this, std::placeholders::_1));
         # self._problem_setup.getStateSpace().allocStateSampler()
@@ -633,6 +634,7 @@ class TerrainOmplRrt:
         trajectory_segments.reset_segments()
 
         state_vector = path.getStates()
+        print(f"[TerrainOmplRrt] path has {len(state_vector)} states")
 
         for idx in range(len(state_vector) - 1):
             # start and end of current segment
@@ -672,6 +674,14 @@ class TerrainOmplRrt:
                 print(f"[TerrainOmplRrt] dubins.cls:  {dubins_path.getClassification()}")
                 print(f"[TerrainOmplRrt] dubins.ks:   {dubins_path._k_start}")
                 print(f"[TerrainOmplRrt] dubins.ke:   {dubins_path._k_end}")
+
+                print(f"[TerrainOmplRrt] segs[0]:     {segmentStarts.segmentStarts[0]}")
+                print(f"[TerrainOmplRrt] segs[1]:     {segmentStarts.segmentStarts[1]}")
+                print(f"[TerrainOmplRrt] segs[2]:     {segmentStarts.segmentStarts[2]}")
+                print(f"[TerrainOmplRrt] segs[3]:     {segmentStarts.segmentStarts[3]}")
+                print(f"[TerrainOmplRrt] segs[4]:     {segmentStarts.segmentStarts[4]}")
+                print(f"[TerrainOmplRrt] segs[5]:     {segmentStarts.segmentStarts[5]}")
+
 
             segment_start_state = ob.State(da_space)
             segment_end_state = ob.State(da_space)
