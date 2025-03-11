@@ -1357,6 +1357,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
             # TODO: Check if that is necessary for the short path case or if
             # it can be moved inside the bracket of the long distance cases.
+            # TODO - need to set the classification on the path
+            classification = self.classifyPath(alpha, beta)
+
             if self._enable_classification:
                 long_path_case = d > (
                     math.sqrt(4.0 - math.pow(ca + cb, 2.0))
@@ -1365,15 +1368,16 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 )
                 # Sufficient condition for optimality of CSC path type
                 if long_path_case:
-                    classification = self.classifyPath(alpha, beta)
                     self._long_ctr += 1
                     path = self.calcDubPathWithClassification(
                         classification, d, alpha, beta, sa, sb, ca, cb
                     )
+                    path.setClassification(classification)
                     return path
 
             self._short_ctr += 1
             path = self.calcDubPathWithoutClassification(d, alpha, beta, sa, sb, ca, cb)
+            path.setClassification(classification)
             return path
 
     def calcDubPathWithClassification(
