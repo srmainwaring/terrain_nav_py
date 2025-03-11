@@ -456,6 +456,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 self.z: float = 0.0
                 self.yaw: float = 0.0
 
+            def __str__(self):
+                msg = f"x: {self.x:.3f}, y: {self.y:.3f}, z: {self.z:.3f}, yaw: {self.yaw:.3f}"
+                return msg
+
         def __init__(self):
             self.segmentStarts = [
                 DubinsAirplaneStateSpace.SegmentStarts.Start(),
