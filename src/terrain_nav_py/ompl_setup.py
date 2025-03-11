@@ -78,7 +78,9 @@ class OmplSetup(og.SimpleSetup):
     An extension of og.Setup for terrain navigation
     """
 
-    DEFAULT_RANGE = 600.0
+    # maximum length of a motion to be added in the tree of motions
+    # DEFAULT_RANGE = 600.0
+    DEFAULT_RANGE = 700.0
 
     def __init__(self, state_space):
         super().__init__(state_space)
