@@ -70,8 +70,6 @@ class TerrainOmplRrt:
 
     def __init__(self, space: ob.StateSpace):
         # TODO: test
-        # TODO: locate definition of TerrainMap
-        # self._minimum_turning_radius: float = 66.67
         self._problem_setup: OmplSetup = OmplSetup(space)
         self._map: TerrainMap = None
         self._min_altitude: float = 50.0
@@ -128,12 +126,8 @@ class TerrainOmplRrt:
         bounds.setHigh(2, self._upper_bound[2])
 
         # define start and goal positions.
-        # TODO: understand types returned by problem_setup.getGeometricComponentStateSpace
-        #       vs problem_setup.getStateSpace
-        # NOTE: in Python they are equivalent and both return the derived type
-        # da_space = self._problem_setup.getGeometricComponentStateSpace()
         da_space = self._problem_setup.getStateSpace()
-        print(f"[TerrainOmplRrt] type(da_space): {type(da_space)}")
+
         print(f"[TerrainOmplRrt] set bounds")
         da_space.setBounds(bounds)
 
@@ -185,16 +179,10 @@ class TerrainOmplRrt:
         delta_theta = 0.1
         theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
 
-        # for (double theta = -M_PI; theta < M_PI; theta += (delta_theta * 2 * M_PI)) {
         for theta in theta_samples:
-            # TODO: check whether to use ob.State or do we need to define a separate scoped one in Python?
 
-            # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
-            #     self._problem_setup.getSpaceInformation());
             start_state = ob.State(da_space)
-            # print(f"[TerrainOmplRrt] type(start_state): {type(start_state)}")
             start_ompl = DubinsAirplaneStateSpace.DubinsAirplaneState(start_state)
-            # print(f"[TerrainOmplRrt] type(start_ompl): {type(start_ompl)}")
 
             start_ompl.setX(
                 start_pos[0] + math.fabs(start_loiter_radius) * math.cos(theta)
