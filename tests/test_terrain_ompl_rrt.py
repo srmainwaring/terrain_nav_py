@@ -50,23 +50,27 @@ def test_terrain_ompl_rrt():
     # create terrain map
     # grid_map = GridMap()
     grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
-    grid_map.setGridLength(2500)
 
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
     # create planner
-    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.15)
+    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.1)
     planner = TerrainOmplRrt(da_space)
     planner.setMap(terrain_map)
     planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
 
+    # TODO: state sampler properties - cannot access RNG
+    # state_sampler = da_space.allocDefaultStateSampler()
+    # print(f"state_sampler: {type(state_sampler)}")
+    # print(f"rng local seed: {state_sampler.samplers().rng().getLocalSeed()}")
+
     # initialise from map (ENU)
-    start_pos = [20.0, 10.0, 60.0]
+    # start_pos = [20.0, 10.0, 60.0]
     # goal_pos = [-3000.0, 4200.0, 60.0]
     # goal_pos = [-1500.0, 2200.0, 60.0]
     # goal_pos = [-4000.0, 100.0, 60.0]
-    goal_pos = [-4500.0, 4000.0, 60.0]
+    # goal_pos = [-4500.0, 4000.0, 60.0]
     # grid_map.setGridLength(10000)
 
     # example
@@ -128,9 +132,7 @@ def test_terrain_ompl_rrt():
         print(f"states count: {len(states)}")
         # print(f"pos1: {pos1}, yaw1: {yaw1}")
         # print(f"pos2: {pos2}, yaw2: {yaw2}")
-        plot_path(
-            start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map
-        )
+        plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map)
 
 
 def plot_path(
