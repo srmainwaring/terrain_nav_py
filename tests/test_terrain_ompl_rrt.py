@@ -154,7 +154,7 @@ def plot_path(
         vz = velocity[:, 2]
         u = scale * vx
         v = scale * vy
-        w = vz
+        w = scale * vz
         ax.quiver(
             x[::stride],
             y[::stride],
