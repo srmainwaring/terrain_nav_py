@@ -647,8 +647,8 @@ class TerrainOmplRrt:
             if debug_print:
                 da_from_state = DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)
                 da_to_state = DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)
-                print(f"[TerrainOmplRrt] from_state: {da_from_state}")
-                print(f"[TerrainOmplRrt] to_state:   {da_to_state}")
+                print(f"[TerrainOmplRrt] state[{idx}]:    {da_from_state}")
+                print(f"[TerrainOmplRrt] state[{idx + 1}]:    {da_to_state}")
 
             # NOTE: do not need to calculate the Dubins paths here
             #       as calculateSegments also calls dubins2
@@ -656,6 +656,22 @@ class TerrainOmplRrt:
             (dubins_path, segmentStarts) = da_space.calculateSegments(
                 from_state, to_state
             )
+
+            if debug_print:
+                def path_type_str(path_type):
+                    msg = (
+                        f"{dubins_path._type[0]}"
+                        f" {dubins_path._type[1]}"
+                        f" {dubins_path._type[2]}"
+                    )
+                    return msg
+                print(f"[TerrainOmplRrt] dubins.idx:  {dubins_path.getIdx()}")
+                print(f"[TerrainOmplRrt] dubins.type: {path_type_str(dubins_path._type)}")
+                print(f"[TerrainOmplRrt] dubins.len:  {dubins_path._length[1]:.3f}       {dubins_path._length[3]:.3f}          {dubins_path._length[4]:.3f}")
+                print(f"[TerrainOmplRrt] dubins.alt:  {dubins_path.getAltitudeCase()}")
+                print(f"[TerrainOmplRrt] dubins.cls:  {dubins_path.getClassification()}")
+                print(f"[TerrainOmplRrt] dubins.ks:   {dubins_path._k_start}")
+                print(f"[TerrainOmplRrt] dubins.ke:   {dubins_path._k_end}")
 
             segment_start_state = ob.State(da_space)
             segment_end_state = ob.State(da_space)
