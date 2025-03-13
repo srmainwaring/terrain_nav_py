@@ -39,6 +39,8 @@ from terrain_nav_py.path_segment import wrap_pi
 from terrain_nav_py.path_segment import State
 from terrain_nav_py.path_segment import PathSegment
 
+FLOAT_EPS = 1.0e-6
+
 
 def test_wrap_2pi():
     for n in [-10, -1, 0, 1, 10]:
@@ -99,7 +101,7 @@ def test_wrap_pi():
         assert angle_deg == pytest.approx(1.0)
 
 
-def test_path_segment_arc_centre():
+def test_path_segment_get_arc_centre1():
     segment_start = Vector3(10.0, 10.0, 0.0)
     segment_start_tangent = Vector3(1.0, -1.0, 0.0) / math.sqrt(2.0)
     radius = math.sqrt(2.0) * 10.0
@@ -123,7 +125,7 @@ def test_path_segment_arc_centre():
     assert arc_centre.y == 0.0
 
 
-def test_path_segment_arc_centre2():
+def test_path_segment_get_arc_centre2():
     segment_start = Vector3(10.0, 10.0, 0.0)
     segment_end = Vector3(20.0, 20.0 - 10.0 * math.sqrt(2.0), 0.0)
     segment_start_tangent = Vector3(1.0, -1.0, 0.0) / math.sqrt(2.0)
@@ -144,7 +146,7 @@ def test_path_segment_arc_centre2():
     assert arc_centre.y == 20.0
 
 
-def test_path_segment_line_progress():
+def test_path_segment_get_line_progress1():
     segment_start = Vector3(10.0, 10.0, 0.0)
     segment_end = Vector3(20.0, 20.0, 0.0)
 
@@ -161,7 +163,7 @@ def test_path_segment_line_progress():
     assert theta == pytest.approx(0.8)
 
 
-def test_path_segment_arc_progress():
+def test_path_segment_get_arc_progress0():
     arc_centre = Vector3(20.0, 20.0, 0.0)
     segment_start = Vector3(10.0, 10.0, 0.0)
     segment_end = Vector3(30.0, 10.0, 0.0)
@@ -473,3 +475,200 @@ def test_path_segment_get_closest_point():
     assert tangent.y == pytest.approx(Vector3(1.0, 0.0, 0.0).normalized().y)
     assert tangent.z == pytest.approx(Vector3(1.0, 0.0, 0.0).normalized().z)
     assert curvature_out == curvature
+
+
+def test_path_segment_get_arc_center3():
+    segment_start = Vector3(0.0, 0.0, 0.0)
+
+    segment_start_tangent = Vector3(1.0, 0.0, 0.0)
+    arc_center = PathSegment.get_arc_centre(segment_start, segment_start_tangent, 1.0)
+    assert arc_center == Vector3(0.0, 1.0, 0.0)
+
+    segment_start_tangent = Vector3(-1.0, 0.0, 0.0)
+    arc_center2 = PathSegment.get_arc_centre(segment_start, segment_start_tangent, -1.0)
+    assert arc_center2 == Vector3(0.0, 1.0, 0.0)
+
+
+def test_path_segment_get_arc_progress1():
+    segment_start = Vector3(0.0, 0.0, 0.0)
+    segment_start_tangent = Vector3(1.0, 0.0, 0.0)
+    segment_end = Vector3(0.0, 2.0, 0.0)
+    expected_center = Vector3(0.0, 1.0, 0.0)
+
+    arc_center = PathSegment.get_arc_centre(segment_start, segment_start_tangent, 1.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_start, segment_start, segment_end, 1.0
+    )
+    assert theta == 0.0
+    assert arc_center == expected_center
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_end, segment_start, segment_end, 1.0
+    )
+    assert theta == 1.0
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_start, segment_start, segment_end, -1.0
+    )
+    assert theta == 0.0
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_end, segment_start, segment_end, -1.0
+    )
+    assert theta == 1.0
+
+    test_position = Vector3(0.0, -1.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, 1.0
+    )
+    assert arc_center == expected_center
+    assert theta == 0.0
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == 0.0
+
+
+def test_path_segment_get_arc_progress2():
+    # Test close to full circle arc segments
+    segment_start = Vector3(1.0, 0.0, 0.0)
+    segment_start_tangent = Vector3(0.0, 1.0, 0.0)
+    end_theta = 1.75 * math.pi
+    segment_end = Vector3(math.cos(end_theta), math.sin(end_theta), 0.0)
+    expected_center = Vector3(0.0, 0.0, 0.0)
+
+    segment_end2 = Vector3(1.0 / math.sqrt(2.0), -1.0 / math.sqrt(2.0), 0.0)
+
+    print(f"segment_start:          {segment_start}")
+    print(f"segment_start_tangent:  {segment_start_tangent}")
+    print(f"end_theta:              {end_theta}")
+    print(f"segment_end:            {segment_end}")
+    print(f"segment_end2:           {segment_end2}")
+    print(f"expected_center:        {expected_center}")
+
+    assert (segment_end - segment_end2).length() == pytest.approx(0.0)
+
+    arc_center = PathSegment.get_arc_centre(segment_start, segment_start_tangent, 1.0)
+    assert (arc_center - expected_center).length() < FLOAT_EPS
+
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_start, segment_start, segment_end, 1.0
+    )
+    assert theta == 0.0
+
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_end, segment_start, segment_end, 1.0
+    )
+    assert theta == 1.0
+
+    test_position = Vector3(2.0, 0.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, 1.0
+    )
+    assert theta == 0.0
+
+    test_position = Vector3(0.0, 2.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, 1.0
+    )
+    assert theta == pytest.approx(2.0 / 7.0)
+
+
+def test_path_segment_get_arc_progress3():
+    # Test close to full circle arc segments
+    segment_start = Vector3(1.0, 0.0, 0.0)
+    segment_start_tangent = Vector3(0.0, -1.0, 0.0)
+    end_theta = -1.75 * math.pi
+    segment_end = Vector3(math.cos(end_theta), math.sin(end_theta), 0.0)
+    expected_center = Vector3(0.0, 0.0, 0.0)
+
+    arc_center = PathSegment.get_arc_centre(segment_start, segment_start_tangent, -1.0)
+    assert (arc_center - expected_center).length() < FLOAT_EPS
+
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_start, segment_start, segment_end, -1.0
+    )
+    assert theta == 0.0
+
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_end, segment_start, segment_end, -1.0
+    )
+    assert theta == 1.0
+
+    test_position = Vector3(2.0, 0.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == 0.0
+
+    test_position = Vector3(0.0, 2.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(6.0 / 7.0)
+
+    test_position = Vector3(1.0, 1.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(1.0)
+
+
+def test_path_segment_get_arc_progress4():
+    # Test close to full circle arc segments
+    segment_start = Vector3(1.0, 0.0, 0.0)
+    segment_start_tangent = Vector3(0.0, -1.0, 0.0)
+    end_theta = -1.5 * math.pi
+    segment_end = Vector3(math.cos(end_theta), math.sin(end_theta), 0.0)
+    expected_center = Vector3(0.0, 0.0, 0.0)
+
+    arc_center = PathSegment.get_arc_centre(segment_start, segment_start_tangent, -1.0)
+    assert (arc_center - expected_center).length() < FLOAT_EPS
+
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_start, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(0.0)
+
+    theta = PathSegment.get_arc_progress(
+        arc_center, segment_end, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(1.0)
+
+    test_position = Vector3(2.0, 0.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(0.0)
+
+    test_position = Vector3(0.0, 2.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(1.0)
+
+    test_position = Vector3(1.0, 1.0, 0.0)
+    theta = PathSegment.get_arc_progress(
+        arc_center, test_position, segment_start, segment_end, -1.0
+    )
+    assert theta == pytest.approx(1.1666666666666667)
+
+
+def test_path_segment_get_line_progress2():
+    segment_start = Vector3(0.0, 0.0, 0.0)
+    segment_end = Vector3(0.0, 0.0, 1.0)
+    progress = Vector3(0.0, 0.0, 0.5)
+
+    theta = PathSegment.get_line_progress(progress, segment_start, segment_end)
+    assert theta == 0.5
+
+    theta = PathSegment.get_line_progress(segment_start, segment_start, segment_end)
+    assert theta == 0.0
+
+    theta = PathSegment.get_line_progress(segment_end, segment_start, segment_end)
+    assert theta == 1.0
+
+
+def main():
+    test_path_segment_get_arc_progress2()
+
+
+if __name__ == "__main__":
+    main()
