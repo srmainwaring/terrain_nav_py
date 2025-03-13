@@ -27,6 +27,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
+import pytest
+
 from pymavlink import quaternion
 from pymavlink.rotmat import Matrix3
 from pymavlink.rotmat import Vector3
@@ -34,6 +37,8 @@ from pymavlink.rotmat import Vector3
 from terrain_nav_py.path_segment import State
 from terrain_nav_py.path_segment import PathSegment
 from terrain_nav_py.path import Path
+
+FLOAT_EPS = 1.0e-6
 
 
 def test_path():
@@ -104,3 +109,133 @@ def test_path():
 
     assert path.first_segment() == path_segment1
     assert path.last_segment() == path_segment3
+
+
+def test_path_get_closest_point1():
+    trajectory = Path()
+    first_arc_segment = PathSegment()
+
+    segment_start = State()
+    segment_start.position = Vector3(0.0, 0.0, 0.0)
+    segment_start.velocity = Vector3(1.0, 0.0, 0.0)
+
+    segment_middle = State()
+    segment_middle.position = Vector3(1.0, 1.0, 0.0)
+    segment_middle.velocity = Vector3(0.0, 1.0, 0.0)
+
+    first_arc_segment.curvature = 1.0
+    first_arc_segment.append_state(segment_start)
+    first_arc_segment.append_state(segment_middle)
+    trajectory.append_segment(first_arc_segment)
+
+    second_straight_segment = PathSegment()
+
+    second_segment_end = State()
+    second_segment_end.position = Vector3(1.0, 2.0, 0.0)
+    second_segment_end.velocity = Vector3(0.0, 1.0, 0.0)
+
+    second_straight_segment.curvature = 0.0
+    second_straight_segment.append_state(segment_middle)
+    second_straight_segment.append_state(second_segment_end)
+    trajectory.append_segment(second_straight_segment)
+
+    query_poistion = Vector3()
+    closest_point = Vector3()
+    tangent = Vector3()
+    curvature = 0.0
+
+    query_poistion = Vector3(0.0, -1.0, 0.0)
+    (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
+    assert closest_point == Vector3()
+    assert tangent == Vector3(1.0, 0.0, 0.0)
+    assert curvature == 1.0
+
+    query_poistion = Vector3(1.0, 0.0, 0.0)
+    (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
+    expected_closest_point = Vector3(
+        math.sin(math.pi / 4.0), 1.0 - math.cos(math.pi / 4.0), 0.0
+    )
+    assert closest_point.x == pytest.approx(expected_closest_point.x)
+    assert closest_point.y == pytest.approx(expected_closest_point.y)
+    assert closest_point.z == pytest.approx(expected_closest_point.z)
+
+    expected_closest_point = Vector3(
+        math.sin(math.pi / 4.0), 1.0 - math.cos(math.pi / 4.0), 0.0
+    )
+    assert (closest_point - expected_closest_point).length() < FLOAT_EPS
+    expected_tangent = Vector3(1.0, 1.0, 0.0).normalized()
+    assert tangent.x == pytest.approx(expected_tangent.x)
+    assert tangent.y == pytest.approx(expected_tangent.y)
+    assert tangent.z == pytest.approx(expected_tangent.z)
+    assert curvature == 1.0
+
+    query_poistion = Vector3(2.0, 1.1, 0.0)
+    (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
+    assert closest_point == Vector3(1.0, 1.1, 0.0)
+    assert tangent == Vector3(0.0, 1.0, 0.0)
+    assert curvature == 0.0
+
+
+def test_path_get_closest_point2():
+    trajectory = Path()
+    first_arc_segment = PathSegment()
+
+    segment_start = State()
+    segment_start.position = Vector3(0.0, 0.0, 0.0)
+    segment_start.velocity = Vector3(1.0, 0.0, 0.0)
+
+    segment_middle = State()
+    segment_middle.position = Vector3(1.0, -1.0, 0.0)
+    segment_middle.velocity = Vector3(0.0, -1.0, 0.0)
+
+    first_arc_segment.curvature = -1.0
+    first_arc_segment.append_state(segment_start)
+    first_arc_segment.append_state(segment_middle)
+    trajectory.append_segment(first_arc_segment)
+
+    second_straight_segment = PathSegment()
+
+    second_segment_end = State()
+    second_segment_end.position = Vector3(1.0, -2.0, 0.0)
+    second_segment_end.velocity = Vector3(0.0, -1.0, 0.0)
+
+    second_straight_segment.curvature = 0.0
+    second_straight_segment.append_state(segment_middle)
+    second_straight_segment.append_state(second_segment_end)
+    trajectory.append_segment(second_straight_segment)
+
+    query_poistion = Vector3()
+    closest_point = Vector3()
+    tangent = Vector3()
+    curvature = 0.0
+
+    query_poistion = Vector3(0.0, 1.0, 0.0)
+    (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
+    assert closest_point == Vector3()
+    assert tangent == Vector3(1.0, 0.0, 0.0)
+    assert curvature == -1.0
+
+    query_poistion = Vector3(1.0, 0.0, 0.0)
+    (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
+    expected_closest_point = Vector3(
+        math.sin(math.pi / 4.0), -1.0 + math.cos(math.pi / 4.0), 0.0
+    )
+    assert closest_point.x == pytest.approx(expected_closest_point.x)
+    assert closest_point.y == pytest.approx(expected_closest_point.y)
+    assert closest_point.z == pytest.approx(expected_closest_point.z)
+
+    expected_closest_point = Vector3(
+        math.sin(math.pi / 4.0), -1.0 + math.cos(math.pi / 4.0), 0.0
+    )
+    assert (closest_point - expected_closest_point).length() < FLOAT_EPS
+    expected_tangent = Vector3(1.0, -1.0, 0.0).normalized()
+    assert tangent.x == pytest.approx(expected_tangent.x)
+    assert tangent.y == pytest.approx(expected_tangent.y)
+    assert tangent.z == pytest.approx(expected_tangent.z)
+    assert curvature == -1.0
+
+    query_poistion = Vector3(2.0, -1.1, 0.0)
+    (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
+    assert closest_point == Vector3(1.0, -1.1, 0.0)
+    assert tangent == Vector3(0.0, -1.0, 0.0)
+    assert curvature == 0.0
