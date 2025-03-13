@@ -126,8 +126,8 @@ class Path:
                 # TODO: This is a magic number in terms of acceptance radius of end of segments
                 return (closest_point, tangent, curvature)
             else:
-                closest_point = segment.states.back().position
-                tangent = (segment.states.back().velocity).normalized()
+                closest_point = segment.last_state().position
+                tangent = (segment.last_state().velocity).normalized()
                 # consider that the segment is tracked
                 segment.reached = True
 
