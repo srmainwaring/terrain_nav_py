@@ -366,8 +366,8 @@ class PathSegment:
             psi *= -1.0
             angle_pos *= -1.0
 
-        wrap_2pi(psi)
-        wrap_2pi(angle_pos)
+        psi = wrap_2pi(psi)
+        angle_pos = wrap_2pi(angle_pos)
 
         residual_pi = max(2.0 * math.pi - psi, 0.0)
 
@@ -416,7 +416,7 @@ class PathSegment:
             psi = math.atan2(end_vector.y, end_vector.x) - math.atan2(
                 start_vector.y, start_vector.x
             )
-            wrap_2pi(psi)
+            psi = wrap_2pi(psi)
             length = radius * psi
 
         return length
@@ -468,7 +468,7 @@ class PathSegment:
                 angle_pos = math.atan2(
                     position_vector.y, position_vector.x
                 ) - math.atan2(start_vector.y, start_vector.x)
-                wrap_2pi(angle_pos)
+                angle_pos = wrap_2pi(angle_pos)
                 # TODO: Check for the case for a helix!
                 theta = angle_pos / (2 * math.pi)
             else:
