@@ -1266,21 +1266,26 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
     def convert_idx(self, i: int) -> int:
         """
-        Converts the input segment index (0-5) to the corresponding path segment index (0-2).
+        Converts the input segment index (0-5) to the corresponding
+        path segment index (0-2).
         """
-        # TODO: test and add bounds check
-        # assert(i < 6 and "In convert_idx, i > 5")
-        if i == 0:  # start helix
+        # TODO: test
+        if i == 0:
+            # start helix
             return 0
-        elif i == 1:  # first Dubins segment
-            # intermediate maneuver, return same direction as first Dubins segment before
+        elif i == 1:
+            # first Dubins segment
+            # intermediate maneuver, return same direction as first
+            # Dubins segment before
             # In interpolate function, will handle this and turn the other way.
             return 0
         elif i == 2:
             return 0
-        elif i == 3:  # second Dubins segment
+        elif i == 3:
+            # second Dubins segment
             return 1
-        else:  # third Dubins segment and end helix
+        else:
+            # third Dubins segment and end helix
             return 2
 
     def dubins1(self, d: float, alpha: float, beta: float) -> DubinsPath:
