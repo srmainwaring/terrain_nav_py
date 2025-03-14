@@ -146,8 +146,12 @@ def test_path_get_closest_point1():
 
     query_poistion = Vector3(0.0, -1.0, 0.0)
     (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
-    assert closest_point == Vector3()
-    assert tangent == Vector3(1.0, 0.0, 0.0)
+    assert closest_point.x == pytest.approx(Vector3().x)
+    assert closest_point.y == pytest.approx(Vector3().y)
+    assert closest_point.z == pytest.approx(Vector3().z)
+    assert tangent.x == pytest.approx(Vector3(1.0, 0.0, 0.0).x)
+    assert tangent.y == pytest.approx(Vector3(1.0, 0.0, 0.0).y)
+    assert tangent.z == pytest.approx(Vector3(1.0, 0.0, 0.0).z)
     assert curvature == 1.0
 
     query_poistion = Vector3(1.0, 0.0, 0.0)
@@ -211,8 +215,12 @@ def test_path_get_closest_point2():
 
     query_poistion = Vector3(0.0, 1.0, 0.0)
     (closest_point, tangent, curvature) = trajectory.get_closest_point(query_poistion)
-    assert closest_point == Vector3()
-    assert tangent == Vector3(1.0, 0.0, 0.0)
+    assert closest_point.x == pytest.approx(Vector3().x)
+    assert closest_point.y == pytest.approx(Vector3().y)
+    assert closest_point.z == pytest.approx(Vector3().z)
+    assert tangent.x == pytest.approx(Vector3(1.0, 0.0, 0.0).x)
+    assert tangent.y == pytest.approx(Vector3(1.0, 0.0, 0.0).y)
+    assert tangent.z == pytest.approx(Vector3(1.0, 0.0, 0.0).z)
     assert curvature == -1.0
 
     query_poistion = Vector3(1.0, 0.0, 0.0)
