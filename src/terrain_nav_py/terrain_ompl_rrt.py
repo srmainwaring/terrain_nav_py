@@ -53,7 +53,7 @@ from terrain_nav_py.grid_map import GridMap
 from terrain_nav_py.ompl_setup import OmplSetup
 
 from terrain_nav_py import path_segment
-from terrain_nav_py.path_segment import wrap_pi
+from terrain_nav_py.util import wrap_pi
 
 from terrain_nav_py.path import Path
 from terrain_nav_py.path import PathSegment
