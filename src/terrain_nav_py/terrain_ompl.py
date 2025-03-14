@@ -62,11 +62,6 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         :type state: ob.State
         """
         # TODO test
-        # print(f"[TerrainValidityChecker] check valid")
-        # print(f"[TerrainValidityChecker] type(state): {type(state)}")
-        # print(f"[TerrainValidityChecker] type(state[0]): {type(state[0])}")
-        # print(f"[TerrainValidityChecker] type(state[1]): {type(state[1])}")
-
         # NOTE: use wrapper for access to internal state.
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         position = (da_state.getX(), da_state.getY(), da_state.getZ())
@@ -177,18 +172,13 @@ class TerrainStateSampler(ob.StateSampler):
         # NOTE: use wrapper for access to internal state.
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         da_state.setXYZYaw(x, y, z, yaw)
-        # DEBUG:
-        # print(f"{x}, {y}, {z}, {yaw}")
-        # print(f"{state()[0][0]}, {state()[0][1]}, {state()[0][2]}, {state()[1].value}")
 
     def sampleUniformNear(
         self, state: ob.State, near: ob.State, distance: float
     ) -> None:
-        # TODO: test
-        # print("Sample Near")
+        # NOTE: not implemented
         pass
 
     def sampleGaussian(self, state: ob.State, mean: ob.State, stdDev: float) -> None:
-        # TODO: test
-        # print("Sample Gaussian")
+        # NOTE: not implemented
         pass
