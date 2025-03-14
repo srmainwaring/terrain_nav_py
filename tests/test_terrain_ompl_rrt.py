@@ -55,7 +55,7 @@ def test_terrain_ompl_rrt():
     terrain_map.setGridMap(grid_map)
 
     # create planner
-    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.1)
+    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.15)
     planner = TerrainOmplRrt(da_space)
     planner.setMap(terrain_map)
     planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
