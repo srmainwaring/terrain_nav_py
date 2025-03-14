@@ -431,7 +431,7 @@ class DubinsPath:
         self._radiusRatio[0] = radius_ratio
         self._radiusRatioInverse[0] = 1.0 / radius_ratio
         self._length[0] = num_helix * 2.0 * math.pi * radius_ratio
-        self._length_2D = (
+        self._length_2d = (
             self._length[0]
             + self._length[1]
             + self._length[2]
@@ -454,7 +454,7 @@ class DubinsPath:
         self._radiusRatio[5] = radius_ratio
         self._radiusRatioInverse[5] = 1.0 / radius_ratio
         self._length[5] = num_helix * 2.0 * math.pi * radius_ratio
-        self._length_2D = (
+        self._length_2d = (
             self._length[0]
             + self._length[1]
             + self._length[2]
@@ -529,7 +529,7 @@ class DubinsPath:
         :type int:
         """
         self._length[idx] = length
-        self._length_2D = (
+        self._length_2d = (
             self._length[0]
             + self._length[1]
             + self._length[2]
