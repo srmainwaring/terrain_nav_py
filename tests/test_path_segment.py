@@ -34,71 +34,10 @@ from pymavlink import quaternion
 from pymavlink.rotmat import Matrix3
 from pymavlink.rotmat import Vector3
 
-from terrain_nav_py.path_segment import wrap_2pi
-from terrain_nav_py.path_segment import wrap_pi
 from terrain_nav_py.path_segment import State
 from terrain_nav_py.path_segment import PathSegment
 
 FLOAT_EPS = 1.0e-6
-
-
-def test_wrap_2pi():
-    for n in [-10, -1, 0, 1, 10]:
-        angle_deg = math.degrees(wrap_2pi(math.radians(n * 360.0 + 1.0)))
-        assert angle_deg == pytest.approx(1.0)
-
-        angle_deg = math.degrees(wrap_2pi(math.radians(n * 360.0 + 90.0)))
-        assert angle_deg == pytest.approx(90.0)
-
-        angle_deg = math.degrees(wrap_2pi(math.radians(n * 360.0 + 180.0)))
-        assert angle_deg == pytest.approx(180.0)
-
-        angle_deg = math.degrees(wrap_2pi(math.radians(n * 360.0 + 270.0)))
-        assert angle_deg == pytest.approx(270.0)
-
-    # modulo 360, angle > 0
-    angle_deg = math.degrees(wrap_2pi(math.radians(360.0)))
-    assert angle_deg == pytest.approx(360.0)
-
-    angle_deg = math.degrees(wrap_2pi(math.radians(720.0)))
-    assert angle_deg == pytest.approx(360.0)
-
-    angle_deg = math.degrees(wrap_2pi(math.radians(3600.0)))
-    assert angle_deg == pytest.approx(360.0)
-
-    # modulo 360, angle < 0
-    angle_deg = math.degrees(wrap_2pi(math.radians(-360.0)))
-    assert angle_deg == pytest.approx(0.0)
-
-    angle_deg = math.degrees(wrap_2pi(math.radians(-720.0)))
-    assert angle_deg == pytest.approx(0.0)
-
-    angle_deg = math.degrees(wrap_2pi(math.radians(-3600.0)))
-    assert angle_deg == pytest.approx(0.0)
-
-
-def test_wrap_pi():
-    for n in [-10, -1, 0, 1, 10]:
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 1.0)))
-        assert angle_deg == pytest.approx(1.0)
-
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 90.0)))
-        assert angle_deg == pytest.approx(90.0)
-
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 179.0)))
-        assert angle_deg == pytest.approx(179.0)
-
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 181.0)))
-        assert angle_deg == pytest.approx(-179.0)
-
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 270.0)))
-        assert angle_deg == pytest.approx(-90.0)
-
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 360.0)))
-        assert angle_deg == pytest.approx(0.0)
-
-        angle_deg = math.degrees(wrap_pi(math.radians(n * 360 + 361.0)))
-        assert angle_deg == pytest.approx(1.0)
 
 
 def test_path_segment_get_arc_centre1():
