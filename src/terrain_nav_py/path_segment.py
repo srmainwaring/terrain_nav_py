@@ -39,30 +39,11 @@ Generate paths for guided path navigation
 
 import math
 
-# Use spatial objects defined in pymavlink
+# Using spatial objects defined in pymavlink
 from pymavlink.quaternion import Quaternion
 from pymavlink.rotmat import Vector3
 
-
-# TODO: use versions of wrap_pi, wrap_2pi from autotest suite if available.
-def wrap_2pi(angle: float) -> float:
-    while (angle < 0.0) or (angle > 2 * math.pi):
-        if angle < 0.0:
-            angle += 2 * math.pi
-        else:
-            angle -= 2 * math.pi
-
-    return angle
-
-
-def wrap_pi(angle: float) -> float:
-    while math.fabs(angle) > math.pi:
-        if angle > 0:
-            angle = angle - 2 * math.pi
-        else:
-            angle = angle + 2 * math.pi
-
-    return angle
+from terrain_nav_py.util import wrap_2pi
 
 
 class State:
