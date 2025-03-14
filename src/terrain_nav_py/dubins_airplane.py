@@ -2189,7 +2189,17 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         da_interpol_state = DubinsAirplaneStateSpace.DubinsAirplaneState(interpol_state)
         da_interpol_state.setXYZYaw(0.0, 0.0, 0.0, da_from_state.getYaw())
 
+        # DubinsPath length[]
+        # 0:  start helix segment
+        # 1:  first Dubins segment (t)
+        # 2:  intermediate maneuver segment (not used)
+        # 3:  second Dubins segment (p)
+        # 4:  third Dubins segment (q)
+        # 5:  end helix segment
         for interpol_iter in range(6):
+            if interpol_seg <= 0.0:
+                break
+
             interpol_v = min(interpol_seg, path.getSegmentLength(interpol_iter))
             interpol_phiStart = da_interpol_state.getYaw()
             interpol_seg -= interpol_v
