@@ -823,8 +823,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 )
                 interpol_phiStart = da_interpol_state.getYaw()
 
-                path_type = path.getType()[self.convert_idx(interpol_iter)]
-                if path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
+                path_type = path.getType()
+                segment_type = path_type[self.convert_idx(interpol_iter)]
+                if segment_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
                     interpol_dPhi = interpol_seg * path.getInverseRadiusRatio(
                         interpol_iter
                     )
@@ -861,7 +862,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                         )
                         da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
                         da_interpol_state.setYaw(interpol_phiStart - interpol_dPhi)
-                elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
+                elif segment_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
                     interpol_dPhi = interpol_seg * path.getInverseRadiusRatio(
                         interpol_iter
                     )
@@ -898,7 +899,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                         )
                         da_interpol_state.addToZ(interpol_seg * interpol_tanGamma)
                         da_interpol_state.setYaw(interpol_phiStart + interpol_dPhi)
-                elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
+                elif segment_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
                     if interpol_iter != 2:
                         da_interpol_state.addToX(
                             interpol_seg * math.cos(interpol_phiStart)
@@ -2218,10 +2219,12 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             so2_space.enforceBounds(so2_state)
             segmentStarts.segmentStarts[interpol_iter].yaw = da_interpol_state.getYaw()
 
-            path_type = path.getType()[self.convert_idx(interpol_iter)]
-            if path_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
+            path_type = path.getType()
+            segment_type = path_type[self.convert_idx(interpol_iter)]
+            if segment_type == DubinsPath.DubinsPathSegmentType.DUBINS_LEFT:
                 interpol_dPhi = interpol_v * path.getInverseRadiusRatio(interpol_iter)
                 if interpol_iter != 2:
+                    # not an additional maneuver
                     interpol_tmp = (
                         2.0
                         * path.getRadiusRatio(interpol_iter)
@@ -2250,9 +2253,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     )
                     da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
                     da_interpol_state.setYaw(interpol_phiStart - interpol_dPhi)
-            elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
+            elif segment_type == DubinsPath.DubinsPathSegmentType.DUBINS_RIGHT:
                 interpol_dPhi = interpol_v * path.getInverseRadiusRatio(interpol_iter)
                 if interpol_iter != 2:
+                    # not an additional maneuver
                     interpol_tmp = (
                         2.0
                         * path.getRadiusRatio(interpol_iter)
@@ -2281,15 +2285,20 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                     )
                     da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
                     da_interpol_state.setYaw(interpol_phiStart + interpol_dPhi)
-            elif path_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
+            elif segment_type == DubinsPath.DubinsPathSegmentType.DUBINS_STRAIGHT:
                 if interpol_iter != 2:
+                    # not an additional maneuver
                     da_interpol_state.addToX(interpol_v * math.cos(interpol_phiStart))
                     da_interpol_state.addToY(interpol_v * math.sin(interpol_phiStart))
                     da_interpol_state.addToZ(interpol_v * interpol_tanGamma)
                 else:
                     raise RuntimeError(
-                        "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace.calculateSegmentStarts"
+                        "[DubinsAirplaneStateSpace] segment DUBINS_STRAIGHT must not have intermediate maneuver"
                     )
+            else:
+                raise ValueError(
+                    f"[DubinsAirplaneStateSpace] invalid DubinsPathSegmentType: {segment_type}"
+                )
         return segmentStarts
 
     def getStateOnCircle(
