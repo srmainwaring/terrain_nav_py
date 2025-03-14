@@ -2190,6 +2190,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         da_interpol_state = DubinsAirplaneStateSpace.DubinsAirplaneState(interpol_state)
         da_interpol_state.setXYZYaw(0.0, 0.0, 0.0, da_from_state.getYaw())
 
+        # TODO: remove debug prints
+        debug_print = False
+        if debug_print:
+            print(f"[calculateSegmentStarts]")
+            print(f"interpol_seg:       {interpol_seg}")
+            print(f"interpol_tanGamma:  {interpol_tanGamma}")
+            print(f"[calculateSegmentStarts] loop...")
+
         # DubinsPath length[]
         # 0:  start helix segment
         # 1:  first Dubins segment (t)
@@ -2218,6 +2226,21 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             so2_state = da_interpol_state.getCompoundState()[1]
             so2_space.enforceBounds(so2_state)
             segmentStarts.segmentStarts[interpol_iter].yaw = da_interpol_state.getYaw()
+
+            # TODO: remove debug prints
+            if debug_print:
+                print(f"interpol_iter:      {interpol_iter}")
+                print(f"interpol_seg:       {interpol_seg}")
+                print(f"interpol_v:         {interpol_v}")
+                print(f"interpol_phiStart:  {interpol_phiStart}")
+                print(f"stateInterp.x:      {da_interpol_state.getX()}")
+                print(f"stateInterp.y:      {da_interpol_state.getY()}")
+                print(f"stateInterp.z:      {da_interpol_state.getZ()}")
+                print(f"stateInterp.yaw:    {da_interpol_state.getYaw()}")
+                print(f"from.x:             {da_from_state.getX()}")
+                print(f"from.y:             {da_from_state.getY()}")
+                print(f"from.z:             {da_from_state.getZ()}")
+                print(f"from.yaw:           {da_from_state.getYaw()}")
 
             path_type = path.getType()
             segment_type = path_type[self.convert_idx(interpol_iter)]
