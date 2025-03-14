@@ -29,11 +29,12 @@
 
 import math
 
+from ompl import base as ob
+from ompl import geometric as og
 from ompl import util as ou
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
-from terrain_nav_py.grid_map import GridMap
 from terrain_nav_py.grid_map import GridMapSRTM
 
 from terrain_nav_py.path import Path
@@ -44,13 +45,12 @@ from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 
 
 def test_terrain_ompl_rrt():
-    # set local seed to ensure reproducible results
+    # TODO: set local seed to ensure reproducible results - this does
+    #       not appear to be working.
     ou.RNG().setLocalSeed(1)
 
     # create terrain map
-    # grid_map = GridMap()
     grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
-
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
@@ -59,6 +59,7 @@ def test_terrain_ompl_rrt():
     planner = TerrainOmplRrt(da_space)
     planner.setMap(terrain_map)
     planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
+    planner.setBoundsFromMap(terrain_map.getGridMap())
 
     # TODO: state sampler properties - cannot access RNG
     # state_sampler = da_space.allocDefaultStateSampler()
@@ -66,24 +67,23 @@ def test_terrain_ompl_rrt():
     # print(f"rng local seed: {state_sampler.samplers().rng().getLocalSeed()}")
 
     # initialise from map (ENU)
-    # start_pos = [20.0, 10.0, 60.0]
+    start_pos = [20.0, 10.0, 60.0]
     # goal_pos = [-3000.0, 4200.0, 60.0]
     # goal_pos = [-1500.0, 2200.0, 60.0]
     # goal_pos = [-4000.0, 100.0, 60.0]
-    # goal_pos = [-4500.0, 4000.0, 60.0]
-    # grid_map.setGridLength(10000)
+    goal_pos = [-4500.0, 4000.0, 60.0]
+    grid_map.setGridLength(10000)
 
     # example
     # start_pos = [0.0, 0.0, 60.0]
     # goal_pos = [-1000.0, 500.0, 60.0]
     # grid_map.setGridLength(2500)
 
-    start_pos = [0.0, 0.0, 60.0]
-    goal_pos = [-400.0, 400.0, 60.0]
-    grid_map.setGridLength(800)
+    # start_pos = [0.0, 0.0, 60.0]
+    # goal_pos = [-200.0, 200.0, 60.0]
+    # grid_map.setGridLength(800)
 
     loiter_radius = 40.0
-    planner.setBoundsFromMap(terrain_map.getGridMap())
 
     # adjust the start and goal altitudes
     start_pos[2] += grid_map.atPosition("elevation", start_pos)
@@ -115,6 +115,13 @@ def test_terrain_ompl_rrt():
     # planner_solution_path = Path()
     # planner.Solve(time_budget=1.0, path=planner_solution_path)
 
+    # solution states (for reproducing tests...)
+    solution_path = planner.getProblemSetup().getSolutionPath()
+    state_vector = solution_path.getStates()
+    for state in state_vector:
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+        print(f"state: {da_state}")
+
     # only display plots if run as script
     if __name__ == "__main__":
         # solution path - og.PathGeometric
@@ -133,6 +140,77 @@ def test_terrain_ompl_rrt():
         # print(f"pos1: {pos1}, yaw1: {yaw1}")
         # print(f"pos2: {pos2}, yaw2: {yaw2}")
         plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map)
+
+
+def test_terrain_ompl_rrt_solution_path_to_path():
+    """
+    home_lat=56.6987387
+    home_lon=-6.1082210
+    turningRadius=40.0
+    gam=0.1
+    start_pos = [0.0, 0.0, 60.0]
+    goal_pos = [-200.0, 200.0, 60.0]
+    max_altitude=120.0
+    min_altitude=50.0
+
+    state: [-40.0000, -0.0000, 73.9186; 1.5708]
+    state: [-187.6393, 161.9577, 104.6088; -2.8274]
+    """
+    home_lat = 56.6987387
+    home_lon = -6.1082210
+    gamma = 0.1
+    loiter_radius = 40.0
+    max_altitude = 120.0
+    min_altitude = 50.0
+
+    # create terrain map
+    grid_map = GridMapSRTM(home_lat, home_lon)
+    grid_map.setGridLength(800)
+    terrain_map = TerrainMap()
+    terrain_map.setGridMap(grid_map)
+
+    # create planner
+    da_space = DubinsAirplaneStateSpace(turningRadius=loiter_radius, gam=gamma)
+    planner = TerrainOmplRrt(da_space)
+    planner.setMap(terrain_map)
+    planner.setAltitudeLimits(max_altitude, min_altitude)
+    planner.setBoundsFromMap(terrain_map.getGridMap())
+
+    # set start and goal
+    start_pos = [0.0, 0.0, 60.0]
+    goal_pos = [-200.0, 200.0, 60.0]
+
+    # adjust start and goal altitudes
+    start_pos[2] += grid_map.atPosition("elevation", start_pos)
+    goal_pos[2] += grid_map.atPosition("elevation", goal_pos)
+
+    # set up problem from start and goal positions and start loiter radius
+    planner.setupProblem2(start_pos, goal_pos, loiter_radius)
+
+    # initialise an empty solution path
+    problem = planner.getProblemSetup()
+    si = problem.getSpaceInformation()
+    solution_path = og.PathGeometric(si)
+
+    # add states
+    state = ob.State(da_space)
+    da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+    da_state.setXYZYaw(-40.0000, -0.0000, 73.9186, 1.5708)
+    solution_path.append(state())
+
+    state = ob.State(da_space)
+    da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+    da_state.setXYZYaw(-187.6393, 161.9577, 104.6088, -2.8274)
+    solution_path.append(state())
+
+    trajectory_segments = Path()
+    planner.solutionPathToPath(solution_path, trajectory_segments)
+
+    if __name__ == "__main__":
+        states = solution_path.getStates()
+        plot_path(
+            start_pos, goal_pos, loiter_radius, trajectory_segments, states, grid_map
+        )
 
 
 def plot_path(
@@ -274,6 +352,7 @@ def plot_path(
 
 def main():
     test_terrain_ompl_rrt()
+    # test_terrain_ompl_rrt_solution_path_to_path()
 
 
 if __name__ == "__main__":
