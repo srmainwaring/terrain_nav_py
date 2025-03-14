@@ -33,6 +33,8 @@ from ompl import base as ob
 from ompl import geometric as og
 from ompl import util as ou
 
+from MAVProxy.modules.lib import mp_util
+
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
 from terrain_nav_py.grid_map import GridMapSRTM
@@ -49,8 +51,56 @@ def test_terrain_ompl_rrt():
     #       not appear to be working.
     ou.RNG().setLocalSeed(1)
 
+    # Foothills Community Park, Colorado
+    start_lat = 40.056671934301086
+    start_lon = -105.28785817446858
+
+    # Buckingham Picnic Area, Colorado
+    goal_lat = 40.11188249790071
+    goal_lon = -105.30681932208977
+
+    # Ward, Colorado
+    goal_lat = 40.072504162423655
+    goal_lon = -105.50885876436985
+
+    # Colorado Mountain Ranch, Colorado
+    goal_lat = 40.061037962756885
+    goal_lon = -105.41560711209344
+
+    distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
+    bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
+    bearing_rad = math.radians(bearing_deg)
+
+    east = distance * math.sin(bearing_rad)
+    north = distance * math.cos(bearing_rad)
+    print(f"distance:       {distance:.0f} m")
+    print(f"bearing:        {bearing_deg:.1f} deg")
+    print(f"east:           {east:.0f} m")
+    print(f"north:          {north:.0f} m")
+
+    # try to manage the map size
+    (home_lat, home_lon) = mp_util.gps_offset(start_lat, start_lon, 0.5 * east, 0.5 * north)
+    grid_length = 1.2 * max(math.fabs(east), math.fabs(north))
+    print(f"grid_length:    {grid_length:.0f} m")
+
+    start_east = -0.5 * east
+    start_north = -0.5 * north
+    goal_east = 0.5 * east
+    goal_north = 0.5 * north
+    print(f"start_east:     {start_east:.0f} m")
+    print(f"start_north:    {start_north:.0f} m")
+    print(f"goal_east:      {goal_east:.0f} m")
+    print(f"goal_north:     {goal_north:.0f} m")
+
+    # return
+
     # create terrain map
-    grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
+    # Kilchoan
+    # grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
+
+    grid_map = GridMapSRTM(home_lat=home_lat, home_lon=home_lon)
+    grid_map.setGridSpacing(100)
+    grid_map.setGridLength(grid_length)
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
@@ -67,12 +117,13 @@ def test_terrain_ompl_rrt():
     # print(f"rng local seed: {state_sampler.samplers().rng().getLocalSeed()}")
 
     # initialise from map (ENU)
-    start_pos = [20.0, 10.0, 60.0]
+    # start_pos = [20.0, 10.0, 60.0]
     # goal_pos = [-3000.0, 4200.0, 60.0]
     # goal_pos = [-1500.0, 2200.0, 60.0]
     # goal_pos = [-4000.0, 100.0, 60.0]
-    goal_pos = [-4500.0, 4000.0, 60.0]
-    grid_map.setGridLength(10000)
+    # Sanna Bay
+    # goal_pos = [-4500.0, 4000.0, 60.0]
+    # grid_map.setGridLength(10000)
 
     # example
     # start_pos = [0.0, 0.0, 60.0]
@@ -82,6 +133,9 @@ def test_terrain_ompl_rrt():
     # start_pos = [0.0, 0.0, 60.0]
     # goal_pos = [-200.0, 200.0, 60.0]
     # grid_map.setGridLength(800)
+
+    start_pos = [start_east, start_north, 60.0]
+    goal_pos = [goal_east, goal_north, 60.0]
 
     loiter_radius = 40.0
 
@@ -101,7 +155,7 @@ def test_terrain_ompl_rrt():
     print("PLANNER_MODE.GLOBAL")
     planner.setupProblem2(start_pos, goal_pos, loiter_radius)
     candidate_path = Path()
-    planner.Solve1(time_budget=15.0, path=candidate_path)
+    planner.Solve1(time_budget=30.0, path=candidate_path)
 
     # PLANNER_MODE.EMERGENCY_ABORT
     # set up problem start position and velocity and rally points
@@ -321,7 +375,8 @@ def plot_path(
     ax = plt.figure().add_subplot(projection="3d")
     ax.set_xlim(-5000.0, 5000.0)
     ax.set_ylim(-5000.0, 5000.0)
-    ax.set_zlim(0.0, 500.0)
+    # ax.set_zlim(0.0, 500.0)
+    ax.set_zlim(1000.0, 2500.0)
     ax.set_xlabel("east (m)")
     ax.set_ylabel("north (m)")
     ax.set_title("Terrain Planner (source: SRTM1)")
