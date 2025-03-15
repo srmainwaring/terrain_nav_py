@@ -1,0 +1,128 @@
+name: ubuntu-build
+
+on: [push, pull_request, workflow_dispatch]
+
+concurrency:
+  group: ci-${{github.workflow}}-${{ github.ref }}
+  cancel-in-progress: true
+
+# permissions:
+#   contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    name: ubuntu-build
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pyplusplus
+        uses: actions/checkout@v4
+        with:
+          repository: ompl/pyplusplus.git
+          ref: main
+          path: pyplusplus
+
+      - name: Checkout ompl
+        uses: actions/checkout@v4
+        with:
+          repository: ompl/ompl.git
+          ref: main
+          path: ompl
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install --no-install-recommends -y \
+          build-essential \
+          castxml \
+          ccache \
+          clang \
+          cmake \
+          doxygen \
+          git \
+          libflann-dev \
+          libeigen3-dev \
+          libboost-dev \
+          libboost-filesystem-dev \
+          libboost-numpy-dev \
+          libboost-program-options-dev \
+          libboost-python-dev \
+          libboost-serialization-dev \
+          libboost-test-dev \
+          libyaml-cpp-dev \
+          python3 \
+          python3-dev \
+          python3.12-venv
+
+      # - name: Set up Python ${{ matrix.python-version }}
+      #   uses: actions/setup-python@v3
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        run: |
+          mkdir venv
+          python3 -m venv --system-site-packages venv
+          . venv/bin/activate
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pygccxml
+          python3 -m pip install matplotlib
+          python3 -m pip install mavproxy
+          python3 -m pip install numpy
+          python3 -m pip install pymavlink
+          python3 -m pip install pytest
+
+      - name: Install pyplusplus
+        run: |
+          . venv/bin/activate
+          cd pyplusplus 
+          python3 -m pip install .
+
+      # Put ccache into github cache for faster build
+      - name: Prepare ccache timestamp
+        id: ccache_cache_timestamp
+        run: |
+          NOW=$(date -u +"%F-%T")
+          echo "timestamp=${NOW}" >> $GITHUB_OUTPUT
+
+      - name: Cache files
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: ${{github.workflow}}-ccache-${{steps.ccache_cache_timestamp.outputs.timestamp}}
+          restore-keys: ${{github.workflow}}-ccache-  # restore ccache from either previous build on this branch or on master
+
+      - name: Setup ccache
+        run: |
+          . .github/workflows/ccache.env
+
+      - name: Install ompl
+        run: |
+          . venv/bin/activate
+          mkdir -p ompl/build && cd ompl/build
+          cmake .. -DPYTHON_EXEC=$(which python3) -DOMPL_BUILD_PYBINDINGS=ON -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          make update_bindings
+          make ompl -j8
+          make py_ompl -j8
+          make all -j8
+          sudo make install
+
+      - name: Install terrain_nav_py
+        run: |
+          . venv/bin/activate
+          python3 -m pip install .
+          # pytest ./tests/test_dubins_airplane.py
+          pytest ./tests/test_dubins_path.py
+          # pytest ./tests/test_grid_map.py
+          pytest ./tests/test_ompl_setup.py
+          pytest ./tests/test_path.py
+          pytest ./tests/test_path_segment.py
+          # pytest ./tests/test_terrain_ompl_rrt.py
+          pytest ./tests/test_terrain_ompl.py
+          pytest ./tests/test_util.py
+
