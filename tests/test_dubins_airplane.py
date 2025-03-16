@@ -28,6 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
+import pytest
 
 from ompl import base as ob
 from ompl import geometric as og
@@ -45,9 +46,9 @@ def test_ompl_compound_state_space_states():
     # RealVectorStateInternal
     re3_s_ref = re3_s()
     # accessors
-    assert re3_s_ref[0] == 0.0
+    assert re3_s_ref[0] == pytest.approx(0.0)
     re3_s_ref[0] = 1.0
-    assert re3_s_ref[0] == 1.0
+    assert re3_s_ref[0] == pytest.approx(1.0)
 
     # SO(2) state space
     so2_space = ob.SO2StateSpace()
@@ -74,8 +75,8 @@ def test_ompl_compound_state_space_states():
     r_s = c_s_ref[0]
     s_s = c_s_ref[1]
 
-    assert r_s[0] == 0.0
-    assert s_s.value == 0.0
+    assert r_s[0] == pytest.approx(0.0)
+    assert s_s.value == pytest.approx(0.0)
 
 
 def test_dubins_airplane_state():
@@ -86,39 +87,39 @@ def test_dubins_airplane_state():
     c_space.lock()
 
     s = DubinsAirplaneStateSpace.DubinsAirplaneState(ob.State(c_space))
-    assert s.getX() == 0.0
-    assert s.getY() == 0.0
-    assert s.getZ() == 0.0
-    assert s.getYaw() == 0.0
+    assert s.getX() == pytest.approx(0.0)
+    assert s.getY() == pytest.approx(0.0)
+    assert s.getZ() == pytest.approx(0.0)
+    assert s.getYaw() == pytest.approx(0.0)
 
     s.setX(100.0)
     s.setY(200.0)
     s.setZ(50.0)
     s.setYaw(0.25 * math.pi)
-    assert s.getX() == 100.0
-    assert s.getY() == 200.0
-    assert s.getZ() == 50.0
-    assert s.getYaw() == 0.25 * math.pi
+    assert s.getX() == pytest.approx(100.0)
+    assert s.getY() == pytest.approx(200.0)
+    assert s.getZ() == pytest.approx(50.0)
+    assert s.getYaw() == pytest.approx(0.25 * math.pi)
 
     s.setXYZ(120.0, 210.0, 60.0)
-    assert s.getX() == 120.0
-    assert s.getY() == 210.0
-    assert s.getZ() == 60.0
+    assert s.getX() == pytest.approx(120.0)
+    assert s.getY() == pytest.approx(210.0)
+    assert s.getZ() == pytest.approx(60.0)
 
     s.setXYZYaw(150.0, 230.0, 45.0, 0.5 * math.pi)
-    assert s.getX() == 150.0
-    assert s.getY() == 230.0
-    assert s.getZ() == 45.0
-    assert s.getYaw() == 0.5 * math.pi
+    assert s.getX() == pytest.approx(150.0)
+    assert s.getY() == pytest.approx(230.0)
+    assert s.getZ() == pytest.approx(45.0)
+    assert s.getYaw() == pytest.approx(0.5 * math.pi)
 
     s.addToX(30.0)
-    assert s.getX() == 180.0
+    assert s.getX() == pytest.approx(180.0)
 
     s.addToY(35.0)
-    assert s.getY() == 265.0
+    assert s.getY() == pytest.approx(265.0)
 
     s.addToZ(-5.0)
-    assert s.getZ() == 40.0
+    assert s.getZ() == pytest.approx(40.0)
 
 
 def test_dubins_airplane_state_space():
@@ -132,10 +133,10 @@ def test_dubins_airplane_state_space():
 
     # max extent is pi for null R(3) x SO(2)
     e = da_space.getMaximumExtent()
-    assert e == math.pi
+    assert e == pytest.approx(math.pi)
 
     e = da_space.getEuclideanExtent()
-    assert e == 0.0
+    assert e == pytest.approx(0.0)
 
     # state1 = ob.State()
     # state2 = ob.State()
