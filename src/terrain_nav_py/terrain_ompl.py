@@ -62,9 +62,8 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         :type state: ob.State
         """
         # TODO test
-        # NOTE: use wrapper for access to internal state.
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-        position = (da_state.getX(), da_state.getY(), da_state.getZ())
+        position = da_state.getXYZ()
 
         # print(f"[TerrainValidityChecker] position: {position}")
         return not self.checkCollision(position)
