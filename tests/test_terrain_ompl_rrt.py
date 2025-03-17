@@ -79,7 +79,9 @@ def test_terrain_ompl_rrt():
     print(f"north:          {north:.0f} m")
 
     # try to manage the map size
-    (home_lat, home_lon) = mp_util.gps_offset(start_lat, start_lon, 0.5 * east, 0.5 * north)
+    (map_lat, map_lon) = mp_util.gps_offset(
+        start_lat, start_lon, 0.5 * east, 0.5 * north
+    )
     grid_length = 1.2 * max(math.fabs(east), math.fabs(north))
     print(f"grid_length:    {grid_length:.0f} m")
 
@@ -96,9 +98,9 @@ def test_terrain_ompl_rrt():
 
     # create terrain map
     # Kilchoan
-    # grid_map = GridMapSRTM(home_lat=56.6987387, home_lon=-6.1082210)
+    # grid_map = GridMapSRTM(map_lat=56.6987387, map_lon=-6.1082210)
 
-    grid_map = GridMapSRTM(home_lat=home_lat, home_lon=home_lon)
+    grid_map = GridMapSRTM(map_lat=map_lat, map_lon=map_lon)
     grid_map.setGridSpacing(100)
     grid_map.setGridLength(grid_length)
     terrain_map = TerrainMap()
@@ -198,8 +200,8 @@ def test_terrain_ompl_rrt():
 
 def test_terrain_ompl_rrt_solution_path_to_path():
     """
-    home_lat=56.6987387
-    home_lon=-6.1082210
+    map_lat=56.6987387
+    map_lon=-6.1082210
     turningRadius=40.0
     gam=0.1
     start_pos = [0.0, 0.0, 60.0]
@@ -210,15 +212,15 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     state: [-40.0000, -0.0000, 73.9186; 1.5708]
     state: [-187.6393, 161.9577, 104.6088; -2.8274]
     """
-    home_lat = 56.6987387
-    home_lon = -6.1082210
+    map_lat = 56.6987387
+    map_lon = -6.1082210
     gamma = 0.1
     loiter_radius = 40.0
     max_altitude = 120.0
     min_altitude = 50.0
 
     # create terrain map
-    grid_map = GridMapSRTM(home_lat, home_lon)
+    grid_map = GridMapSRTM(map_lat, map_lon)
     grid_map.setGridLength(800)
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
