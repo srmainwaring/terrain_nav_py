@@ -44,11 +44,11 @@ jobs:
           python3 -m pip install .
           pytest ./tests/test_dubins_airplane.py
           pytest ./tests/test_dubins_path.py
-          # pytest ./tests/test_grid_map.py
+          pytest ./tests/test_grid_map.py
           pytest ./tests/test_ompl_setup.py
           pytest ./tests/test_path.py
           pytest ./tests/test_path_segment.py
-          # pytest ./tests/test_terrain_ompl_rrt.py
+          pytest ./tests/test_terrain_ompl_rrt.py
           pytest ./tests/test_terrain_ompl.py
           pytest ./tests/test_util.py
 
