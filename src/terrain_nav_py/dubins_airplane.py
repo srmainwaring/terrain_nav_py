@@ -350,6 +350,27 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             """
             return self._internal_state[1].value
 
+        def getXYZ(self) -> tuple[float, float, float]:
+            """
+            Get the X, Y, Z components of the state
+            """
+            return (
+                self._internal_state[0][0],
+                self._internal_state[0][1],
+                self._internal_state[0][2]
+            )
+
+        def getXYZYaw(self) -> tuple[float, float, float, float]:
+            """
+            Get the X, Y, Z and heading/yaw components of the state
+            """
+            return (
+                self._internal_state[0][0],
+                self._internal_state[0][1],
+                self._internal_state[0][2],
+                self._internal_state[1].value
+            )
+
         #   void setX(double x);
         def setX(self, value: float) -> None:
             """
