@@ -137,15 +137,16 @@ class GridMapSRTM(GridMap):
     NOTE: the planner follows ROS conventions and must use ENU coordinates.
     """
 
-    def __init__(self, home_lat, home_lon):
+    def __init__(self, map_lat, map_lon):
         super().__init__()
 
-        self._home_lat = home_lat
-        self._home_lon = home_lon
+        self._map_lat = map_lat
+        self._map_lon = map_lon
         self._grid_spacing = 30
         self._grid_length = 10000
         self._terrain_source = "SRTM1"
         self._terrain_offline = False
+        self._terrain_timeout = 10.0
         self._elevation_model = mp_elevation.ElevationModel(
             database=self._terrain_source, offline=self._terrain_offline
         )
@@ -205,15 +206,20 @@ class GridMapSRTM(GridMap):
 
     def atPosition(self, layer: str, position: tuple[float, float]) -> float:
         """
-        Get cell data at the
         Return the layer value at the given cartesian position.
         """
         east = position[0]
         north = position[1]
         (lat2, lon2) = (lat2, lon2) = mp_util.gps_offset(
-            self._home_lat, self._home_lon, east, north
+            self._map_lat, self._map_lon, east, north
         )
-        alt = self._elevation_model.GetElevation(lat2, lon2)
+        alt = self._elevation_model.GetElevation(lat2, lon2, self._terrain_timeout)
+        if alt is None:
+            raise ValueError(
+                f"[GridMapSRTM] invalid elevation, "
+                f"failed to load terrain data for {self._terrain_source} "
+                f"at lat: {lat2}, lon: {lon2}"
+            )
 
         if layer == "elevation":
             return alt

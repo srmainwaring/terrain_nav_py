@@ -28,6 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import random
 
 from MAVProxy.modules.lib import mp_elevation
 from MAVProxy.modules.lib import mp_util
@@ -43,9 +44,8 @@ def test_load_mavproxy_elevation_module():
     # TERRAIN_REPORT {lat : 566987387, lon : -61082210, spacing : 0, terrain_height : 0.0, current_height : 2.809999942779541, pending : 56, loaded : 336}
     # --custom-location="56.6987387,-6.1082210,2.74,0.0"
     # orthometric coordinates (AMSL)
-    home_lat = 56.6987387
-    home_lon = -6.1082210
-    home_alt = 2.74
+    map_lat = 56.6987387
+    map_lon = -6.1082210
 
     # Add terrain contours to map #1508
     # https://github.com/ArduPilot/MAVProxy/pull/1508
@@ -53,6 +53,7 @@ def test_load_mavproxy_elevation_module():
     # load mavproxy elevation model
     terrain_source = "SRTM1"
     terrain_offline = False
+    terrain_timeout = 10.0
     elevation_model = mp_elevation.ElevationModel(
         database=terrain_source, offline=terrain_offline
     )
@@ -74,12 +75,12 @@ def test_load_mavproxy_elevation_module():
             alt_y = []
             for east in x:
                 (lat2, lon2) = mp_util.gps_offset(lat, lon, east, north)
-                alt_y.append(elevation_model.GetElevation(lat2, lon2))
+                alt_y.append(elevation_model.GetElevation(lat2, lon2, terrain_timeout))
             alt.append(alt_y)
         return alt
 
     # generate surface
-    z_grid = np.array(terrain_surface(home_lat, home_lon, x, y))
+    z_grid = np.array(terrain_surface(map_lat, map_lon, x, y))
     # print(z_grid)
 
 
@@ -88,9 +89,8 @@ def test_grid_map_srtm():
     # TERRAIN_REPORT {lat : 566987387, lon : -61082210, spacing : 0, terrain_height : 0.0, current_height : 2.809999942779541, pending : 56, loaded : 336}
     # --custom-location="56.6987387,-6.1082210,2.74,0.0"
     # orthometric coordinates (AMSL)
-    home_lat = 56.6987387
-    home_lon = -6.1082210
-    home_alt = 2.74
+    map_lat = 56.6987387
+    map_lon = -6.1082210
 
     # Add terrain contours to map #1508
     # https://github.com/ArduPilot/MAVProxy/pull/1508
@@ -98,11 +98,12 @@ def test_grid_map_srtm():
     # load mavproxy elevation model
     terrain_source = "SRTM1"
     terrain_offline = False
+    terrain_timeout = 10.0
     elevation_model = mp_elevation.ElevationModel(
         database=terrain_source, offline=terrain_offline
     )
 
-    grid_map = GridMapSRTM(home_lat, home_lon)
+    grid_map = GridMapSRTM(map_lat, map_lon)
 
     # check default grid extents
     assert grid_map.getLength()[0] == 10000
@@ -111,9 +112,9 @@ def test_grid_map_srtm():
     # terrain at a position (ENU)
     position = (200, 100)
     (lat, lon) = mp_util.gps_offset(
-        home_lat, home_lon, east=position[0], north=position[1]
+        map_lat, map_lon, east=position[0], north=position[1]
     )
-    expected_alt = elevation_model.GetElevation(lat, lon)
+    expected_alt = elevation_model.GetElevation(lat, lon, terrain_timeout)
     assert expected_alt != 0.0
 
     alt = grid_map.atPosition("elevation", position)
@@ -140,8 +141,27 @@ def test_grid_map_srtm():
     print(f"alt_min: {alt_min:.2f}, alt_max: {alt_max:.2f}")
 
 
+def test_grid_map_srtm_loading():
+    """
+    Test terrain tiles are loading within timeout=10.0.
+    """
+    terrain_source = "SRTM1"
+    terrain_offline = False
+    terrain_timeout = 10.0
+
+    elevation_model = mp_elevation.ElevationModel(
+        database=terrain_source, offline=terrain_offline
+    )
+
+    for i in range(10):
+        lat = random.uniform(-60.0, 60.0)
+        lon = random.uniform(-180.0, 180.0)
+        alt = elevation_model.GetElevation(lat, lon, terrain_timeout)
+        assert alt is not None
+
+
 def main():
-    test_grid_map_srtm()
+    test_grid_map_srtm_loading()
 
 
 if __name__ == "__main__":
