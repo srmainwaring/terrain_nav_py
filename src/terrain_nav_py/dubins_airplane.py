@@ -596,21 +596,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: DubinsPath
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] dubins2")
 
         # extract state 1
         da_state1 = DubinsAirplaneStateSpace.DubinsAirplaneState(state1)
-        x1 = da_state1.getX()
-        y1 = da_state1.getY()
-        z1 = da_state1.getZ()
-        th1 = da_state1.getYaw()
+        (x1, y1, z1, th1) = da_state1.getXYZYaw()
 
         # extract state 2
         da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state2)
-        x2 = da_state2.getX()
-        y2 = da_state2.getY()
-        z2 = da_state2.getZ()
-        th2 = da_state2.getYaw()
+        (x2, y2, z2, th2) = da_state2.getXYZYaw()
 
         dx = (x2 - x1) * self._curvature
         dy = (y2 - y1) * self._curvature
