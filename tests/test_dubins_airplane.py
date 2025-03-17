@@ -165,3 +165,11 @@ def test_dubins_airplane_alloc_state():
 
     # cs = ob.CompoundState(si)
     # print(type(cs))
+
+
+def main():
+    test_dubins_airplane_state()
+
+
+if __name__ == "__main__":
+    main()
