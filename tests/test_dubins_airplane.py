@@ -121,6 +121,17 @@ def test_dubins_airplane_state():
     s.addToZ(-5.0)
     assert s.getZ() == pytest.approx(40.0)
 
+    (x, y, z) = s.getXYZ()
+    assert x == 180.0
+    assert y == 265.0
+    assert z == 40.0
+
+    (x, y, z, yaw) = s.getXYZYaw()
+    assert x == 180.0
+    assert y == 265.0
+    assert z == 40.0
+    assert yaw == 0.5 * math.pi
+
 
 def test_dubins_airplane_state_space():
     da_space = DubinsAirplaneStateSpace()
