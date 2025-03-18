@@ -134,6 +134,18 @@ class GridMapSRTM(GridMap):
     """
     A GridMap using SRTM terrain data accessed using MAVProxy tools.
 
+    USGS EROS Archive - Digital Elevation - Shuttle Radar Topography Mission (SRTM) 1 Arc-Second Global
+    https://www.usgs.gov/centers/eros/science/usgs-eros-archive-digital-elevation-shuttle-radar-topography-mission-srtm-1
+
+    Projection	Geographic
+    Horizontal Datum	WGS84
+    Vertical Datum	EGM96 (Earth Gravitational Model 1996)
+    Vertical Units	Meters
+    Spatial Resolution	1 arc-second for global coverage (~30 meters)
+                        3 arc-seconds for global coverage (~90 meters)
+    Raster Size	1 degree tiles
+
+
     NOTE: the planner follows ROS conventions and must use ENU coordinates.
     """
 
