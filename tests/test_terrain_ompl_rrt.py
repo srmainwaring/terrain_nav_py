@@ -67,6 +67,12 @@ def test_terrain_ompl_rrt():
     goal_lat = 40.061037962756885
     goal_lon = -105.41560711209344
 
+    # Davos
+    start_lat = 46.8141348
+    start_lon = 9.8488310
+    goal_lat = 46.8201124
+    goal_lon = 9.8260916
+
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
     bearing_rad = math.radians(bearing_deg)
@@ -78,7 +84,7 @@ def test_terrain_ompl_rrt():
     print(f"east:           {east:.0f} m")
     print(f"north:          {north:.0f} m")
 
-    # try to manage the map size
+    # set map size and centre
     (map_lat, map_lon) = mp_util.gps_offset(
         start_lat, start_lon, 0.5 * east, 0.5 * north
     )
@@ -94,52 +100,33 @@ def test_terrain_ompl_rrt():
     print(f"goal_east:      {goal_east:.0f} m")
     print(f"goal_north:     {goal_north:.0f} m")
 
-    # return
+    # settings
+    loiter_radius = 90.0
+    loiter_alt = 60.0
+    turning_radius = 90.0
+    climb_angle_rad = 0.15
+    max_altitude = 120.0
+    min_altitude = 50.0
+    time_budget = 10.0
 
-    # create terrain map
-    # Kilchoan
-    # grid_map = GridMapSRTM(map_lat=56.6987387, map_lon=-6.1082210)
-
+    # create map
     grid_map = GridMapSRTM(map_lat=map_lat, map_lon=map_lon)
-    grid_map.setGridSpacing(100)
+    grid_map.setGridSpacing(30)
     grid_map.setGridLength(grid_length)
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
     # create planner
-    da_space = DubinsAirplaneStateSpace(turningRadius=40.0, gam=0.15)
+    da_space = DubinsAirplaneStateSpace(turningRadius=turning_radius, gam=climb_angle_rad)
     planner = TerrainOmplRrt(da_space)
     planner.setMap(terrain_map)
-    planner.setAltitudeLimits(max_altitude=120.0, min_altitude=50.0)
+    planner.setAltitudeLimits(max_altitude=max_altitude, min_altitude=min_altitude)
     planner.setBoundsFromMap(terrain_map.getGridMap())
 
-    # TODO: state sampler properties - cannot access RNG
-    # state_sampler = da_space.allocDefaultStateSampler()
-    # print(f"state_sampler: {type(state_sampler)}")
-    # print(f"rng local seed: {state_sampler.samplers().rng().getLocalSeed()}")
+    # set start and goal positions
+    start_pos = [start_east, start_north, loiter_alt]
+    goal_pos = [goal_east, goal_north, loiter_alt]
 
-    # initialise from map (ENU)
-    # start_pos = [20.0, 10.0, 60.0]
-    # goal_pos = [-3000.0, 4200.0, 60.0]
-    # goal_pos = [-1500.0, 2200.0, 60.0]
-    # goal_pos = [-4000.0, 100.0, 60.0]
-    # Sanna Bay
-    # goal_pos = [-4500.0, 4000.0, 60.0]
-    # grid_map.setGridLength(10000)
-
-    # example
-    # start_pos = [0.0, 0.0, 60.0]
-    # goal_pos = [-1000.0, 500.0, 60.0]
-    # grid_map.setGridLength(2500)
-
-    # start_pos = [0.0, 0.0, 60.0]
-    # goal_pos = [-200.0, 200.0, 60.0]
-    # grid_map.setGridLength(800)
-
-    start_pos = [start_east, start_north, 60.0]
-    goal_pos = [goal_east, goal_north, 60.0]
-
-    loiter_radius = 40.0
 
     # adjust the start and goal altitudes
     start_pos[2] += grid_map.atPosition("elevation", start_pos)
@@ -154,10 +141,9 @@ def test_terrain_ompl_rrt():
 
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
-    print("PLANNER_MODE.GLOBAL")
-    planner.setupProblem2(start_pos, goal_pos, loiter_radius)
+    planner.setupProblem2(start_pos, goal_pos, turning_radius)
     candidate_path = Path()
-    planner.Solve1(time_budget=30.0, path=candidate_path)
+    planner.Solve1(time_budget=time_budget, path=candidate_path)
 
     # PLANNER_MODE.EMERGENCY_ABORT
     # set up problem start position and velocity and rally points
@@ -171,30 +157,22 @@ def test_terrain_ompl_rrt():
     # planner_solution_path = Path()
     # planner.Solve(time_budget=1.0, path=planner_solution_path)
 
-    # solution states (for reproducing tests...)
-    solution_path = planner.getProblemSetup().getSolutionPath()
-    state_vector = solution_path.getStates()
-    for state in state_vector:
+    # check states are all above the min_altitude
+    solution_path = planner._problem_setup.getSolutionPath()
+    states = solution_path.getStates()
+    for state in states:
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-        print(f"state: {da_state}")
+        (x, y, z, yaw) = da_state.getXYZYaw()
+        layer = "elevation"
+        elevation = grid_map.atPosition(layer, da_state.getXYZ())
+        print(
+            f"[{layer}]: "
+            f"[{x:.2f}, {y:.2f}, {z:.2f}]; "
+            f"ter_alt: {elevation:.2f}, agl_alt: {(z - elevation):.2f}"
+        )
 
     # only display plots if run as script
     if __name__ == "__main__":
-        # solution path - og.PathGeometric
-        solution_path = planner._problem_setup.getSolutionPath()
-        states = solution_path.getStates()
-        # state1 = solution_path.getState(0)
-        # state2 = solution_path.getState(solution_path.getStateCount() - 1)
-        # pos1 = TerrainOmplRrt.dubinsairplanePosition(state1)
-        # yaw1 = TerrainOmplRrt.dubinsairplaneYaw(state1)
-        # pos2 = TerrainOmplRrt.dubinsairplanePosition(state2)
-        # yaw2 = TerrainOmplRrt.dubinsairplaneYaw(state2)
-        print(f"Planner solution path (og.PathGeometric)")
-        # print(type(solution_path))
-        print(f"path length: {solution_path.length():.2f}")
-        print(f"states count: {len(states)}")
-        # print(f"pos1: {pos1}, yaw1: {yaw1}")
-        # print(f"pos2: {pos2}, yaw2: {yaw2}")
         plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map)
 
 
@@ -262,8 +240,9 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     trajectory_segments = Path()
     planner.solutionPathToPath(solution_path, trajectory_segments)
 
+    states = solution_path.getStates()
+
     if __name__ == "__main__":
-        states = solution_path.getStates()
         plot_path(
             start_pos, goal_pos, loiter_radius, trajectory_segments, states, grid_map
         )
