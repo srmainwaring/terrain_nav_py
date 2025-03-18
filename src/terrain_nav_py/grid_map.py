@@ -75,8 +75,8 @@ class GridMap:
         self._position = (0.0, 0.0)
         self._length = (1000.0, 1000.0)
         self._elevation = 0.0
-        self._distance_surface = 0.0
         self._max_elevation = 120.0
+        self._min_elevation = 50.0
         self._size = 10
 
     def __iter__(self) -> Iterator:
@@ -110,7 +110,7 @@ class GridMap:
         if layer == "elevation":
             return self._elevation
         elif layer == "distance_surface":
-            return self._distance_surface
+            return self._min_elevation
         elif layer == "max_elevation":
             return self._max_elevation
         else:
@@ -123,7 +123,7 @@ class GridMap:
         if layer == "elevation":
             return self._elevation
         elif layer == "distance_surface":
-            return self._distance_surface
+            return self._min_elevation
         elif layer == "max_elevation":
             return self._max_elevation
         else:
@@ -149,7 +149,7 @@ class GridMapSRTM(GridMap):
     NOTE: the planner follows ROS conventions and must use ENU coordinates.
     """
 
-    def __init__(self, map_lat, map_lon):
+    def __init__(self, map_lat, map_lon, max_elevation=120.0, min_elevation=50.0):
         super().__init__()
 
         self._map_lat = map_lat
@@ -169,8 +169,8 @@ class GridMapSRTM(GridMap):
 
         # set super class properties
         self._position = (0.0, 0.0)
-        self._distance_surface = 0.0
-        self._max_elevation = 120.0
+        self._max_elevation = max_elevation
+        self._min_elevation = min_elevation
 
         # ensure grid is updated
         self._updateGrid()
@@ -236,7 +236,7 @@ class GridMapSRTM(GridMap):
         if layer == "elevation":
             return alt
         elif layer == "distance_surface":
-            return alt + self._distance_surface
+            return alt + self._min_elevation
         elif layer == "max_elevation":
             return alt + self._max_elevation
         else:
