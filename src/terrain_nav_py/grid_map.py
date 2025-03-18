@@ -252,3 +252,13 @@ class GridMapSRTM(GridMap):
         x = self._x[i_x]
         y = self._y[i_y]
         return self.atPosition(layer, (x, y))
+    
+
+    def addLayerDistanceTransform(self):
+        surface_distance = 50
+        reference_layer = "elevation"
+
+        for x in self._x:
+            for y in self._y:
+                position_2d = (x, y)
+                elevation = self.atPosition(reference_layer, position_2d)
