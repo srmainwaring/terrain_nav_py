@@ -103,7 +103,11 @@ def test_grid_map_srtm():
         database=terrain_source, offline=terrain_offline
     )
 
-    grid_map = GridMapSRTM(map_lat, map_lon)
+    max_altitude = 120.0
+    min_altitude = 50.0
+    grid_map = GridMapSRTM(
+        map_lat, map_lon, max_elevation=max_altitude, min_elevation=min_altitude
+    )
 
     # check default grid extents
     assert grid_map.getLength()[0] == 10000
@@ -121,10 +125,10 @@ def test_grid_map_srtm():
     assert alt == expected_alt
 
     alt = grid_map.atPosition("distance_surface", position)
-    assert alt == expected_alt + 0.0
+    assert alt == expected_alt + min_altitude
 
     alt = grid_map.atPosition("max_elevation", position)
-    assert alt == expected_alt + 120.0
+    assert alt == expected_alt + max_altitude
 
     # terrain at index (use to find max and min over grid)
     assert grid_map.size() == (334) * (334)
