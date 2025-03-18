@@ -37,9 +37,16 @@
 Generate paths for guided path navigation
 """
 
+import sys
+
 from terrain_nav_py.path_segment import PathSegment
 
-from typing import Self
+if sys.version_info.minor > 10:
+    from typing import Self
+else:
+    from typing import TypeVar
+
+    Self = TypeVar("Self", bound="Path")
 
 # Use spatial objects defined in pymavlink
 from pymavlink.rotmat import Vector3
