@@ -677,7 +677,6 @@ class TerrainOmplRrt:
             total_length = dubins_path.length_2d()
             print(f"[TerrainOmplRrt] total_length: {total_length}")
 
-            dt = resolution / total_length
             progress = 0.0
             for start_idx in range(len(segmentStarts.segmentStarts)):
                 if dubins_path.getSegmentLength(start_idx) > 0.0:
@@ -706,25 +705,31 @@ class TerrainOmplRrt:
                         self._problem_setup, dubins_path, start_idx
                     )
                     trajectory.flightpath_angle = dubins_path.getGamma()
-                    track_progress = 0.0
-                    t_samples = np.arange(progress, progress + segment_progress, dt)
-                    for t in t_samples:
-                        segment_state = path_segment.State()
-                        state = da_space.interpolate3(dubins_path, segmentStarts, t)
 
-                        position = TerrainOmplRrt.dubinsairplanePosition(state)
-                        yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
-                        velocity = (math.cos(yaw), math.sin(yaw), 0.0)
-                        segment_state.position = position
-                        segment_state.velocity = velocity
-                        segment_state.attitude = (
-                            math.cos(yaw / 2.0),
-                            0.0,
-                            0.0,
-                            math.sin(yaw / 2.0),
-                        )
-                        trajectory.append_state(segment_state)
-                        track_progress = t
+                    # handle case when start and end state are the same
+                    track_progress = 0.0
+                    if total_length > 0.0:
+                        dt = resolution / total_length
+                        t_samples = np.arange(progress, progress + segment_progress, dt)
+                        for t in t_samples:
+                            segment_state = path_segment.State()
+                            state = da_space.interpolate3(dubins_path, segmentStarts, t)
+
+                            position = TerrainOmplRrt.dubinsairplanePosition(state)
+                            yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
+                            velocity = (math.cos(yaw), math.sin(yaw), 0.0)
+                            segment_state.position = position
+                            segment_state.velocity = velocity
+                            segment_state.attitude = (
+                                math.cos(yaw / 2.0),
+                                0.0,
+                                0.0,
+                                math.sin(yaw / 2.0),
+                            )
+                            trajectory.append_state(segment_state)
+                            track_progress = t
+                    else:
+                            track_progress = progress
 
                     # Append end state
                     if ((start_idx + 1) > (len(segmentStarts.segmentStarts) - 1)) or (
