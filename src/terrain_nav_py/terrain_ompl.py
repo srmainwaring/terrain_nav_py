@@ -128,6 +128,17 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         if self._map.isInside(position_2d):
             elevation = self._map.atPosition(layer, position_2d)
             z = position[2]
+
+            # TODO: debug - show all checks that z is above terrain
+            # if is_above:
+            #     x = position[0]
+            #     y = position[1]
+            #     print(
+            #         f"[{layer}]: "
+            #         f"[{x:.2f}, {y:.2f}, {z:.2f}]; "
+            #         f"ter_alt: {elevation:.2f}, agl_alt: {(z - elevation):.2f}"
+            #     )
+
             if is_above:
                 return elevation > z
             else:
