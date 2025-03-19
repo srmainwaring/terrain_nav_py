@@ -180,11 +180,12 @@ class GridMapSRTM(GridMap):
         Internal method to update the precalculated grid positions
         """
         # update precalculated grid positions
-        self._x = np.arange(
-            -0.5 * self._grid_length, 0.5 * self._grid_length, self._grid_spacing
+        num_step = int(self._grid_length / self._grid_spacing)
+        self._x = np.linspace(
+            -0.5 * self._grid_length, 0.5 * self._grid_length, num_step
         )
-        self._y = np.arange(
-            -0.5 * self._grid_length, 0.5 * self._grid_length, self._grid_spacing
+        self._y = np.linspace(
+            -0.5 * self._grid_length, 0.5 * self._grid_length, num_step
         )
 
         # update super class properties
