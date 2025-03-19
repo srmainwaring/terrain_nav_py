@@ -32,8 +32,8 @@ GridMap
 """
 
 import copy
-import math
 import numpy as np
+import scipy as sp
 
 from MAVProxy.modules.lib import mp_elevation
 from MAVProxy.modules.lib import mp_util
@@ -166,6 +166,9 @@ class GridMapSRTM(GridMap):
         # precalculated grid x: east, y: north
         self._x = np.array([])
         self._y = np.array([])
+        self._elev_grid = None
+        self._surf_grid = None
+        self._surf_interp = None
 
         # set super class properties
         self._position = (0.0, 0.0)
@@ -237,7 +240,12 @@ class GridMapSRTM(GridMap):
         if layer == "elevation":
             return alt
         elif layer == "distance_surface":
-            return alt + self._min_elevation
+            # TODO: keep this fallback?
+            if self._surf_interp is not None:
+                value = self._surf_interp((east, north))
+                return float(value)
+            else:
+                return alt + self._min_elevation
         elif layer == "max_elevation":
             return alt + self._max_elevation
         else:
@@ -254,22 +262,22 @@ class GridMapSRTM(GridMap):
         y = self._y[i_y]
         return self.atPosition(layer, (x, y))
 
-    def addLayerDistanceTransform(self):
-        surface_distance = 50.0
+    def addLayerDistanceTransform(self, surface_distance):
         reference_layer = "elevation"
 
         # sample points on circle of radius
         radius = surface_distance
         x_grid, y_grid = np.meshgrid(self._x, self._y)
-        z_grid_elev = 0 * x_grid
-        z_grid_surf = 0 * x_grid
+        self._elev_grid = 0 * x_grid
+        self._surf_grid = 0 * x_grid
 
-        # TODO move
-        # populate elevation grid
+        # TODO: move
+        # TODO: check index convention
+        # populate elevation grid (x=rows, y=cols)
         for i, x in enumerate(self._x):
             for j, y in enumerate(self._y):
                 z = self.atPosition(reference_layer, (x, y))
-                z_grid_elev[i][j] = z
+                self._elev_grid[i][j] = z
 
         def circleSlice(x_grid, y_grid, centre_pos, radius):
             # set up selection conditions
@@ -282,52 +290,69 @@ class GridMapSRTM(GridMap):
             is_inside = d2 <= r2
             is_inside_flat = is_inside.reshape(is_inside.size)
 
+            # TODO: indexing convention???
             # create then flatten indices
             idx_xy = np.indices(is_inside.shape, dtype=int)
-            idx_x = idx_xy[0].reshape((idx_xy[0].size))
-            idx_y = idx_xy[1].reshape((idx_xy[1].size))
+            idx_y = idx_xy[0].reshape((idx_xy[0].size))
+            idx_x = idx_xy[1].reshape((idx_xy[1].size))
 
-            # TODO: check index ordering
+            # TODO: check index convention
             # boolean slice, then zip to form array of 2d indices
-            sub_idx = list(zip(idx_y[is_inside_flat], idx_x[is_inside_flat]))
+            sub_idx = list(zip(idx_x[is_inside_flat], idx_y[is_inside_flat]))
             return sub_idx
 
-        # iterate over the grid
+        # iterate over the grid (x=rows, y=cols)
         for i, x in enumerate(self._x):
             for j, y in enumerate(self._y):
                 # position at circle centre
                 centre_pos = (x, y)
-                centre_z = self.atPosition(reference_layer, centre_pos)
-                layer_z = centre_z + surface_distance
+                elev_z = self._elev_grid[i][j]
+                surface_z = elev_z
                 indices = circleSlice(x_grid, y_grid, centre_pos, radius)
                 for idx in indices:
-                    px = x_grid[idx]
-                    py = y_grid[idx]
-                    pz = z_grid_elev[idx]
+                    ii = idx[0]
+                    jj = idx[1]
+                    # TODO: indexing issue?
+                    px = self._x[ii]
+                    py = self._y[jj]
+                    # pz = self._elev_grid[idx]
+                    pz = self._elev_grid[ii][jj]
                     dx = px - x
                     dy = py - y
                     d2 = dx * dx + dy * dy
-                    s2 = surface_distance * surface_distance
-                    ed = np.sqrt(max(s2 - d2, 0.0))
+                    d1 = np.sqrt(d2)
+                    sd = surface_distance
+                    ed = np.sqrt(max(sd * sd - d2, 0.0))
                     # TODO: also check for sign of surface_distance
-                    if layer_z < pz + ed:
-                        layer_z = pz + ed
+                    if surface_z < pz + ed:
+                        surface_z = pz + ed
 
                     # TODO: debug
-                    dz = layer_z - centre_z
-                    print(
-                        f"grid: ({j}, {i}), slice: ({idx[0]}, {idx[1]}), "
-                        f"x: {x}, y: {y}, px: {px}, py: {py}, "
-                        f"d2: {d2}, s2: {s2}, ed: {ed}, dz: {dz}"
-                    )
-                    pass
+                    dz = surface_z - elev_z
+                    # print(
+                    #     f"grid: ({i}, {j}), slice: ({ii}, {jj}), "
+                    #     f"[x: {x:.1f}, y: {y:.1f}, z: {elev_z:.1f}]; "
+                    #     f"[px: {px:.1f}, py: {py:.1f}, pz: {pz:.1f}]; "
+                    #     f"[d1: {d1:.1f}, sd: {sd:.1f}, ed: {ed:.1f}]; "
+                    #     f"elev_z: {elev_z:.1f}, surf_z: {surface_z:.1f}, dz: {dz:.1f}"
+                    # )
+                    # pass
 
                 # set the layer value
-                z_grid_surf[i][j] = layer_z
+                self._surf_grid[i][j] = surface_z
                 # TODO: debug
-                print()
+                # print()
+
+        # create interpolator
+        self._surf_interp = sp.interpolate.RegularGridInterpolator(
+            (self._x, self._y), self._surf_grid, method="linear"
+        )
 
         # TODO: debug
-        print(f"z_grid_elev: {z_grid_elev}")
-        print(f"z_grid_surf: {z_grid_surf}")
-        print(f"dz_grid_surf: {z_grid_surf-z_grid_elev}")
+        # dz = self._surf_grid - self._elev_grid
+        # min_dz = np.min(dz)
+        # max_dz = np.max(dz)
+        # print(f"elev: {self._elev_grid}")
+        # print(f"surf: {self._surf_grid}")
+        # print(f"dz: {dz}")
+        # print(f"min_dz: {min_dz}, max_dz: {max_dz}")

@@ -69,12 +69,12 @@ def test_load_mavproxy_elevation_module():
         centred on (lat, lon).
         """
         alt = []
-        for north in y:
-            alt_y = []
-            for east in x:
+        for east in x:
+            alt_x = []
+            for north in y:
                 (lat2, lon2) = mp_util.gps_offset(lat, lon, east, north)
-                alt_y.append(elevation_model.GetElevation(lat2, lon2, terrain_timeout))
-            alt.append(alt_y)
+                alt_x.append(elevation_model.GetElevation(lat2, lon2, terrain_timeout))
+            alt.append(alt_x)
         return alt
 
     # generate surface
@@ -167,13 +167,17 @@ def test_grid_map_distance_layer():
     map_lat = 56.6987387
     map_lon = -6.1082210
 
+    # Davos
+    map_lat = 46.8201124
+    map_lon = 9.8260916
+
     # load mavproxy elevation model
     terrain_source = "SRTM1"
     terrain_offline = False
-    terrain_timeout = 10.0
-    elevation_model = mp_elevation.ElevationModel(
-        database=terrain_source, offline=terrain_offline
-    )
+    # terrain_timeout = 10.0
+    # elevation_model = mp_elevation.ElevationModel(
+    #     database=terrain_source, offline=terrain_offline
+    # )
 
     max_altitude = 120.0
     min_altitude = 50.0
@@ -186,8 +190,30 @@ def test_grid_map_distance_layer():
     grid_map.setGridSpacing(grid_spacing)
     grid_map.setGridLength(grid_length)
 
-    grid_map.addLayerDistanceTransform()
+    grid_map.addLayerDistanceTransform(surface_distance=min_altitude)
 
+    # check that the bounds are inclusive
+    # print(grid_map._x[0], grid_map._x[-1])
+    # print(grid_map._y[0], grid_map._y[-1])
+
+    # random check that distance surface is above elevation
+    min_dz = max_altitude
+    max_dz = 0.0
+    for i in range(1000):
+        x = random.uniform(-0.5 * 300.0, 0.5 * 300.0)
+        y = random.uniform(-0.5 * 300.0, 0.5 * 300.0)
+        position = (x, y)
+        elev_alt = grid_map.atPosition("elevation", position)
+        surf_alt = grid_map.atPosition("distance_surface", position)
+        # print(f"elev_alt: {elev_alt}")
+        # print(f"surf_alt: {surf_alt}")
+        # print(f"dz: {surf_alt - elev_alt}")
+        assert (surf_alt - elev_alt) >= 0.0
+        # assert (surf_alt - elev_alt) >= min_altitude
+        min_dz = min(min_dz, surf_alt - elev_alt)
+        max_dz = max(max_dz, surf_alt - elev_alt)
+
+    print(f"min_dz: {min_dz:.1f}, max_dz: {max_dz:.1f}")
 
 def test_grid_map_subgrid():
     # locate grid points within a circle of radius at centre_pos
@@ -219,17 +245,17 @@ def test_grid_map_subgrid():
         idx_x = idx_xy[0].reshape((idx_xy[0].size))
         idx_y = idx_xy[1].reshape((idx_xy[1].size))
 
-        # TODO: check index ordering
+        # TODO: check index convention
         # boolean slice, then zip to form array of 2d indices
-        sub_idx = list(zip(idx_y[is_inside_flat], idx_x[is_inside_flat]))
+        sub_idx = list(zip(idx_x[is_inside_flat], idx_y[is_inside_flat]))
         return (sub_idx, d1)
 
     (indices, d1) = circleSlice(x_grid, y_grid, centre_pos, radius)
 
     for idx in indices:
         (i, j) = idx
-        z = d1[idx]
-        print(f"d1[{i}, {j}] = {z}")
+        z = d1[i][j]
+        print(f"d1[{i}][{j}] = {z}")
 
 
 def main():
