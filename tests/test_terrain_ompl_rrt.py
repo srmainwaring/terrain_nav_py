@@ -255,7 +255,8 @@ def plot_path(
     import numpy as np
 
     def plot_circle(ax, position, radius, label=""):
-        theta = np.arange(-math.pi, math.pi, 0.01 * math.pi)
+        num_step = 50
+        theta = np.linspace(-math.pi, math.pi, num_step, endpoint=False)
         x = position[0] + radius * np.cos(theta)
         y = position[1] + radius * np.sin(theta)
         z = position[2] * np.ones(len(theta))
@@ -324,8 +325,10 @@ def plot_path(
         length_x = length[0]
         length_y = length[1]
         grid_spacing = 30
-        x = np.arange(-0.5 * length_x, 0.5 * length_x, grid_spacing)
-        y = np.arange(-0.5 * length_y, 0.5 * length_y, grid_spacing)
+        num_step = int(length_x / grid_spacing)
+        x = np.linspace(-0.5 * length_x, 0.5 * length_x, num_step)
+        num_step = int(length_y / grid_spacing)
+        y = np.linspace(-0.5 * length_y, 0.5 * length_y, num_step)
         x_grid, y_grid = np.meshgrid(x, y)
 
         def terrain_surface(x, y):

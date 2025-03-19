@@ -176,8 +176,8 @@ class TerrainOmplRrt:
         radius = da_space.getMinTurningRadius()
         print(f"[TerrainOmplRrt] radius: {radius}")
 
-        delta_theta = 0.1
-        theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
+        num_step = 10
+        theta_samples = np.linspace(-math.pi, math.pi, num_step, endpoint=False)
 
         for theta in theta_samples:
 
@@ -286,8 +286,8 @@ class TerrainOmplRrt:
         if goal_radius < 0.0:
             radius = da_space.getMinTurningRadius()
 
-        delta_theta = 0.1
-        theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
+        num_step = 10
+        theta_samples = np.linspace(-math.pi, math.pi, num_step, endpoint=False)
 
         # TODO: check (see above)
         # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
@@ -364,8 +364,8 @@ class TerrainOmplRrt:
 
         radius = da_space.getMinTurningRadius()
 
-        delta_theta = 0.1
-        theta_samples = np.arange(-math.pi, math.pi, delta_theta * 2 * math.pi)
+        num_step = 10
+        theta_samples = np.linspace(-math.pi, math.pi, num_step, endpoint=False)
 
         # TODO: check (see above)
         # ompl::base::ScopedState<fw_planning::spaces::DubinsAirplaneStateSpace> start_ompl(
