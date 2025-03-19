@@ -1908,8 +1908,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         alpha = mod2pi(th1 - th)
         beta = mod2pi(th2 - th)
 
-        step = 0.26
-        # 0.35 = 20 / 180 * pi, 0.26 = 15. / 180. * pi, 0.17 = 10. / 180. * pi, 0.09 = 5. / 180. * pi
+        # number of points to sample in SO(2) 
+        num_step = 24
 
         L_desired2D = math.fabs(dz) * self._tanGammaMaxInv
 
@@ -1939,7 +1939,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         path_type = dp.getIdx()
         if path_type == DubinsPath.Index.TYPE_LSL:
             # The sub-optimal 2D Dubins path is LSL so the optimal path is L + RSL
-            for phi in np.arange(0.0, twopi, step):
+            for phi in np.linspace(0.0, twopi, num_step, endpoint=False):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
                 si = self.getStateOnCircle(state1, rl=1, ud=sgn(dz), t=phi)
@@ -1972,7 +1972,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
         elif path_type == DubinsPath.TYPE_RSR:
             # The 2D Dubins path is RSR so the optimal 3D path is R + LSR
-            for phi in np.arange(0.0, twopi, step):
+            for phi in np.linspace(0.0, twopi, num_step, endpoint=False):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
                 si = self.getStateOnCircle(state1, rl=0, ud=sgn(dz), t=phi)
@@ -2005,7 +2005,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
         elif path_type == DubinsPath.TYPE_RSL:
             # The 2D Dubins path is RSL so the optimal 3D path is R + LSL
-            for phi in np.arange(0.0, twopi, step):
+            for phi in np.linspace(0.0, twopi, num_step, endpoint=False):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
                 si = self.getStateOnCircle(state1, rl=0, ud=sgn(dz), t=phi)
@@ -2039,7 +2039,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return (phi_min, foundSol, t_min, p_min, q_min, L_2D)
         elif path_type == DubinsPath.TYPE_LSR:
             # The 2D Dubins path is LSR so the optimal 3D path is L + RSR
-            for phi in np.arange(0.0, twopi, step):
+            for phi in np.linspace(0.0, twopi, num_step, endpoint=False):
                 # get a state on the circle with the angle phi
                 # rl: right (0), left (1)
                 si = self.getStateOnCircle(state1, rl=1, ud=sgn(dz), t=phi)
