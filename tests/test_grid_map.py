@@ -47,9 +47,6 @@ def test_load_mavproxy_elevation_module():
     map_lat = 56.6987387
     map_lon = -6.1082210
 
-    # Add terrain contours to map #1508
-    # https://github.com/ArduPilot/MAVProxy/pull/1508
-
     # load mavproxy elevation model
     terrain_source = "SRTM1"
     terrain_offline = False
@@ -91,9 +88,6 @@ def test_grid_map_srtm():
     # orthometric coordinates (AMSL)
     map_lat = 56.6987387
     map_lon = -6.1082210
-
-    # Add terrain contours to map #1508
-    # https://github.com/ArduPilot/MAVProxy/pull/1508
 
     # load mavproxy elevation model
     terrain_source = "SRTM1"
@@ -164,8 +158,80 @@ def test_grid_map_srtm_loading():
         assert alt is not None
 
 
+def test_grid_map_distance_layer():
+    # Kilchoan
+    # TERRAIN_REPORT {lat : 566987387, lon : -61082210, spacing : 0, terrain_height : 0.0, current_height : 2.809999942779541, pending : 56, loaded : 336}
+    # --custom-location="56.6987387,-6.1082210,2.74,0.0"
+    # orthometric coordinates (AMSL)
+    map_lat = 56.6987387
+    map_lon = -6.1082210
+
+    # load mavproxy elevation model
+    terrain_source = "SRTM1"
+    terrain_offline = False
+    terrain_timeout = 10.0
+    elevation_model = mp_elevation.ElevationModel(
+        database=terrain_source, offline=terrain_offline
+    )
+
+    max_altitude = 120.0
+    min_altitude = 50.0
+    grid_length = 300.0
+    grid_spacing = 30.0
+
+    grid_map = GridMapSRTM(
+        map_lat, map_lon, max_elevation=max_altitude, min_elevation=min_altitude
+    )
+    grid_map.setGridSpacing(grid_spacing)
+    grid_map.setGridLength(grid_length)
+
+    grid_map.addLayerDistanceTransform()
+
+
+def test_grid_map_subgrid():
+    # locate grid points within a circle of radius at centre_pos
+    radius = 20
+    centre_pos = np.array([20, -10])
+
+    # create a grid with length and spacing
+    spacing = 10
+    length = 100
+    x = np.arange(-0.5 * length, 0.5 * length, spacing)
+    y = np.arange(-0.5 * length, 0.5 * length, spacing)
+    x_grid, y_grid = np.meshgrid(x, y)
+
+    def circleSlice(x_grid, y_grid, centre_pos, radius):
+        # set up selection conditions 
+        r2 = radius * radius
+        dx = centre_pos[0] - x_grid
+        dy = centre_pos[1] - y_grid
+        d2 = dx * dx + dy * dy
+        d1 = np.round(np.sqrt(d2), 2)
+
+        # boolean array, the flattened
+        is_inside = d2 <= r2
+        is_inside_flat = is_inside.reshape(is_inside.size)
+
+        # create then flatten indices
+        idx_xy = np.indices(is_inside.shape, dtype=int)
+        idx_x = idx_xy[0].reshape((idx_xy[0].size))
+        idx_y = idx_xy[1].reshape((idx_xy[1].size))
+
+        # TODO: check index ordering
+        # boolean slice, then zip to form array of 2d indices
+        sub_idx = list(zip(idx_y[is_inside_flat], idx_x[is_inside_flat]))
+        return (sub_idx, d1)
+
+    (indices, d1) = circleSlice(x_grid, y_grid, centre_pos, radius)
+
+    for idx in indices:
+        (i, j) = idx
+        z = d1[idx]
+        print(f"d1[{i}, {j}] = {z}")
+
+
 def main():
-    test_grid_map_srtm_loading()
+    test_grid_map_distance_layer()
 
 
 if __name__ == "__main__":

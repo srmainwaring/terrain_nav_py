@@ -32,7 +32,7 @@ GridMap
 """
 
 import copy
-
+import math
 import numpy as np
 
 from MAVProxy.modules.lib import mp_elevation
@@ -252,13 +252,81 @@ class GridMapSRTM(GridMap):
         x = self._x[i_x]
         y = self._y[i_y]
         return self.atPosition(layer, (x, y))
-    
 
     def addLayerDistanceTransform(self):
-        surface_distance = 50
+        surface_distance = 50.0
         reference_layer = "elevation"
 
-        for x in self._x:
-            for y in self._y:
-                position_2d = (x, y)
-                elevation = self.atPosition(reference_layer, position_2d)
+        # sample points on circle of radius
+        radius = surface_distance
+        x_grid, y_grid = np.meshgrid(self._x, self._y)
+        z_grid_elev = 0 * x_grid
+        z_grid_surf = 0 * x_grid
+
+        # TODO move
+        # populate elevation grid
+        for i, x in enumerate(self._x):
+            for j, y in enumerate(self._y):
+                z = self.atPosition(reference_layer, (x, y))
+                z_grid_elev[i][j] = z
+
+        def circleSlice(x_grid, y_grid, centre_pos, radius):
+            # set up selection conditions
+            r2 = radius * radius
+            dx = centre_pos[0] - x_grid
+            dy = centre_pos[1] - y_grid
+            d2 = dx * dx + dy * dy
+
+            # boolean array (flattened)
+            is_inside = d2 <= r2
+            is_inside_flat = is_inside.reshape(is_inside.size)
+
+            # create then flatten indices
+            idx_xy = np.indices(is_inside.shape, dtype=int)
+            idx_x = idx_xy[0].reshape((idx_xy[0].size))
+            idx_y = idx_xy[1].reshape((idx_xy[1].size))
+
+            # TODO: check index ordering
+            # boolean slice, then zip to form array of 2d indices
+            sub_idx = list(zip(idx_y[is_inside_flat], idx_x[is_inside_flat]))
+            return sub_idx
+
+        # iterate over the grid
+        for i, x in enumerate(self._x):
+            for j, y in enumerate(self._y):
+                # position at circle centre
+                centre_pos = (x, y)
+                centre_z = self.atPosition(reference_layer, centre_pos)
+                layer_z = centre_z + surface_distance
+                indices = circleSlice(x_grid, y_grid, centre_pos, radius)
+                for idx in indices:
+                    px = x_grid[idx]
+                    py = y_grid[idx]
+                    pz = z_grid_elev[idx]
+                    dx = px - x
+                    dy = py - y
+                    d2 = dx * dx + dy * dy
+                    s2 = surface_distance * surface_distance
+                    ed = np.sqrt(max(s2 - d2, 0.0))
+                    # TODO: also check for sign of surface_distance
+                    if layer_z < pz + ed:
+                        layer_z = pz + ed
+
+                    # TODO: debug
+                    dz = layer_z - centre_z
+                    print(
+                        f"grid: ({j}, {i}), slice: ({idx[0]}, {idx[1]}), "
+                        f"x: {x}, y: {y}, px: {px}, py: {py}, "
+                        f"d2: {d2}, s2: {s2}, ed: {ed}, dz: {dz}"
+                    )
+                    pass
+
+                # set the layer value
+                z_grid_surf[i][j] = layer_z
+                # TODO: debug
+                print()
+
+        # TODO: debug
+        print(f"z_grid_elev: {z_grid_elev}")
+        print(f"z_grid_surf: {z_grid_surf}")
+        print(f"dz_grid_surf: {z_grid_surf-z_grid_elev}")
