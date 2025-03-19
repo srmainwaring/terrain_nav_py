@@ -58,8 +58,9 @@ def test_load_mavproxy_elevation_module():
     # create a mesh grid (m)
     grid_spacing = 30
     grid_extent = 10000
-    x = np.arange(-0.5 * grid_extent, 0.5 * grid_extent, grid_spacing)
-    y = np.arange(-0.5 * grid_extent, 0.5 * grid_extent, grid_spacing)
+    num_step = int(grid_extent / grid_spacing)
+    x = np.linspace(-0.5 * grid_extent, 0.5 * grid_extent, num_step)
+    y = np.linspace(-0.5 * grid_extent, 0.5 * grid_extent, num_step)
     x_grid, y_grid = np.meshgrid(x, y)
 
     def terrain_surface(lat, lon, x, y):
@@ -125,7 +126,7 @@ def test_grid_map_srtm():
     assert alt == expected_alt + max_altitude
 
     # terrain at index (use to find max and min over grid)
-    assert grid_map.size() == (334) * (334)
+    assert grid_map.size() == (333) * (333)
 
     alt_min = 10000.0
     alt_max = -10000.0
@@ -196,8 +197,9 @@ def test_grid_map_subgrid():
     # create a grid with length and spacing
     spacing = 10
     length = 100
-    x = np.arange(-0.5 * length, 0.5 * length, spacing)
-    y = np.arange(-0.5 * length, 0.5 * length, spacing)
+    num_step = int(length / spacing)
+    x = np.linspace(-0.5 * length, 0.5 * length, num_step)
+    y = np.linspace(-0.5 * length, 0.5 * length, num_step)
     x_grid, y_grid = np.meshgrid(x, y)
 
     def circleSlice(x_grid, y_grid, centre_pos, radius):
