@@ -709,8 +709,9 @@ class TerrainOmplRrt:
                     # handle case when start and end state are the same
                     track_progress = 0.0
                     if total_length > 0.0:
-                        dt = resolution / total_length
-                        t_samples = np.arange(progress, progress + segment_progress, dt)
+                        # dt = resolution / total_length
+                        num_step = int(total_length / resolution)
+                        t_samples = np.linspace(progress, progress + segment_progress, num_step, endpoint=False)
                         for t in t_samples:
                             segment_state = path_segment.State()
                             state = da_space.interpolate3(dubins_path, segmentStarts, t)
