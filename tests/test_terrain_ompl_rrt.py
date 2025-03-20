@@ -116,17 +116,18 @@ def test_terrain_ompl_rrt():
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
-    # create planner
-    da_space = DubinsAirplaneStateSpace(turningRadius=turning_radius, gam=climb_angle_rad)
-    planner = TerrainOmplRrt(da_space)
-    planner.setMap(terrain_map)
-    planner.setAltitudeLimits(max_altitude=max_altitude, min_altitude=min_altitude)
-    planner.setBoundsFromMap(terrain_map.getGridMap())
+    # create planner manager
+    da_space = DubinsAirplaneStateSpace(
+        turningRadius=turning_radius, gam=climb_angle_rad
+    )
+    planner_mgr = TerrainOmplRrt(da_space)
+    planner_mgr.setMap(terrain_map)
+    planner_mgr.setAltitudeLimits(max_altitude=max_altitude, min_altitude=min_altitude)
+    planner_mgr.setBoundsFromMap(terrain_map.getGridMap())
 
     # set start and goal positions
     start_pos = [start_east, start_north, loiter_alt]
     goal_pos = [goal_east, goal_north, loiter_alt]
-
 
     # adjust the start and goal altitudes
     start_pos[2] += grid_map.atPosition("elevation", start_pos)
@@ -141,24 +142,24 @@ def test_terrain_ompl_rrt():
 
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
-    planner.setupProblem2(start_pos, goal_pos, turning_radius)
+    planner_mgr.setupProblem2(start_pos, goal_pos, turning_radius)
     candidate_path = Path()
-    planner.Solve1(time_budget=time_budget, path=candidate_path)
+    planner_mgr.Solve1(time_budget=time_budget, path=candidate_path)
 
     # PLANNER_MODE.EMERGENCY_ABORT
     # set up problem start position and velocity and rally points
-    # planner.setupProblem4(start_pos, start_vel, rally_points)
-    # planner_solution_path = Path()
-    # planner.Solve(time_budget=1.0, path=planner_solution_path)
+    # planner_mgr.setupProblem4(start_pos, start_vel, rally_points)
+    # planner_mgr_solution_path = Path()
+    # planner_mgr.Solve(time_budget=1.0, path=planner_solution_path)
 
     # PLANNER_MODE.RETURN
     # set up problem start position and velocity and home position and radius
-    # planner.setupProblem3(start_pos, start_vel, home_pos, home_pos_radius)
-    # planner_solution_path = Path()
-    # planner.Solve(time_budget=1.0, path=planner_solution_path)
+    # planner_mgr.setupProblem3(start_pos, start_vel, home_pos, home_pos_radius)
+    # planner_mgr_solution_path = Path()
+    # planner_mgr.Solve(time_budget=1.0, path=planner_solution_path)
 
     # check states are all above the min_altitude
-    solution_path = planner._problem_setup.getSolutionPath()
+    solution_path = planner_mgr._problem_setup.getSolutionPath()
     states = solution_path.getStates()
     for state in states:
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
@@ -203,12 +204,12 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
-    # create planner
+    # create planner manager
     da_space = DubinsAirplaneStateSpace(turningRadius=loiter_radius, gam=gamma)
-    planner = TerrainOmplRrt(da_space)
-    planner.setMap(terrain_map)
-    planner.setAltitudeLimits(max_altitude, min_altitude)
-    planner.setBoundsFromMap(terrain_map.getGridMap())
+    planner_mgr = TerrainOmplRrt(da_space)
+    planner_mgr.setMap(terrain_map)
+    planner_mgr.setAltitudeLimits(max_altitude, min_altitude)
+    planner_mgr.setBoundsFromMap(terrain_map.getGridMap())
 
     # set start and goal
     start_pos = [0.0, 0.0, 60.0]
@@ -219,10 +220,10 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     goal_pos[2] += grid_map.atPosition("elevation", goal_pos)
 
     # set up problem from start and goal positions and start loiter radius
-    planner.setupProblem2(start_pos, goal_pos, loiter_radius)
+    planner_mgr.setupProblem2(start_pos, goal_pos, loiter_radius)
 
     # initialise an empty solution path
-    problem = planner.getProblemSetup()
+    problem = planner_mgr.getProblemSetup()
     si = problem.getSpaceInformation()
     solution_path = og.PathGeometric(si)
 
@@ -238,7 +239,7 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     solution_path.append(state())
 
     trajectory_segments = Path()
-    planner.solutionPathToPath(solution_path, trajectory_segments)
+    planner_mgr.solutionPathToPath(solution_path, trajectory_segments)
 
     states = solution_path.getStates()
 
