@@ -108,6 +108,7 @@ def test_terrain_ompl_rrt():
     max_altitude = 120.0
     min_altitude = 50.0
     time_budget = 10.0
+    resolution_m = 200.0
 
     # create map
     grid_map = GridMapSRTM(map_lat=map_lat, map_lon=map_lon)
@@ -153,6 +154,16 @@ def test_terrain_ompl_rrt():
     # PLANNER_MODE.GLOBAL
     # set up problem from start and goal positions and start loiter radius
     planner_mgr.setupProblem2(start_pos, goal_pos, turning_radius)
+
+    # Adjust validity checking resolution as needed. This is expressed as
+    # a fraction of the spaces extent.
+    problem = planner_mgr.getProblemSetup()
+    resolution_requested = resolution_m / grid_length
+    problem.setStateValidityCheckingResolution(resolution_requested)
+    si = problem.getSpaceInformation()
+    resolution_used = si.getStateValidityCheckingResolution()
+    print(f"Resolution used: {resolution_used}")
+
     candidate_path = Path()
     planner_mgr.Solve1(time_budget=time_budget, path=candidate_path)
 
