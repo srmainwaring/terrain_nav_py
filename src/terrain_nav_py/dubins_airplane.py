@@ -722,9 +722,10 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         return dp
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, const double t, ob::State* state) const override;
-    def interpolate1(
-        self, from_state: ob.State, to_state: ob.State, t: float
-    ) -> ob.State:
+    # NOTE: overides base class interpolate - so cannot have different name...
+    def interpolate(
+        self, from_state: ob.State, to_state: ob.State, t: float, state: ob.State
+    ) -> None:
         """
         Calculates the state in between `from_state` and `to_state` after
         a fraction of `t` of the length of the path.
@@ -735,10 +736,27 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return: The interpolated state
         :rtype: ompl.base.State
         """
+        # print(f"[DubinsAirplaneStateSpace] interpolate")
+        # print(f"[DubinsAirplaneStateSpace] from_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)}")
+        # print(f"[DubinsAirplaneStateSpace] to_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)}")
+        # print(f"[DubinsAirplaneStateSpace] state: {DubinsAirplaneStateSpace.DubinsAirplaneState(state)}")
+
         # TODO: test
         firstTime = True
-        (_, _, state) = self.interpolate2(from_state, to_state, t, firstTime)
-        return state
+        path = DubinsPath()
+        segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
+        # state2 = ob.State(self)
+        # (_, _, state2) = self.interpolate2(from_state, to_state, t, firstTime, path, segmentStarts, state)
+        self.interpolate2(
+            from_state, to_state, t, firstTime, path, segmentStarts, state
+        )
+
+        # Copy
+        # da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state2)
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+        # (x, y, z, yaw) = da_state2.getXYZYaw()
+        # da_state.setXYZYaw(x, y, z, yaw)
+        # print(f"[DubinsAirplaneStateSpace] state: {da_state}")
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, double t, bool& firstTime, DubinsPath& path,
     #                           SegmentStarts& segmentStarts, ob::State* state) const;
@@ -751,7 +769,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         path: DubinsPath,
         segmentStarts: SegmentStarts,
         state: ob.State,
-    ) -> tuple[DubinsPath, SegmentStarts, ob.State]:
+    ) -> None:
+        # ) -> tuple[DubinsPath, SegmentStarts, ob.State]:
         """
         Calculates the state in between from and to after a fraction of t of the length of the path.
 
@@ -795,13 +814,14 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         if math.isnan(path.length_3d()):
             state().setXYZ(sys.float_info.max, sys.float_info.max, sys.float_info.max)
         else:
-            state = self.interpolate3(path, segmentStarts, t)
+            self.interpolate3(path, segmentStarts, t, state)
 
-        return (path, segmentStarts, state)
+        # return (path, segmentStarts, state)
 
     def interpolate3(
-        self, path: DubinsPath, segmentStarts: SegmentStarts, t: float
-    ) -> ob.State:
+        self, path: DubinsPath, segmentStarts: SegmentStarts, t: float, state: ob.State
+    ) -> None:
+        # ) -> ob.State:
         """
         Calculates the state in between `from_state` and `to_state` after
         a fraction of `t` of the length of the known (non-optimal)
@@ -927,7 +947,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                             "This should never happen, otherwise something wrong in the DubinsAirplaneStateSpace.interpolate3"
                         )
 
-                state = ob.State(self)
+                # state = ob.State(self)
                 da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
                 da_state.setX(
                     da_interpol_state.getX() * self._rho
@@ -946,7 +966,8 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 so2_space.enforceBounds(so2_state)
                 da_state.setYaw(da_interpol_state.getYaw())
                 interpol_seg = 0.0
-                return state
+                return
+                # return state
 
             else:
                 interpol_seg -= path.getSegmentLength(interpol_iter)
