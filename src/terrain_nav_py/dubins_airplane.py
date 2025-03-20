@@ -357,7 +357,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             return (
                 self._internal_state[0][0],
                 self._internal_state[0][1],
-                self._internal_state[0][2]
+                self._internal_state[0][2],
             )
 
         def getXYZYaw(self) -> tuple[float, float, float, float]:
@@ -368,7 +368,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
                 self._internal_state[0][0],
                 self._internal_state[0][1],
                 self._internal_state[0][2],
-                self._internal_state[1].value
+                self._internal_state[1].value,
             )
 
         #   void setX(double x);
@@ -1908,7 +1908,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         alpha = mod2pi(th1 - th)
         beta = mod2pi(th2 - th)
 
-        # number of points to sample in SO(2) 
+        # number of points to sample in SO(2)
         num_step = 24
 
         L_desired2D = math.fabs(dz) * self._tanGammaMaxInv
