@@ -36,6 +36,7 @@ from pymavlink.rotmat import Vector3
 
 from terrain_nav_py.path_segment import State
 from terrain_nav_py.path_segment import PathSegment
+from terrain_nav_py.util import wrap_2pi
 
 FLOAT_EPS = 1.0e-6
 
@@ -605,8 +606,70 @@ def test_path_segment_get_line_progress2():
     assert theta == 1.0
 
 
+def test_path_segment_get_length_angle_calc():
+    t = Vector3(0, 1, 0)
+    a = Vector3(1, 0, 0)
+    b = Vector3(0, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+
+    t = Vector3(0, 1, 0)
+    a = Vector3(1, 0, 0)
+    b = Vector3(-1, 0, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+
+    t = Vector3(0, 1, 0)
+    a = Vector3(1, 0, 0)
+    b = Vector3(0, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+
+    t = Vector3(0, 1, 0)
+    a = Vector3(-1, 0, 0)
+    b = Vector3(0, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+
+    t = Vector3(0, 1, 0)
+    a = Vector3(-1, 0, 0)
+    b = Vector3(0, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+
+    t = Vector3(0, -1, 0)
+    a = Vector3(-1, 0, 0)
+    b = Vector3(0, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+
+
 def main():
-    test_path_segment_get_arc_progress2()
+    test_path_segment_get_length_angle_calc()
 
 
 if __name__ == "__main__":
