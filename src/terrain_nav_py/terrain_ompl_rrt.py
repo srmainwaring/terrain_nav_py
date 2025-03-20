@@ -860,3 +860,31 @@ class TerrainOmplRrt:
         # TODO: test
         self._max_altitude = max_altitude
         self._min_altitude = min_altitude
+
+    @staticmethod
+    def validatePosition(
+        map: GridMap, centre_pos: tuple[float, float, float], radius: float
+    ) -> bool:
+        """
+        Check the position is not an inevitable collision state (ICS)
+
+        NOTE: this is an approximate the check whether the position
+              is a ICS.
+        """
+        # Map must have two layers: "distance_surface" and "max_elevation".
+        min_layer = "distance_surface"
+        max_layer = "max_elevation"
+        num_steps = 24
+        theta_samples = np.linspace(-math.pi, math.pi, num_steps)
+        pos_2d = np.array([centre_pos[0], centre_pos[1]])
+        pos_z = centre_pos[2]
+        points = [
+            pos_2d + radius * np.array((np.cos(theta), np.sin(theta)))
+            for theta in theta_samples
+        ]
+        for point in points:
+            min_z = map.atPosition(min_layer, point)
+            max_z = map.atPosition(max_layer, point)
+            if pos_z < min_z or pos_z > max_z:
+                return False
+        return True
