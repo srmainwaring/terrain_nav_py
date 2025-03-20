@@ -648,6 +648,7 @@ class TerrainOmplRrt:
             )
 
             if debug_print:
+
                 def path_type_str(path_type):
                     msg = (
                         f"{dubins_path._type[0]}"
@@ -655,11 +656,21 @@ class TerrainOmplRrt:
                         f" {dubins_path._type[2]}"
                     )
                     return msg
+
                 print(f"[TerrainOmplRrt] dubins.idx:  {dubins_path.getIdx()}")
-                print(f"[TerrainOmplRrt] dubins.type: {path_type_str(dubins_path._type)}")
-                print(f"[TerrainOmplRrt] dubins.len:  {dubins_path._length[1]:.3f}       {dubins_path._length[3]:.3f}          {dubins_path._length[4]:.3f}")
+                print(
+                    f"[TerrainOmplRrt] dubins.type: {path_type_str(dubins_path._type)}"
+                )
+                print(
+                    f"[TerrainOmplRrt] dubins.len: "
+                    f"{dubins_path._length[1]:.3f} "
+                    f"{dubins_path._length[3]:.3f} "
+                    f"{dubins_path._length[4]:.3f} "
+                )
                 print(f"[TerrainOmplRrt] dubins.alt:  {dubins_path.getAltitudeCase()}")
-                print(f"[TerrainOmplRrt] dubins.cls:  {dubins_path.getClassification()}")
+                print(
+                    f"[TerrainOmplRrt] dubins.cls:  {dubins_path.getClassification()}"
+                )
                 print(f"[TerrainOmplRrt] dubins.ks:   {dubins_path._k_start}")
                 print(f"[TerrainOmplRrt] dubins.ke:   {dubins_path._k_end}")
 
@@ -669,7 +680,6 @@ class TerrainOmplRrt:
                 print(f"[TerrainOmplRrt] segs[3]:     {segmentStarts.segmentStarts[3]}")
                 print(f"[TerrainOmplRrt] segs[4]:     {segmentStarts.segmentStarts[4]}")
                 print(f"[TerrainOmplRrt] segs[5]:     {segmentStarts.segmentStarts[5]}")
-
 
             segment_start_state = ob.State(da_space)
             segment_end_state = ob.State(da_space)
@@ -711,7 +721,12 @@ class TerrainOmplRrt:
                     if total_length > 0.0:
                         # dt = resolution / total_length
                         num_step = int(total_length / resolution)
-                        t_samples = np.linspace(progress, progress + segment_progress, num_step, endpoint=False)
+                        t_samples = np.linspace(
+                            progress,
+                            progress + segment_progress,
+                            num_step,
+                            endpoint=False,
+                        )
                         for t in t_samples:
                             segment_state = path_segment.State()
                             state = da_space.interpolate3(dubins_path, segmentStarts, t)
@@ -730,7 +745,7 @@ class TerrainOmplRrt:
                             trajectory.append_state(segment_state)
                             track_progress = t
                     else:
-                            track_progress = progress
+                        track_progress = progress
 
                     # Append end state
                     if ((start_idx + 1) > (len(segmentStarts.segmentStarts) - 1)) or (
