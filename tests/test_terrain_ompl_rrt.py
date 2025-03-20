@@ -58,20 +58,22 @@ def test_terrain_ompl_rrt():
     # Buckingham Picnic Area, Colorado
     goal_lat = 40.11188249790071
     goal_lon = -105.30681932208977
+    grid_length_factor = 1.2
 
     # Ward, Colorado
-    goal_lat = 40.072504162423655
-    goal_lon = -105.50885876436985
+    # goal_lat = 40.072504162423655
+    # goal_lon = -105.50885876436985
 
     # Colorado Mountain Ranch, Colorado
-    goal_lat = 40.061037962756885
-    goal_lon = -105.41560711209344
+    # goal_lat = 40.061037962756885
+    # goal_lon = -105.41560711209344
 
     # Davos
-    start_lat = 46.8141348
-    start_lon = 9.8488310
-    goal_lat = 46.8201124
-    goal_lon = 9.8260916
+    # start_lat = 46.8141348
+    # start_lon = 9.8488310
+    # goal_lat = 46.8201124
+    # goal_lon = 9.8260916
+    # grid_length_factor = 5.0
 
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
@@ -88,7 +90,6 @@ def test_terrain_ompl_rrt():
     (map_lat, map_lon) = mp_util.gps_offset(
         start_lat, start_lon, 0.5 * east, 0.5 * north
     )
-    grid_length_factor = 5.0
     grid_length = grid_length_factor * max(math.fabs(east), math.fabs(north))
     print(f"grid_length:    {grid_length:.0f} m")
 
@@ -108,7 +109,7 @@ def test_terrain_ompl_rrt():
     climb_angle_rad = 0.15
     max_altitude = 120.0
     min_altitude = 50.0
-    time_budget = 10.0
+    time_budget = 20.0
     resolution_m = 200.0
 
     # create map
@@ -193,6 +194,27 @@ def test_terrain_ompl_rrt():
             f"[{x:.2f}, {y:.2f}, {z:.2f}]; "
             f"ter_alt: {elevation:.2f}, agl_alt: {(z - elevation):.2f}"
         )
+
+    # More information... from og.SimpleSetup
+    problem = planner_mgr.getProblemSetup()
+
+    problem.getGoal()
+    last_comp_time = problem.getLastPlanComputationTime()
+    status = problem.getLastPlannerStatus()
+    last_simp_time = problem.getLastSimplificationTime()
+    oo = problem.getOptimizationObjective()
+    planner = problem.getPlanner()
+    problem_definition = problem.getProblemDefinition()
+    solution_path = problem.getSolutionPath()
+    planner_name = problem.getSolutionPlannerName()
+    si = problem.getSpaceInformation()
+    vc = problem.getStateValidityChecker()
+
+    planner_data = ob.PlannerData(si)
+    problem.getPlannerData(planner_data)
+    print(planner_data)
+    print(f"numVertices: {planner_data.numVertices()}")
+    print(f"numEdges: {planner_data.numEdges()}")
 
     # only display plots if run as script
     if __name__ == "__main__":
