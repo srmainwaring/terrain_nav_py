@@ -394,9 +394,11 @@ class PathSegment:
             start_vector = (segment_start_2d - arc_center_2d).normalized()
             end_vector = (segment_end_2d - arc_center_2d).normalized()
 
-            psi = math.atan2(end_vector.y, end_vector.x) - math.atan2(
-                start_vector.y, start_vector.x
-            )
+            # get directed angle between two vectors
+            psi_s = math.atan2(start_vector.y, start_vector.x)
+            psi_e = math.atan2(end_vector.y, end_vector.x)
+            dir = (start_vector % segment_start_tangent_2d).normalized().z
+            psi = dir * (psi_e - psi_s)
             psi = wrap_2pi(psi)
             length = radius * psi
 
