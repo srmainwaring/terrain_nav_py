@@ -716,6 +716,8 @@ class TerrainOmplRrt:
                     )
                     trajectory.flightpath_angle = dubins_path.getGamma()
 
+                    state = ob.State(da_space)
+
                     # handle case when start and end state are the same
                     track_progress = 0.0
                     if total_length > 0.0:
@@ -729,7 +731,8 @@ class TerrainOmplRrt:
                         )
                         for t in t_samples:
                             segment_state = path_segment.State()
-                            state = da_space.interpolate3(dubins_path, segmentStarts, t)
+                            # state = da_space.interpolate3(dubins_path, segmentStarts, t)
+                            da_space.interpolate3(dubins_path, segmentStarts, t, state)
 
                             position = TerrainOmplRrt.dubinsairplanePosition(state)
                             yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
