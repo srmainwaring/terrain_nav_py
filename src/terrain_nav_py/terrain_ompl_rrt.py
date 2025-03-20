@@ -45,6 +45,9 @@ import numpy as np
 from ompl import base as ob
 from ompl import geometric as og
 
+from pymavlink.quaternion import Quaternion
+from pymavlink.rotmat import Vector3
+
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.dubins_path import DubinsPath
 
@@ -737,14 +740,13 @@ class TerrainOmplRrt:
                             position = TerrainOmplRrt.dubinsairplanePosition(state)
                             yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
                             velocity = (math.cos(yaw), math.sin(yaw), 0.0)
-                            segment_state.position = position
-                            segment_state.velocity = velocity
-                            segment_state.attitude = (
-                                math.cos(yaw / 2.0),
-                                0.0,
-                                0.0,
-                                math.sin(yaw / 2.0),
+                            segment_state.position = Vector3(
+                                position[0], position[1], position[2]
                             )
+                            segment_state.velocity = Vector3(
+                                velocity[0], velocity[1], velocity[2]
+                            )
+                            segment_state.attitude = Quaternion([0.0, 0.0, yaw])
                             trajectory.append_state(segment_state)
                             track_progress = t
                     else:
@@ -762,14 +764,13 @@ class TerrainOmplRrt:
                         )
                         end_yaw = TerrainOmplRrt.dubinsairplaneYaw(segment_end_state)
                         end_velocity = (math.cos(end_yaw), math.sin(end_yaw), 0.0)
-                        end_state.position = end_position
-                        end_state.velocity = end_velocity
-                        end_state.attitude = (
-                            math.cos(end_yaw / 2.0),
-                            0.0,
-                            0.0,
-                            math.sin(end_yaw / 2.0),
+                        end_state.position = Vector3(
+                            end_position[0], end_position[1], end_position[2]
                         )
+                        end_state.velocity = Vector3(
+                            end_velocity[0], end_velocity[1], end_velocity[2]
+                        )
+                        end_state.attitude = [0.0, 0.0, end_yaw]
                         trajectory.append_state(end_state)
 
                     progress = track_progress

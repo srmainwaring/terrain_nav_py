@@ -314,9 +314,9 @@ def plot_path(
         # check the state vector is not empty
         if position.size == 0:
             return
-        x = position[:, 0]
-        y = position[:, 1]
-        z = position[:, 2]
+        x = np.array([p.x for p in position])
+        y = np.array([p.y for p in position])
+        z = np.array([p.z for p in position])
         ax.scatter(x, y, z, linestyle="solid", marker=".", s=1, c="green")
 
         # plot velocity vectors along the path
@@ -328,9 +328,9 @@ def plot_path(
 
         scale = 0.25 * loiter_radius
         stride = 10
-        vx = velocity[:, 0]
-        vy = velocity[:, 1]
-        vz = velocity[:, 2]
+        vx = np.array([v.x for v in velocity])
+        vy = np.array([v.y for v in velocity])
+        vz = np.array([v.z for v in velocity])
         u = scale * vx
         v = scale * vy
         w = scale * vz
