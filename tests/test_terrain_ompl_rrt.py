@@ -136,6 +136,16 @@ def test_terrain_ompl_rrt():
     # TODO: check the start and goal states are valid. This requires a
     #       correctly calculated distance surface: a surface where at each
     # point a circle of radius r will not intersect with the elevation layer.
+    is_start_valid = planner_mgr.validatePosition(grid_map, start_pos, loiter_radius)
+    if not is_start_valid:
+        print(f"Invalid start position: {start_pos}")
+    else:
+        print(f"Accept start position: {start_pos}")
+    is_goal_valid = planner_mgr.validatePosition(grid_map, start_pos, loiter_radius)
+    if not is_goal_valid:
+        print(f"Invalid goal position: {goal_pos}")
+    else:
+        print(f"Accept goal position: {start_pos}")
 
     # NOTE: if the time budget is insufficient, the solution tree may not
     #       include a goal state, and an approximate solution will be found.
