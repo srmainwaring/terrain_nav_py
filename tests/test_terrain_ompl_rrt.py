@@ -88,7 +88,8 @@ def test_terrain_ompl_rrt():
     (map_lat, map_lon) = mp_util.gps_offset(
         start_lat, start_lon, 0.5 * east, 0.5 * north
     )
-    grid_length = 1.2 * max(math.fabs(east), math.fabs(north))
+    grid_length_factor = 5.0
+    grid_length = grid_length_factor * max(math.fabs(east), math.fabs(north))
     print(f"grid_length:    {grid_length:.0f} m")
 
     start_east = -0.5 * east
