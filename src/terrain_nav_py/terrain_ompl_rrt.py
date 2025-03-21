@@ -884,6 +884,8 @@ class TerrainOmplRrt:
             for theta in theta_samples
         ]
         for point in points:
+            if not map.isInside(point):
+                return False
             min_z = map.atPosition(min_layer, point)
             max_z = map.atPosition(max_layer, point)
             if pos_z < min_z or pos_z > max_z:
