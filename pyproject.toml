@@ -5,16 +5,35 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "terrain_nav_py"
 version = "0.0.1"
-authors = [
-  { name="Rhys Mainwaring", email="rhys.mainwaring@me.com" },
-]
+authors = [{ name = "Rhys Mainwaring", email = "rhys.mainwaring@me.com" }]
 description = "Terrain navigation"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
-    "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: BSD-3-Clause",
+]
+
+dependencies = [
+  "matplotlib>=3.10",
+  "MAVProxy>=1.8",
+  "numpy>=2.2",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp310-cp310-macosx_15_0_arm64.whl ; python_version == '3.10' and sys_platform == 'darwin' and platform_machine == 'arm64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp310-cp310-macosx_15_0_x86_64.whl ; python_version == '3.10' and sys_platform == 'darwin' and platform_machine == 'x86_64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp310-cp310-manylinux_2_28_aarch64.whl ; python_version == '3.10' and sys_platform == 'linux' and platform_machine == 'aarch64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp310-cp310-manylinux_2_28_x86_64.whl ; python_version == '3.10' and sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp311-cp311-macosx_15_0_arm64.whl ; python_version == '3.11' and sys_platform == 'darwin' and platform_machine == 'arm64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp311-cp311-macosx_15_0_x86_64.whl ; python_version == '3.11' and sys_platform == 'darwin' and platform_machine == 'x86_64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp311-cp311-manylinux_2_28_aarch64.whl ; python_version == '3.11' and sys_platform == 'linux' and platform_machine == 'aarch64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp311-cp311-manylinux_2_28_x86_64.whl ; python_version == '3.11' and sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp312-cp312-macosx_15_0_arm64.whl ; python_version == '3.12' and sys_platform == 'darwin' and platform_machine == 'arm64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp312-cp312-macosx_15_0_x86_64.whl ; python_version == '3.12' and sys_platform == 'darwin' and platform_machine == 'x86_64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp312-cp312-manylinux_2_28_aarch64.whl ; python_version == '3.12' and sys_platform == 'linux' and platform_machine == 'aarch64'",
+  "ompl @ https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp312-cp312-manylinux_2_28_x86_64.whl ; python_version == '3.12' and sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "pymavlink>=2.4",
+  "pytest>=8.3",
+  "scipy>=1.15",
 ]
 
 [project.urls]
