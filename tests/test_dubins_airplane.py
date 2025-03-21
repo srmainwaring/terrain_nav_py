@@ -87,6 +87,7 @@ def test_dubins_airplane_state():
     c_space.lock()
 
     s = DubinsAirplaneStateSpace.DubinsAirplaneState(ob.State(c_space))
+    s.setXYZYaw(0.0, 0.0, 0.0, 0.0)
     assert s.getX() == pytest.approx(0.0)
     assert s.getY() == pytest.approx(0.0)
     assert s.getZ() == pytest.approx(0.0)
