@@ -7,9 +7,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  ubuntu-24-build:
     runs-on: ubuntu-24.04
-    name: ubuntu-build
+    name: ubuntu-24-build
     strategy:
       fail-fast: false
     steps:
@@ -29,13 +29,6 @@ jobs:
           python3 -m venv --system-site-packages venv
           . venv/bin/activate
           python3 -m pip install --upgrade pip
-          python3 -m pip install https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp312-cp312-manylinux_2_28_x86_64.whl
-          python3 -m pip install matplotlib
-          python3 -m pip install mavproxy
-          python3 -m pip install numpy
-          python3 -m pip install pymavlink
-          python3 -m pip install pytest
-          python3 -m pip install scipy
 
       - name: Install terrain_nav_py
         run: |
@@ -45,15 +38,7 @@ jobs:
       - name: Run tests in terrain_nav_py
         run: |
           . venv/bin/activate
-          pytest ./tests/test_dubins_airplane.py
-          pytest ./tests/test_dubins_path.py
-          pytest ./tests/test_grid_map.py
-          pytest ./tests/test_ompl_setup.py
-          pytest ./tests/test_path.py
-          pytest ./tests/test_path_segment.py
-          pytest ./tests/test_terrain_ompl_rrt.py
-          pytest ./tests/test_terrain_ompl.py
-          pytest ./tests/test_util.py
+          pytest .
 
   ubuntu-22-build:
     runs-on: ubuntu-22.04
@@ -77,13 +62,6 @@ jobs:
           python3 -m venv --system-site-packages venv
           . venv/bin/activate
           python3 -m pip install --upgrade pip
-          python3 -m pip install https://github.com/ompl/ompl/releases/download/prerelease/ompl-1.6.0-cp310-cp310-manylinux_2_28_x86_64.whl
-          python3 -m pip install matplotlib
-          python3 -m pip install mavproxy
-          python3 -m pip install numpy
-          python3 -m pip install pymavlink
-          python3 -m pip install pytest
-          python3 -m pip install scipy
 
       - name: Install terrain_nav_py
         run: |
@@ -93,12 +71,4 @@ jobs:
       - name: Run tests in terrain_nav_py
         run: |
           . venv/bin/activate
-          pytest ./tests/test_dubins_airplane.py
-          pytest ./tests/test_dubins_path.py
-          pytest ./tests/test_grid_map.py
-          pytest ./tests/test_ompl_setup.py
-          pytest ./tests/test_path.py
-          pytest ./tests/test_path_segment.py
-          pytest ./tests/test_terrain_ompl_rrt.py
-          pytest ./tests/test_terrain_ompl.py
-          pytest ./tests/test_util.py
+          pytest .
