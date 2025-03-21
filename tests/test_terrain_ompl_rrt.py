@@ -116,6 +116,12 @@ def test_terrain_ompl_rrt():
     grid_map = GridMapSRTM(map_lat=map_lat, map_lon=map_lon)
     grid_map.setGridSpacing(30)
     grid_map.setGridLength(grid_length)
+
+    # set up distance layer (may take a while..)
+    print(f"calculating distance-surface...", end="")
+    # grid_map.addLayerDistanceTransform(surface_distance=min_altitude)
+    print(f"done.")
+
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
