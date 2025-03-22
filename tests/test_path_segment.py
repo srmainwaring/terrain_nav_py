@@ -607,6 +607,7 @@ def test_path_segment_get_line_progress2():
 
 
 def test_path_segment_get_length_angle_calc():
+    # 1/4 turn from x, ccw
     t = Vector3(0, 1, 0)
     a = Vector3(1, 0, 0)
     b = Vector3(0, 1, 0)
@@ -615,8 +616,9 @@ def test_path_segment_get_length_angle_calc():
     psi_b = math.atan2(b.y, b.x)
     psi_ab = dir * (psi_b - psi_a)
     psi_ab = wrap_2pi(psi_ab)
-    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+    assert math.degrees(psi_ab) == pytest.approx(90.0)
 
+    # 1/2 turn from x, ccw
     t = Vector3(0, 1, 0)
     a = Vector3(1, 0, 0)
     b = Vector3(-1, 0, 0)
@@ -625,8 +627,9 @@ def test_path_segment_get_length_angle_calc():
     psi_b = math.atan2(b.y, b.x)
     psi_ab = dir * (psi_b - psi_a)
     psi_ab = wrap_2pi(psi_ab)
-    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+    assert math.degrees(psi_ab) == pytest.approx(180.0)
 
+    # 3/4 turn from x, ccw
     t = Vector3(0, 1, 0)
     a = Vector3(1, 0, 0)
     b = Vector3(0, -1, 0)
@@ -635,8 +638,42 @@ def test_path_segment_get_length_angle_calc():
     psi_b = math.atan2(b.y, b.x)
     psi_ab = dir * (psi_b - psi_a)
     psi_ab = wrap_2pi(psi_ab)
-    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+    assert math.degrees(psi_ab) == pytest.approx(270.0)
 
+    # 1/4 turn from x, cw
+    t = Vector3(0, -1, 0)
+    a = Vector3(1, 0, 0)
+    b = Vector3(0, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(90.0)
+
+    # 1/2 turn from x, cw
+    t = Vector3(0, -1, 0)
+    a = Vector3(1, 0, 0)
+    b = Vector3(-1, 0, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(180.0)
+
+    # 3/4 turn from x, cw
+    t = Vector3(0, -1, 0)
+    a = Vector3(1, 0, 0)
+    b = Vector3(0, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(270.0)
+
+    # 1/4 turn from -x, cw
     t = Vector3(0, 1, 0)
     a = Vector3(-1, 0, 0)
     b = Vector3(0, 1, 0)
@@ -645,8 +682,20 @@ def test_path_segment_get_length_angle_calc():
     psi_b = math.atan2(b.y, b.x)
     psi_ab = dir * (psi_b - psi_a)
     psi_ab = wrap_2pi(psi_ab)
-    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+    assert math.degrees(psi_ab) == pytest.approx(90.0)
 
+    # 1/2 turn from -x, cw
+    t = Vector3(0, 1, 0)
+    a = Vector3(-1, 0, 0)
+    b = Vector3(1, 0, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(180.0)
+
+    # 3/4 turn from -x, cw
     t = Vector3(0, 1, 0)
     a = Vector3(-1, 0, 0)
     b = Vector3(0, -1, 0)
@@ -655,8 +704,31 @@ def test_path_segment_get_length_angle_calc():
     psi_b = math.atan2(b.y, b.x)
     psi_ab = dir * (psi_b - psi_a)
     psi_ab = wrap_2pi(psi_ab)
-    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+    assert math.degrees(psi_ab) == pytest.approx(270.0)
 
+    # 1/4 turn from -x, ccw
+    t = Vector3(0, -1, 0)
+    a = Vector3(-1, 0, 0)
+    b = Vector3(0, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(90.0)
+
+    # 1/2 turn from -x, ccw
+    t = Vector3(0, -1, 0)
+    a = Vector3(-1, 0, 0)
+    b = Vector3(1, 0, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(180.0)
+
+    # 3/4 turn from -x, ccw
     t = Vector3(0, -1, 0)
     a = Vector3(-1, 0, 0)
     b = Vector3(0, 1, 0)
@@ -665,11 +737,200 @@ def test_path_segment_get_length_angle_calc():
     psi_b = math.atan2(b.y, b.x)
     psi_ab = dir * (psi_b - psi_a)
     psi_ab = wrap_2pi(psi_ab)
-    print(f"dir: {dir:.1f}, psi: {math.degrees(psi_ab):.1f}")
+    assert math.degrees(psi_ab) == pytest.approx(270.0)
+
+    # 1/8 turn from x + 45deg, ccw
+    t = Vector3(-1, 1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(0, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(45.0)
+
+    # 1/4 turn from x + 45deg, ccw
+    t = Vector3(-1, 1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(-1, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(90.0)
+
+    # 1/2 turn from x + 45deg, ccw
+    t = Vector3(-1, 1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(-1, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(180.0)
+
+    # 3/4 turn from x + 45deg, ccw
+    t = Vector3(-1, 1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(1, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(270.0)
+
+    # 1/8 turn from x + 45deg, cw
+    t = Vector3(1, -1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(1, 0, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(45.0)
+
+    # 1/4 turn from x + 45deg, cw
+    t = Vector3(1, -1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(1, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(90.0)
+
+    # 1/2 turn from x + 45deg, cw
+    t = Vector3(1, -1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(-1, -1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(180.0)
+
+    # 3/4 turn from x + 45deg, cw
+    t = Vector3(1, -1, 0)
+    a = Vector3(1, 1, 0)
+    b = Vector3(-1, 1, 0)
+    dir = (a % t).normalized().z
+    psi_a = math.atan2(a.y, a.x)
+    psi_b = math.atan2(b.y, b.x)
+    psi_ab = dir * (psi_b - psi_a)
+    psi_ab = wrap_2pi(psi_ab)
+    assert math.degrees(psi_ab) == pytest.approx(270.0)
+
+
+def test_path_segment_get_length_arc():
+    # workspace for rotationa
+    m_att = Matrix3()
+
+    # 1/4 turn from x, ccw
+    m_att.from_euler(0.0, 0.0, math.radians(90))
+
+    state1 = State()
+    state1.position = Vector3(1, 0, 0)
+    state1.velocity = Vector3(0, 1, 0)
+    state1.attitude = quaternion.Quaternion(m_att)
+
+    m_att.from_euler(0.0, 0.0, math.radians(180))
+
+    state2 = State()
+    state2.position = Vector3(0, 1, 0)
+    state2.velocity = Vector3(-1, 0, 0)
+    state2.attitude = quaternion.Quaternion(m_att)
+
+    path_segment = PathSegment()
+    path_segment.curvature = 1.0
+    path_segment.is_periodic = False
+    path_segment.reached = False
+    path_segment.append_state(state1)
+    path_segment.append_state(state2)
+
+    assert path_segment.get_length() == pytest.approx(math.radians(90.0))
+
+    # 2/4 turn from x, ccw
+    m_att.from_euler(0.0, 0.0, math.radians(90))
+
+    state1 = State()
+    state1.position = Vector3(1, 0, 0)
+    state1.velocity = Vector3(0, 1, 0)
+    state1.attitude = quaternion.Quaternion(m_att)
+
+    m_att.from_euler(0.0, 0.0, math.radians(0))
+
+    state2 = State()
+    state2.position = Vector3(0, -1, 0)
+    state2.velocity = Vector3(1, 0, 0)
+    state2.attitude = quaternion.Quaternion(m_att)
+
+    path_segment = PathSegment()
+    path_segment.curvature = 1.0
+    path_segment.is_periodic = False
+    path_segment.reached = False
+    path_segment.append_state(state1)
+    path_segment.append_state(state2)
+
+    assert path_segment.get_length() == pytest.approx(math.radians(270.0))
+
+    # 1/4 turn from -x, cw
+    m_att.from_euler(0.0, 0.0, math.radians(90))
+
+    state1 = State()
+    state1.position = Vector3(-1, 0, 0)
+    state1.velocity = Vector3(0, 1, 0)
+    state1.attitude = quaternion.Quaternion(m_att)
+
+    m_att.from_euler(0.0, 0.0, math.radians(0))
+
+    state2 = State()
+    state2.position = Vector3(0, 1, 0)
+    state2.velocity = Vector3(1, 0, 0)
+    state2.attitude = quaternion.Quaternion(m_att)
+
+    path_segment = PathSegment()
+    path_segment.curvature = -1.0
+    path_segment.is_periodic = False
+    path_segment.reached = False
+    path_segment.append_state(state1)
+    path_segment.append_state(state2)
+
+    assert path_segment.get_length() == pytest.approx(math.radians(90.0))
+
+    # 3/4 turn from -x, cw
+    m_att.from_euler(0.0, 0.0, math.radians(90))
+
+    state1 = State()
+    state1.position = Vector3(-1, 0, 0)
+    state1.velocity = Vector3(0, 1, 0)
+    state1.attitude = quaternion.Quaternion(m_att)
+
+    m_att.from_euler(0.0, 0.0, math.radians(270))
+
+    state2 = State()
+    state2.position = Vector3(0, -1, 0)
+    state2.velocity = Vector3(-1, 0, 0)
+    state2.attitude = quaternion.Quaternion(m_att)
+
+    path_segment = PathSegment()
+    path_segment.curvature = -1.0
+    path_segment.is_periodic = False
+    path_segment.reached = False
+    path_segment.append_state(state1)
+    path_segment.append_state(state2)
+
+    assert path_segment.get_length() == pytest.approx(math.radians(270.0))
 
 
 def main():
-    test_path_segment_get_length_angle_calc()
+    test_path_segment_get_length_arc()
 
 
 if __name__ == "__main__":
