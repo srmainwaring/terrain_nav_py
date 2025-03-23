@@ -57,9 +57,9 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         self._check_collision_max_altitude = check_max_altitude
 
         self._exclusion_polygons = []
-        self._exclusion_circles = []
         self._inclusion_polygons = []
         self._inclusion_circles = []
+        self._exclusion_circles = []
 
     def isValid(self, state: ob.State) -> bool:
         """
@@ -105,9 +105,18 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         :return: `True` if the positon is in collision
         :rtype: bool
         """
-        # check fences
+        # check fences, circles are fastest so do first
         point = geometry.Point(position[0], position[1])
-        if self.isInsideExclusionPolygon(point):
+        if self.isInsideExclusionCircles(point):
+            return True
+
+        if self.isOutsideInclusionCircles(point):
+            return True
+
+        if self.isInsideExclusionPolygons(point):
+            return True
+
+        if self.isOutsideInclusionPolygons(point):
             return True
 
         # check elevation
@@ -123,33 +132,115 @@ class TerrainValidityChecker(ob.StateValidityChecker):
             # Do not allow vehicle to go outside the map
             return True
 
-    def setExclusionPolygons(
-        self, exclusion_polygons: list[list[tuple[float, float]]]
-    ) -> None:
+    def setExclusionPolygons(self, polygons: list[list[tuple[float, float]]]) -> None:
         """
         Set one or more exclusion polygons
 
-        :param exclusion_polygons: A list of exclusion polygons (ENU frame)
-        :type exclusion_polygons: A list of polygons (each a point list)
+        :param polygons: A list of exclusion polygons (ENU frame)
+        :type polygons: A list of polygons (each a point list)
         """
         self._exclusion_polygons.clear()
-        for polygon in exclusion_polygons:
+        for polygon in polygons:
             line = geometry.LineString(polygon)
             polygon = geometry.Polygon(line)
             self._exclusion_polygons.append(polygon)
 
-    def isInsideExclusionPolygon(self, point: geometry.Point) -> bool:
+    def setInclusionPolygons(self, polygons: list[list[tuple[float, float]]]) -> None:
         """
-        Check if a point is inside or on the boundary of the exclusion polygons.
+        Set one or more inclusion polygons
 
-        :param point: The point to check if inside the polygon
+        :param polygons: A list of inclusion polygons (ENU frame)
+        :type polygons: A list of polygons (poly = list[(east, north)])
+        """
+        self._inclusion_polygons.clear()
+        for polygon in polygons:
+            line = geometry.LineString(polygon)
+            polygon = geometry.Polygon(line)
+            self._inclusion_polygons.append(polygon)
+
+    def setExclusionCircles(self, circles: list[tuple[float, float, float]]) -> None:
+        """
+        Set one or more exclusion circles
+
+        :param circles: A list of exclusion circles (ENU frame)
+        :type polygons: A list of circles (circle = (east, north, radius))
+        """
+        self._exclusion_circles = circles
+
+    def setInclusionCircles(self, circles: list[tuple[float, float, float]]) -> None:
+        """
+        Set one or more exclusion circles
+
+        :param circles: A list of exclusion circles (ENU frame)
+        :type polygons: A list of circles (circle = (east, north, radius))
+        """
+        self._inclusion_circles = circles
+
+    def isInsideExclusionPolygons(self, point: geometry.Point) -> bool:
+        """
+        Check if a point is inside or on the boundary of any exclusion polygon.
+
+        :param point: The point to check if inside the polygons
         :return: `True` if the point is inside or on the boundary
-        :rtype: bool 
+        :rtype: bool
         """
         for polygon in self._exclusion_polygons:
             if polygon.contains(point) or polygon.boundary.contains(point):
                 return True
         return False
+
+    def isOutsideInclusionPolygons(self, point: geometry.Point) -> bool:
+        """
+        Check if a point is outside of all the inclusion polygons.
+
+        :param point: The point to check if outside the polygons
+        :return: `True` if the point is outside
+        :rtype: bool
+        """
+        if not self._inclusion_polygons:
+            return False
+
+        for polygon in self._inclusion_polygons:
+            if polygon.contains(point):
+                return False
+        return True
+
+    def isInsideExclusionCircles(self, point: geometry.Point) -> bool:
+        """
+        Check if a point is inside or on the boundary of any exclusion circle.
+
+        :param point: The point to check if inside the circle
+        :return: `True` if the point is inside or on the boundary
+        :rtype: bool
+        """
+        for x, y, radius in self._exclusion_circles:
+            dx = point.x - x
+            dy = point.y - y
+            d2 = dx * dx + dy * dy
+            r2 = radius * radius
+            if d2 <= r2:
+                return True
+        return False
+
+    def isOutsideInclusionCircles(self, point: geometry.Point) -> bool:
+        """
+        Check if a point is outside of all inclusion circle.
+
+        :param point: The point to check if outside the circle
+        :return: `True` if the point is outside
+        :rtype: bool
+        """
+        if not self._inclusion_circles:
+            return False
+
+        for x, y, radius in self._inclusion_circles:
+            dx = point.x - x
+            dy = point.y - y
+            d2 = dx * dx + dy * dy
+            r2 = radius * radius
+            if d2 <= r2:
+                return False
+        return True
 
 
 class TerrainStateSampler(ob.StateSampler):
