@@ -42,6 +42,8 @@ import math
 from ompl import base as ob
 from ompl import util as ou
 
+from shapely import geometry
+
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.grid_map import GridMap
 
@@ -54,9 +56,14 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         self._map = map
         self._check_collision_max_altitude = check_max_altitude
 
+        self._exclusion_polygons = []
+        self._exclusion_circles = []
+        self._inclusion_polygons = []
+        self._inclusion_circles = []
+
     def isValid(self, state: ob.State) -> bool:
         """
-        State validity check
+        State validity check - overrides virual base class method
 
         :param state: the state to check
         :type state: ob.State
@@ -87,13 +94,23 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         self, layer: str, position: tuple[float, float, float], is_above: bool
     ) -> bool:
         """
-        Check if the state is in collision with a layer
+        Check if the state is in collision with a layer or fence
 
-        :param layer: name of the layer in the elevation map
-        :param position: position of the state to evaluate
-        :param is_above:
+        :param layer: Name of the layer in the elevation map
+        :type layer: str
+        :param position: Position of the state to evaluate
+        :type position: tuple[float, float, float]
+        :param is_above: `True` if to check above layer, `False` to check below
+        :type is_above: bool
+        :return: `True` if the positon is in collision
+        :rtype: bool
         """
-        # TODO test
+        # check fences
+        point = geometry.Point(position[0], position[1])
+        if self.isInsideExclusionPolygon(point):
+            return True
+
+        # check elevation
         position_2d = (position[0], position[1])
         if self._map.isInside(position_2d):
             elevation = self._map.atPosition(layer, position_2d)
@@ -105,6 +122,34 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         else:
             # Do not allow vehicle to go outside the map
             return True
+
+    def setExclusionPolygons(
+        self, exclusion_polygons: list[list[tuple[float, float]]]
+    ) -> None:
+        """
+        Set one or more exclusion polygons
+
+        :param exclusion_polygons: A list of exclusion polygons (ENU frame)
+        :type exclusion_polygons: A list of polygons (each a point list)
+        """
+        self._exclusion_polygons.clear()
+        for polygon in exclusion_polygons:
+            line = geometry.LineString(polygon)
+            polygon = geometry.Polygon(line)
+            self._exclusion_polygons.append(polygon)
+
+    def isInsideExclusionPolygon(self, point: geometry.Point) -> bool:
+        """
+        Check if a point is inside or on the boundary of the exclusion polygons.
+
+        :param point: The point to check if inside the polygon
+        :return: `True` if the point is inside or on the boundary
+        :rtype: bool 
+        """
+        for polygon in self._exclusion_polygons:
+            if polygon.contains(point) or polygon.boundary.contains(point):
+                return True
+        return False
 
 
 class TerrainStateSampler(ob.StateSampler):
