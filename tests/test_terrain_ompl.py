@@ -174,5 +174,38 @@ def test_terrain_ompl_sampler_uniform():
     assert da_state.getYaw() != 0.0
 
 
+# inclusion tests
+def test_polygon_inclusion_checker():
+    from shapely import geometry
+
+    polygon = [
+        (100, 100),
+        (50, 100),
+        (50, 50),
+        (100, 50),
+    ]
+    line = geometry.LineString(polygon)
+    polygon = geometry.Polygon(line)
+
+    point = geometry.Point(75, 75)
+    assert polygon.contains(point) == True
+
+    point = geometry.Point(0, 0)
+    assert polygon.contains(point) == False
+
+    point = geometry.Point(50, 50)
+    assert polygon.contains(point) == False
+    assert polygon.boundary.contains(point) == True
+
+    point = geometry.Point(50, 75)
+    assert polygon.contains(point) == False
+    assert polygon.boundary.contains(point) == True
+
+    point = geometry.Point(100, 75)
+    assert polygon.contains(point) == False
+    assert polygon.boundary.contains(point) == True
+
+
+
 if __name__ == "__main__":
     test_terrain_ompl_gridmap_iterator()
