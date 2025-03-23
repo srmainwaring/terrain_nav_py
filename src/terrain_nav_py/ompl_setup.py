@@ -85,6 +85,8 @@ class OmplSetup(og.SimpleSetup):
     def __init__(self, state_space):
         super().__init__(state_space)
 
+        self._terrain_validity_checker = None
+
     def setDefaultObjective(self) -> None:
         """
         Set the default objective
@@ -146,7 +148,13 @@ class OmplSetup(og.SimpleSetup):
         :param check_max_altitude: set true to check maximum altitude
         :type check_max_altitude: bool
         """
-        validity_checker = TerrainValidityChecker(
+        self._terrain_validity_checker = TerrainValidityChecker(
             self.getSpaceInformation(), map, check_max_altitude
         )
-        self.setStateValidityChecker(validity_checker)
+        self.setStateValidityChecker(self._terrain_validity_checker)
+
+    def setExclusionPolygons(
+        self, exclusion_polygons: list[list[tuple[float, float]]]
+    ) -> None:
+        # TODO: test
+        self._terrain_validity_checker.setExclusionPolygons(exclusion_polygons)
