@@ -862,6 +862,7 @@ class TerrainOmplRrt:
         self._max_altitude = max_altitude
         self._min_altitude = min_altitude
 
+    # TODO: not checking fences - reuse state validator.
     @staticmethod
     def validatePosition(
         map: GridMap, centre_pos: tuple[float, float, float], radius: float
@@ -889,5 +890,44 @@ class TerrainOmplRrt:
             min_z = map.atPosition(min_layer, point)
             max_z = map.atPosition(max_layer, point)
             if pos_z < min_z or pos_z > max_z:
+                return False
+        return True
+
+    def validateCircle(
+        self, centre_pos: tuple[float, float, float], radius: float
+    ) -> bool:
+        """
+        Check the position is not an inevitable collision state (ICS)
+
+        NOTE: this is an approximate the check whether the position
+              is a ICS.
+        """
+        # access the state validity checker
+        da_space = self._problem_setup.getStateSpace()
+        validity_checker = self._problem.getStateValidityChecker()
+        print(f"validity_checker (type): {type(validity_checker)}")
+
+        # create state workspace
+        state = ob.State(da_space)
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+
+        # check valid at centre
+        da_state.setXYZ(*centre_pos)
+        is_valid = validity_checker.isValid(state)
+        if not is_valid:
+            return False
+
+        # check valid on perimeter (using altitude at centre)
+        num_steps = 24
+        theta_samples = np.linspace(-math.pi, math.pi, num_steps)
+        pos_2d = np.array([centre_pos[0], centre_pos[1]])
+        points = [
+            pos_2d + radius * np.array((np.cos(theta), np.sin(theta)))
+            for theta in theta_samples
+        ]
+        for point in points:
+            da_state.setXYZ(point[0], point[1], centre_pos[2])
+            is_valid = validity_checker.isValid(state)
+            if not is_valid:
                 return False
         return True
