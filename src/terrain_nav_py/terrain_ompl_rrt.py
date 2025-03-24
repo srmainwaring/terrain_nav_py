@@ -87,6 +87,13 @@ class TerrainOmplRrt:
         self._solve_duration: float = 0.0
         self._check_max_altitude: bool = True
 
+    def clear(self) -> None:
+        """
+        Clear start states and previous motion plan computation.
+        """
+        self._problem_setup.clear()
+        self._problem_setup.clearStartStates()
+
     def configureProblem(self) -> None:
         """
         Configure OMPL problem descriptions
@@ -173,6 +180,7 @@ class TerrainOmplRrt:
         """
         # TODO: test
         print(f"[TerrainOmplRrt] setupProblem2")
+        self.clear()
         self.configureProblem()
 
         da_space = self._problem_setup.getStateSpace()
@@ -281,6 +289,7 @@ class TerrainOmplRrt:
         :param goal: center of the goal loiter position
         """
         # TODO: test
+        self.clear()
         self.configureProblem()
 
         da_space = self._problem_setup.getStateSpace()
@@ -361,6 +370,7 @@ class TerrainOmplRrt:
             )
             return
 
+        self.clear()
         self.configureProblem()
 
         da_space = self._problem_setup.getStateSpace()
@@ -431,6 +441,7 @@ class TerrainOmplRrt:
         :param goal_vel: velocity of the goal state
         """
         # TODO: test
+        self.clear()
         self.configureProblem()
 
         da_space = self._problem_setup.getStateSpace()
