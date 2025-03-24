@@ -85,8 +85,6 @@ class OmplSetup(og.SimpleSetup):
     def __init__(self, state_space):
         super().__init__(state_space)
 
-        self._terrain_validity_checker = None
-
     def setDefaultObjective(self) -> None:
         """
         Set the default objective
@@ -148,27 +146,31 @@ class OmplSetup(og.SimpleSetup):
         :param check_max_altitude: set true to check maximum altitude
         :type check_max_altitude: bool
         """
-        self._terrain_validity_checker = TerrainValidityChecker(
+        validity_checker = TerrainValidityChecker(
             self.getSpaceInformation(), map, check_max_altitude
         )
-        self.setStateValidityChecker(self._terrain_validity_checker)
+        self.setStateValidityChecker(validity_checker)
 
     def setExclusionPolygons(
         self, polygons: list[list[tuple[float, float]]]
     ) -> None:
-        self._terrain_validity_checker.setExclusionPolygons(polygons)
+        validity_checker = self.getStateValidityChecker()
+        validity_checker.setExclusionPolygons(polygons)
 
     def setInclusionPolygons(
         self, polygons: list[list[tuple[float, float]]]
     ) -> None:
-        self._terrain_validity_checker.setInclusionPolygons(polygons)
+        validity_checker = self.getStateValidityChecker()
+        validity_checker.setInclusionPolygons(polygons)
 
     def setExclusionCircles(
         self, circles: list[tuple[float, float, float]]
     ) -> None:
-        self._terrain_validity_checker.setExclusionCircles(circles)
+        validity_checker = self.getStateValidityChecker()
+        validity_checker.setExclusionCircles(circles)
 
     def setInclusionCircles(
         self, circles: list[tuple[float, float, float]]
     ) -> None:
-        self._terrain_validity_checker.setInclusionCircles(circles)
+        validity_checker = self.getStateValidityChecker()
+        validity_checker.setInclusionCircles(circles)
