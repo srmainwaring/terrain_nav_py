@@ -65,7 +65,9 @@ from terrain_nav_py.terrain_map import TerrainMap
 
 from terrain_nav_py.terrain_ompl import TerrainStateSampler
 
-
+# TODO: the state management needs re-working from the original C++
+#       version as it's possible to get the planner into an inconsistent
+#       state by calling set methods and configure etc in the wrong order 
 class TerrainOmplRrt:
     """
     Setup and run the planning problem.
@@ -74,6 +76,7 @@ class TerrainOmplRrt:
     def __init__(self, space: ob.StateSpace):
         # TODO: test
         self._problem_setup: OmplSetup = OmplSetup(space)
+        self._is_configured = False
         self._map: TerrainMap = None
         self._min_altitude: float = 50.0
         self._max_altitude: float = 120.0
@@ -90,6 +93,9 @@ class TerrainOmplRrt:
         """
         # TODO: test
         print(f"[TerrainOmplRrt] configureProblem")
+        # only configure once - see TODO above class declaration.
+        if self._is_configured:
+            return
 
         print(f"[TerrainOmplRrt] clearing previous states")
         self._problem_setup.clear()
@@ -98,13 +104,6 @@ class TerrainOmplRrt:
         print(f"[TerrainOmplRrt] setup default planner and objective")
         self._problem_setup.setDefaultPlanner()
         self._problem_setup.setDefaultObjective()
-
-        # TODO: DEBUG
-        # planner = self._problem_setup.getPlanner()
-        # print(f"[TerrainOmplRrt] planner: {planner}")
-        # objective = self._problem_setup.getOptimizationObjective()
-        # print(f"[TerrainOmplRrt] objective: {objective}")
-        # TODO: DEBUG
 
         print(f"[TerrainOmplRrt] setup terrain collition checking")
         grid_map = self._map.getGridMap()
@@ -140,6 +139,8 @@ class TerrainOmplRrt:
         print(f"[TerrainOmplRrt] setup planner data ")
         si = self._problem_setup.getSpaceInformation()
         self._planner_data = ob.PlannerData(si)
+
+        self._is_configured = True
 
     # setup using start and goal positions and default start loiter radius
     def setupProblem1(
@@ -240,7 +241,7 @@ class TerrainOmplRrt:
 
         # TODO: DEBUG inspect problem definition
         problem_def = self._problem_setup.getProblemDefinition()
-        print(f"[TerrainOmplRrt] type(problem_def): {type(problem_def)}")
+        # print(f"[TerrainOmplRrt] type(problem_def): {type(problem_def)}")
         # print(f"[TerrainOmplRrt] problem_def:\n{problem_def}")
 
         # TODO: DEBUG inspect bounds
@@ -904,8 +905,8 @@ class TerrainOmplRrt:
         """
         # access the state validity checker
         da_space = self._problem_setup.getStateSpace()
-        validity_checker = self._problem.getStateValidityChecker()
-        print(f"validity_checker (type): {type(validity_checker)}")
+        problem = self.getProblemSetup()
+        validity_checker = problem.getStateValidityChecker()
 
         # create state workspace
         state = ob.State(da_space)
