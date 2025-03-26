@@ -27,6 +27,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 import math
 
 from ompl import base as ob
@@ -34,6 +35,10 @@ from ompl import geometric as og
 from ompl import util as ou
 
 from MAVProxy.modules.lib import mp_util
+
+from terrain_nav_py import add_stderr_logger
+
+from terrain_nav_py.path import Path
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 
@@ -45,8 +50,13 @@ from terrain_nav_py.terrain_map import TerrainMap
 
 from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 
+log = logging.getLogger(__name__)
+
 
 def test_terrain_ompl_rrt():
+    # configure logger
+    add_stderr_logger()
+
     # TODO: set local seed to ensure reproducible results - this does
     #       not appear to be working.
     ou.RNG().setLocalSeed(1)
