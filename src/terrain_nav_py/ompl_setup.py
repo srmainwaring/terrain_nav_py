@@ -151,26 +151,18 @@ class OmplSetup(og.SimpleSetup):
         )
         self.setStateValidityChecker(validity_checker)
 
-    def setExclusionPolygons(
-        self, polygons: list[list[tuple[float, float]]]
-    ) -> None:
+    def setExclusionPolygons(self, polygons: list[list[tuple[float, float]]]) -> None:
         validity_checker = self.getStateValidityChecker()
         validity_checker.setExclusionPolygons(polygons)
 
-    def setInclusionPolygons(
-        self, polygons: list[list[tuple[float, float]]]
-    ) -> None:
+    def setInclusionPolygons(self, polygons: list[list[tuple[float, float]]]) -> None:
         validity_checker = self.getStateValidityChecker()
         validity_checker.setInclusionPolygons(polygons)
 
-    def setExclusionCircles(
-        self, circles: list[tuple[float, float, float]]
-    ) -> None:
+    def setExclusionCircles(self, circles: list[tuple[float, float, float]]) -> None:
         validity_checker = self.getStateValidityChecker()
         validity_checker.setExclusionCircles(circles)
 
-    def setInclusionCircles(
-        self, circles: list[tuple[float, float, float]]
-    ) -> None:
+    def setInclusionCircles(self, circles: list[tuple[float, float, float]]) -> None:
         validity_checker = self.getStateValidityChecker()
         validity_checker.setInclusionCircles(circles)

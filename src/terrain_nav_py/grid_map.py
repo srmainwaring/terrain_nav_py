@@ -32,11 +32,14 @@ GridMap
 """
 
 import copy
+import logging
 import numpy as np
 import scipy as sp
 
 from MAVProxy.modules.lib import mp_elevation
 from MAVProxy.modules.lib import mp_util
+
+log = logging.getLogger(__name__)
 
 
 class GridMap:
@@ -327,32 +330,29 @@ class GridMapSRTM(GridMap):
                     if surface_z < pz + ed:
                         surface_z = pz + ed
 
-                    # TODO: debug
-                    dz = surface_z - elev_z
-                    # print(
+                    # NOTE: leave for in-depth debugging
+                    # dz = surface_z - elev_z
+                    # log.debug(
                     #     f"grid: ({i}, {j}), slice: ({ii}, {jj}), "
                     #     f"[x: {x:.1f}, y: {y:.1f}, z: {elev_z:.1f}]; "
                     #     f"[px: {px:.1f}, py: {py:.1f}, pz: {pz:.1f}]; "
                     #     f"[d1: {d1:.1f}, sd: {sd:.1f}, ed: {ed:.1f}]; "
                     #     f"elev_z: {elev_z:.1f}, surf_z: {surface_z:.1f}, dz: {dz:.1f}"
                     # )
-                    # pass
 
                 # set the layer value
                 self._surf_grid[i][j] = surface_z
-                # TODO: debug
-                # print()
 
         # create interpolator
         self._surf_interp = sp.interpolate.RegularGridInterpolator(
             (self._x, self._y), self._surf_grid, method="linear"
         )
 
-        # TODO: debug
+        # NOTE: leave for in-depth debugging
         # dz = self._surf_grid - self._elev_grid
         # min_dz = np.min(dz)
         # max_dz = np.max(dz)
-        # print(f"elev: {self._elev_grid}")
-        # print(f"surf: {self._surf_grid}")
-        # print(f"dz: {dz}")
-        # print(f"min_dz: {min_dz}, max_dz: {max_dz}")
+        # log.debug(f"elev: {self._elev_grid}")
+        # log.debug(f"surf: {self._surf_grid}")
+        # log.debug(f"dz: {dz}")
+        # log.debug(f"min_dz: {min_dz}, max_dz: {max_dz}")

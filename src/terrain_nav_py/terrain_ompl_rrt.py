@@ -37,6 +37,7 @@
 Terrain planner OMPL RRT
 """
 
+import logging
 import math
 import sys
 
@@ -65,9 +66,12 @@ from terrain_nav_py.terrain_map import TerrainMap
 
 from terrain_nav_py.terrain_ompl import TerrainStateSampler
 
+log = logging.getLogger(__name__)
+
+
 # TODO: the state management needs re-working from the original C++
 #       version as it's possible to get the planner into an inconsistent
-#       state by calling set methods and configure etc in the wrong order 
+#       state by calling set methods and configure etc in the wrong order
 class TerrainOmplRrt:
     """
     Setup and run the planning problem.
@@ -99,20 +103,20 @@ class TerrainOmplRrt:
         Configure OMPL problem descriptions
         """
         # TODO: test
-        print(f"[TerrainOmplRrt] configureProblem")
+        log.debug(f"Configure problem")
         # only configure once - see TODO above class declaration.
         if self._is_configured:
             return
 
-        print(f"[TerrainOmplRrt] clearing previous states")
+        log.debug(f"Clearing previous states")
         self._problem_setup.clear()
         self._problem_setup.clearStartStates()
 
-        print(f"[TerrainOmplRrt] setup default planner and objective")
+        log.debug(f"Setup default planner and objective")
         self._problem_setup.setDefaultPlanner()
         self._problem_setup.setDefaultObjective()
 
-        print(f"[TerrainOmplRrt] setup terrain collition checking")
+        log.debug(f"Setup terrain collition checking")
         grid_map = self._map.getGridMap()
         self._problem_setup.setTerrainCollisionChecking(
             grid_map, self._check_max_altitude
@@ -123,13 +127,13 @@ class TerrainOmplRrt:
         #      std::bind(&TerrainOmplRrt::allocTerrainStateSampler, this, std::placeholders::_1));
         # self._problem_setup.getStateSpace().allocStateSampler()
 
-        print(f"[TerrainOmplRrt] get lower bounds")
+        log.debug(f"Get lower bounds")
         bounds = ob.RealVectorBounds(3)
         bounds.setLow(0, self._lower_bound[0])
         bounds.setLow(1, self._lower_bound[1])
         bounds.setLow(2, self._lower_bound[2])
 
-        print(f"[TerrainOmplRrt] get upper bounds")
+        log.debug(f"Get upper bounds")
         bounds.setHigh(0, self._upper_bound[0])
         bounds.setHigh(1, self._upper_bound[1])
         bounds.setHigh(2, self._upper_bound[2])
@@ -137,13 +141,13 @@ class TerrainOmplRrt:
         # define start and goal positions.
         da_space = self._problem_setup.getStateSpace()
 
-        print(f"[TerrainOmplRrt] set bounds")
+        log.debug(f"Set bounds")
         da_space.setBounds(bounds)
 
-        print(f"[TerrainOmplRrt] setup validity check resolution")
+        log.debug(f"Setup validity check resolution")
         self._problem_setup.setStateValidityCheckingResolution(0.001)
 
-        print(f"[TerrainOmplRrt] setup planner data ")
+        log.debug(f"Setup planner data ")
         si = self._problem_setup.getSpaceInformation()
         self._planner_data = ob.PlannerData(si)
 
@@ -179,14 +183,13 @@ class TerrainOmplRrt:
         :param start_loiter_radius:
         """
         # TODO: test
-        print(f"[TerrainOmplRrt] setupProblem2")
+        log.debug(f"SetupProblem2")
         self.clear()
         self.configureProblem()
 
         da_space = self._problem_setup.getStateSpace()
-        print(f"[TerrainOmplRrt] type(da_space): {da_space}")
         radius = da_space.getMinTurningRadius()
-        print(f"[TerrainOmplRrt] radius: {radius}")
+        log.debug(f"turning radius: {radius}")
 
         num_step = 10
         theta_samples = np.linspace(-math.pi, math.pi, num_step, endpoint=False)
@@ -210,13 +213,10 @@ class TerrainOmplRrt:
             )
             start_yaw = wrap_pi(start_yaw)
             start_ompl.setYaw(start_yaw)
-            # print(f"[TerrainOmplRrt] adding start state to problem")
-            # TODO scoped vs abstract state
-            # self._problem_setup.addStartState(start_ompl)
+            # log.debug(f"Adding start state to problem")
             self._problem_setup.addStartState(start_state)
 
         self._goal_states = ob.GoalStates(self._problem_setup.getSpaceInformation())
-        # print(f"[TerrainOmplRrt] type(goal_states): {type(self._goal_states)}")
 
         # for (double theta = -M_PI; theta < M_PI; theta += (delta_theta * 2 * M_PI)) {
         for theta in theta_samples:
@@ -244,34 +244,28 @@ class TerrainOmplRrt:
             # self._goal_states.addState(goal_ompl)
             self._goal_states.addState(goal_state)
 
-        print(f"[TerrainOmplRrt] setting problem goals")
+        log.debug(f"Setting problem goals")
         self._problem_setup.setGoal(self._goal_states)
 
-        # TODO: DEBUG inspect problem definition
-        problem_def = self._problem_setup.getProblemDefinition()
-        # print(f"[TerrainOmplRrt] type(problem_def): {type(problem_def)}")
-        # print(f"[TerrainOmplRrt] problem_def:\n{problem_def}")
-
-        # TODO: DEBUG inspect bounds
+        # inspect bounds
         da_space = self._problem_setup.getStateSpace()
         re3_space = da_space.getSubspace(0)
         re3_bounds = re3_space.getBounds()
-        print(
-            f"[TerrainOmplRrt] re3_space.getBounds: "
+        log.debug(
+            f"re3_space.getBounds: "
             f"low: {re3_bounds.low[0], re3_bounds.low[1], re3_bounds.low[2]}"
         )
-        print(
-            f"[TerrainOmplRrt] re3_space.getBounds: "
+        log.debug(
+            f"re3_space.getBounds: "
             f"high: {re3_bounds.high[0], re3_bounds.high[1], re3_bounds.high[2]}"
         )
 
-        print(f"[TerrainOmplRrt] running problem setup")
+        log.debug(f"Running problem setup")
         self._problem_setup.setup()
 
-        print(f"[TerrainOmplRrt] get planner from problem")
+        log.debug(f"Get planner from problem")
         planner = self._problem_setup.getPlanner()
-        # print(f"[TerrainOmplRrt] type(planner): {type(planner)}")
-        print(f"[TerrainOmplRrt] planner range: {planner.getRange()}")
+        log.debug(f"Planner range: {planner.getRange()}")
 
     # setup using start position and velocity and goal position and loiter radius
     def setupProblem3(
@@ -365,9 +359,7 @@ class TerrainOmplRrt:
         # TODO: test
         if goal_positions.empty():
             # TODO: should raise exception?
-            print(
-                f"[TerrainOmplRrt] Failed to configure problem: Goal position list empty"
-            )
+            log.debug(f"Failed to configure problem: Goal position list empty")
             return
 
         self.clear()
@@ -523,8 +515,8 @@ class TerrainOmplRrt:
             map_pos[1] + roi_ratio * map_width_y,
             max_elevation,
         )
-        print(f"[TerrainOmplRrt] Upper bounds: {upper_bounds}")
-        print(f"[TerrainOmplRrt] Lower bounds: {lower_bounds}")
+        log.debug(f"Upper bounds: {upper_bounds}")
+        log.debug(f"Lower bounds: {lower_bounds}")
         self.setBounds(lower_bounds, upper_bounds)
 
     def setMap(self, map: TerrainMap) -> None:
@@ -556,7 +548,7 @@ class TerrainOmplRrt:
         :return false: Did not find an exact solution
         """
         # TODO: test
-        print(f"[TerrainOmplRrt] run solver")
+        log.debug(f"Run solver")
         if self._problem_setup.solve(time_budget):
             # self._problem_setup.getSolutionPath().print(std::cout)
             # self._problem_setup.simplifySolution()
@@ -565,10 +557,10 @@ class TerrainOmplRrt:
             self._solve_duration = self._problem_setup.getLastPlanComputationTime()
 
         else:
-            print(f"[TerrainOmplRrt] Solution Not found")
+            log.debug(f"Solution not found")
 
         if self._problem_setup.haveExactSolutionPath():
-            print(f"[TerrainOmplRrt] Found Exact solution!")
+            log.debug(f"Found exact solution!")
             self.solutionPathToPath(self._problem_setup.getSolutionPath(), path)
             return True
 
@@ -579,7 +571,7 @@ class TerrainOmplRrt:
     ) -> bool:
         # TODO: test
         if self._problem_setup.solve(time_budget):
-            print(f"[TerrainOmplRrt] Found solution:")
+            log.debug(f"Found solution:")
             # self._problem_setup.getSolutionPath().print(std::cout);
             # self._problem_setup.simplifySolution();
             # self._problem_setup.getSolutionPath().print(std::cout);
@@ -587,7 +579,7 @@ class TerrainOmplRrt:
             self._solve_duration = self._problem_setup.getLastPlanComputationTime()
 
         else:
-            print(f"[TerrainOmplRrt] Solution Not found")
+            log.debug(f"Solution not found")
 
         if self._problem_setup.haveExactSolutionPath():
             self.solutionPathToTrajectoryPoints(
@@ -633,11 +625,11 @@ class TerrainOmplRrt:
         resolution: float = 0.05,
     ) -> None:
         # TODO: test
-        print(f"[TerrainOmplRrt] convert solution path to Path")
+        log.debug(f"Convert solution path to Path")
         trajectory_segments.reset_segments()
 
         state_vector = path.getStates()
-        print(f"[TerrainOmplRrt] path has {len(state_vector)} states")
+        log.debug(f"Path has {len(state_vector)} states")
 
         for idx in range(len(state_vector) - 1):
             # start and end of current segment
@@ -648,12 +640,12 @@ class TerrainOmplRrt:
             da_space = self._problem_setup.getStateSpace()
 
             # TODO: remove debug prints
-            debug_print = True
-            if debug_print:
+            is_debug = True
+            if is_debug:
                 da_from_state = DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)
                 da_to_state = DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)
-                print(f"[TerrainOmplRrt] state[{idx}]:    {da_from_state}")
-                print(f"[TerrainOmplRrt] state[{idx + 1}]:    {da_to_state}")
+                log.debug(f"state[{idx}]:    {da_from_state}")
+                log.debug(f"state[{idx + 1}]:    {da_to_state}")
 
             # NOTE: do not need to calculate the Dubins paths here
             #       as calculateSegments also calls dubins2
@@ -662,7 +654,7 @@ class TerrainOmplRrt:
                 from_state, to_state
             )
 
-            if debug_print:
+            if is_debug:
 
                 def path_type_str(path_type):
                     msg = (
@@ -672,35 +664,26 @@ class TerrainOmplRrt:
                     )
                     return msg
 
-                print(f"[TerrainOmplRrt] dubins.idx:  {dubins_path.getIdx()}")
-                print(
-                    f"[TerrainOmplRrt] dubins.type: {path_type_str(dubins_path._type)}"
-                )
-                print(
-                    f"[TerrainOmplRrt] dubins.len: "
+                log.debug(f"dubins.idx:  {dubins_path.getIdx()}")
+                log.debug(f"dubins.type: {path_type_str(dubins_path._type)}")
+                log.debug(
+                    f"dubins.len: "
                     f"{dubins_path._length[1]:.3f} "
                     f"{dubins_path._length[3]:.3f} "
                     f"{dubins_path._length[4]:.3f} "
                 )
-                print(f"[TerrainOmplRrt] dubins.alt:  {dubins_path.getAltitudeCase()}")
-                print(
-                    f"[TerrainOmplRrt] dubins.cls:  {dubins_path.getClassification()}"
-                )
-                print(f"[TerrainOmplRrt] dubins.ks:   {dubins_path._k_start}")
-                print(f"[TerrainOmplRrt] dubins.ke:   {dubins_path._k_end}")
-
-                print(f"[TerrainOmplRrt] segs[0]:     {segmentStarts.segmentStarts[0]}")
-                print(f"[TerrainOmplRrt] segs[1]:     {segmentStarts.segmentStarts[1]}")
-                print(f"[TerrainOmplRrt] segs[2]:     {segmentStarts.segmentStarts[2]}")
-                print(f"[TerrainOmplRrt] segs[3]:     {segmentStarts.segmentStarts[3]}")
-                print(f"[TerrainOmplRrt] segs[4]:     {segmentStarts.segmentStarts[4]}")
-                print(f"[TerrainOmplRrt] segs[5]:     {segmentStarts.segmentStarts[5]}")
+                log.debug(f"dubins.alt:  {dubins_path.getAltitudeCase()}")
+                log.debug(f"dubins.cls:  {dubins_path.getClassification()}")
+                log.debug(f"dubins.ks:   {dubins_path._k_start}")
+                log.debug(f"dubins.ke:   {dubins_path._k_end}")
+                for i in range(6):
+                    log.debug(f"segs[{i}]:     {segmentStarts.segmentStarts[i]}")
 
             segment_start_state = ob.State(da_space)
             segment_end_state = ob.State(da_space)
 
             total_length = dubins_path.length_2d()
-            print(f"[TerrainOmplRrt] total_length: {total_length}")
+            log.debug(f"total_length: {total_length}")
 
             progress = 0.0
             for start_idx in range(len(segmentStarts.segmentStarts)):
