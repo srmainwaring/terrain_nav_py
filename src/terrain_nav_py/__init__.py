@@ -14,7 +14,9 @@ def add_stderr_logger(level: int = logging.DEBUG) -> logging.StreamHandler:
     # even if this library is vendored within another package.
     logger = logging.getLogger(__name__)
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s [%(module)s] %(message)s")
+    )
     logger.addHandler(handler)
     logger.setLevel(level)
     logger.debug(f"Added a stderr logging handler to logger: {__name__}")
