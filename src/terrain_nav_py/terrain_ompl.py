@@ -72,8 +72,13 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         :type state: ob.State
         """
         # TODO test
-        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-        position = da_state.getXYZ()
+        # NOTE: DubinsAirplaneStateSpace
+        # da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+        # position = da_state.getXYZ()
+
+        # TODO: OwenStateSpace only
+        da_state = state
+        position = (da_state[0], da_state[1], da_state[2])
 
         # NOTE: leave for in-depth debugging
         # log.debug(f"position: {position}")
