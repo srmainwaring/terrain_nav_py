@@ -27,6 +27,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import copy
 import logging
 import math
 
@@ -36,14 +37,21 @@ from ompl import util as ou
 
 from ompl.base import OwenStateSpace
 
+from pymavlink import quaternion
+from pymavlink.rotmat import Matrix3
+from pymavlink.rotmat import Vector3
+
 from MAVProxy.modules.lib import mp_util
 
 from terrain_nav_py import add_stderr_logger
+
 # from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.grid_map import GridMapSRTM
 from terrain_nav_py.path import Path
+from terrain_nav_py.path_segment import PathSegment
+from terrain_nav_py.path_segment import State
 from terrain_nav_py.terrain_map import TerrainMap
-from terrain_nav_py.terrain_ompl_rrt_owen import TerrainOmplRrt
+from terrain_nav_py.terrain_ompl_rrt_owen import TerrainOmplRrtOwen
 
 from test_terrain_ompl_rrt import plot_path
 
@@ -79,11 +87,11 @@ def test_owen_state_space_model():
     grid_length_factor = 1.2
 
     # Davos
-    # start_lat = 46.8141348
-    # start_lon = 9.8488310
-    # goal_lat = 46.8201124
-    # goal_lon = 9.8260916
-    # grid_length_factor = 5.0
+    start_lat = 46.8141348
+    start_lon = 9.8488310
+    goal_lat = 46.8201124
+    goal_lon = 9.8260916
+    grid_length_factor = 2.0
 
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
@@ -119,7 +127,7 @@ def test_owen_state_space_model():
     climb_angle_rad = 0.15
     max_altitude = 120.0
     min_altitude = 50.0
-    time_budget = 1.0
+    time_budget = 5.0
     resolution_m = 200.0
 
     # create map
@@ -135,10 +143,8 @@ def test_owen_state_space_model():
     terrain_map.setGridMap(grid_map)
 
     # create planner manager
-    da_space = OwenStateSpace( 
-        turningRadius=turning_radius, maxPitch=climb_angle_rad
-    )
-    planner_mgr = TerrainOmplRrt(da_space)
+    da_space = OwenStateSpace(turningRadius=turning_radius, maxPitch=climb_angle_rad)
+    planner_mgr = TerrainOmplRrtOwen(da_space)
     planner_mgr.setMap(terrain_map)
     planner_mgr.setAltitudeLimits(max_altitude=max_altitude, min_altitude=min_altitude)
     planner_mgr.setBoundsFromMap(terrain_map.getGridMap())
@@ -154,12 +160,16 @@ def test_owen_state_space_model():
     # TODO: check the start and goal states are valid. This requires a
     #       correctly calculated distance surface: a surface where at each
     # point a circle of radius r will not intersect with the elevation layer.
-    is_start_valid = TerrainOmplRrt.validatePosition(grid_map, start_pos, loiter_radius)
+    is_start_valid = TerrainOmplRrtOwen.validatePosition(
+        grid_map, start_pos, loiter_radius
+    )
     if not is_start_valid:
         log.debug(f"Invalid start position: {start_pos}")
     else:
         log.debug(f"Accept start position: {start_pos}")
-    is_goal_valid = TerrainOmplRrt.validatePosition(grid_map, start_pos, loiter_radius)
+    is_goal_valid = TerrainOmplRrtOwen.validatePosition(
+        grid_map, start_pos, loiter_radius
+    )
     if not is_goal_valid:
         log.debug(f"Invalid goal position: {goal_pos}")
     else:
@@ -187,7 +197,9 @@ def test_owen_state_space_model():
     # check states are all above the min_altitude
     solution_path = planner_mgr._problem_setup.getSolutionPath()
     states = solution_path.getStates()
+    states_copy = []
     for state in states:
+        states_copy.append(state)
         # da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         da_state = state
         # (x, y, z, yaw) = da_state.getXYZYaw()
@@ -204,9 +216,39 @@ def test_owen_state_space_model():
             f"ter_alt: {elevation:.2f}, agl_alt: {(z - elevation):.2f}"
         )
 
+    # NOTE: approximaste path construction for visualisation, as
+    #       OwenStateSpace is missing additional methods present in
+    #       DubinsAirplaneStateSpace.
+    path = planner_mgr._problem_setup.getSolutionPath()
+    print(f"path len: {len(path.getStates())}")
+    path.interpolate(1000)
+    print(f"path len: {len(path.getStates())}")
+    candidate_path = Path()
+    path_segment = PathSegment()
+    for state in path.getStates():
+        x = state[0]
+        y = state[1]
+        z = state[2]
+        yaw = state.yaw()
+        m_att = Matrix3()
+        m_att.from_euler(0.0, 0.0, yaw)
+        path_state = State()
+        path_state.position = Vector3(x, y, z)
+        path_state.velocity = Vector3(0.0, 0.0, 0.0)
+        path_state.attitude = quaternion.Quaternion(m_att)
+        path_segment.append_state(path_state)
+    candidate_path.append_segment(path_segment)
+
     # only display plots if run as script
     if __name__ == "__main__":
-        plot_path(start_pos, goal_pos, loiter_radius, candidate_path, states, grid_map)
+        plot_path(
+            start_pos,
+            goal_pos,
+            loiter_radius,
+            candidate_path,
+            states=states_copy,
+            grid_map=grid_map,
+        )
 
 
 def main():

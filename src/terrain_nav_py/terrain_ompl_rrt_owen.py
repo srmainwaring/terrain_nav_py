@@ -72,7 +72,7 @@ log = logging.getLogger(__name__)
 # TODO: the state management needs re-working from the original C++
 #       version as it's possible to get the planner into an inconsistent
 #       state by calling set methods and configure etc in the wrong order
-class TerrainOmplRrt:
+class TerrainOmplRrtOwen:
     """
     Setup and run the planning problem.
     """
@@ -688,6 +688,7 @@ class TerrainOmplRrt:
             # NOTE: do not need to calculate the Dubins paths here
             #       as calculateSegments also calls dubins2
             # dubins_path = da_space.dubins2(from_state, to_state)
+            # TODO: not available in OwenStateSpace
             (dubins_path, segmentStarts) = da_space.calculateSegments(
                 from_state, to_state
             )
@@ -730,7 +731,7 @@ class TerrainOmplRrt:
                         dubins_path.getSegmentLength(start_idx) / total_length
                     )
                     # Read segment start and end states
-                    TerrainOmplRrt.segmentStart2OmplState(
+                    TerrainOmplRrtOwen.segmentStart2OmplState(
                         segmentStarts.segmentStarts[start_idx], segment_start_state
                     )
                     if (start_idx + 1) > (len(segmentStarts.segmentStarts) - 1):
@@ -740,7 +741,7 @@ class TerrainOmplRrt:
                     ) and dubins_path.getSegmentLength(start_idx + 1) == 0.0:
                         segment_end_state = to_state
                     else:
-                        TerrainOmplRrt.segmentStart2OmplState(
+                        TerrainOmplRrtOwen.segmentStart2OmplState(
                             segmentStarts.segmentStarts[start_idx + 1],
                             segment_end_state,
                         )
@@ -768,10 +769,11 @@ class TerrainOmplRrt:
                         for t in t_samples:
                             segment_state = path_segment.State()
                             # state = da_space.interpolate3(dubins_path, segmentStarts, t)
+                            # TODO: not available in OwenStateSpace
                             da_space.interpolate3(dubins_path, segmentStarts, t, state)
 
-                            position = TerrainOmplRrt.dubinsairplanePosition(state)
-                            yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
+                            position = TerrainOmplRrtOwen.dubinsairplanePosition(state)
+                            yaw = TerrainOmplRrtOwen.dubinsairplaneYaw(state)
                             velocity = (math.cos(yaw), math.sin(yaw), 0.0)
                             segment_state.position = Vector3(
                                 position[0], position[1], position[2]
@@ -792,10 +794,10 @@ class TerrainOmplRrt:
                     ):
                         # Append segment with last state
                         end_state = path_segment.State()
-                        end_position = TerrainOmplRrt.dubinsairplanePosition(
+                        end_position = TerrainOmplRrtOwen.dubinsairplanePosition(
                             segment_end_state
                         )
-                        end_yaw = TerrainOmplRrt.dubinsairplaneYaw(segment_end_state)
+                        end_yaw = TerrainOmplRrtOwen.dubinsairplaneYaw(segment_end_state)
                         end_velocity = (math.cos(end_yaw), math.sin(end_yaw), 0.0)
                         end_state.position = Vector3(
                             end_position[0], end_position[1], end_position[2]
@@ -824,7 +826,7 @@ class TerrainOmplRrt:
         state_vector = path.getStates()
 
         for state in state_vector:
-            position = TerrainOmplRrt.dubinsairplanePosition(state)
+            position = TerrainOmplRrtOwen.dubinsairplanePosition(state)
             trajectory_points.append(position)
 
         return trajectory_points
