@@ -69,6 +69,8 @@ def test_terrain_ompl_rrt():
     # configure loggers
     add_stderr_logger()
     add_test_stderr_logger()
+    ou.setLogLevel(ou.LogLevel.LOG_DEBUG)
+    print(ou.getLogLevel())
 
     # TODO: set local seed to ensure reproducible results - this does
     #       not appear to be working.
@@ -265,6 +267,8 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     # configure loggers
     add_stderr_logger()
     add_test_stderr_logger()
+    ou.setLogLevel(ou.LogLevel.LOG_DEBUG)
+    print(ou.getLogLevel())
 
     map_lat = 56.6987387
     map_lon = -6.1082210
