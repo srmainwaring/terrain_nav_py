@@ -42,6 +42,7 @@ using geometric motion planning algorithms. (This is an extension ot the OMPL Du
 """
 
 
+import logging
 import math
 import sys
 
@@ -50,6 +51,8 @@ import numpy as np
 from ompl import base as ob
 
 from terrain_nav_py.dubins_path import DubinsPath
+
+log = logging.getLogger(__name__)
 
 half_pi: float = 0.5 * math.pi
 pi: float = math.pi
@@ -736,12 +739,13 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :return: The interpolated state
         :rtype: ompl.base.State
         """
-        # print(f"[DubinsAirplaneStateSpace] interpolate")
-        # print(f"[DubinsAirplaneStateSpace] from_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)}")
-        # print(f"[DubinsAirplaneStateSpace] to_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)}")
-        # print(f"[DubinsAirplaneStateSpace] state: {DubinsAirplaneStateSpace.DubinsAirplaneState(state)}")
-
         # TODO: test
+        # NOTE: leave for in-depth debugging
+        # log.debug(f"interpolate")
+        # log.debug(f"from_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(from_state)}")
+        # log.debug(f"to_state: {DubinsAirplaneStateSpace.DubinsAirplaneState(to_state)}")
+        # log.debug(f"state: {DubinsAirplaneStateSpace.DubinsAirplaneState(state)}")
+
         firstTime = True
         path = DubinsPath()
         segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
@@ -751,12 +755,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             from_state, to_state, t, firstTime, path, segmentStarts, state
         )
 
-        # Copy
-        # da_state2 = DubinsAirplaneStateSpace.DubinsAirplaneState(state2)
-        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-        # (x, y, z, yaw) = da_state2.getXYZYaw()
-        # da_state.setXYZYaw(x, y, z, yaw)
-        # print(f"[DubinsAirplaneStateSpace] state: {da_state}")
+        # NOTE: leave for in-depth debugging
+        # da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+        # log.debug(f"state: {da_state}")
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, double t, bool& firstTime, DubinsPath& path,
     #                           SegmentStarts& segmentStarts, ob::State* state) const;
@@ -1024,7 +1025,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         #     self(0)->getBounds().high[i]
         #
 
-        print("[DubinsAirplaneStateSpace] enforceBounds")
         rstate = state()
 
         # RE3 part
@@ -1205,8 +1205,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         the range of the space in which sampling is performed.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] setBounds")
-        print(f"[DubinsAirplaneStateSpace] type(bound): {type(bounds)}")
         re3_space = self.getSubspace(0)
         re3_space.setBounds(bounds)
 
@@ -1215,8 +1213,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Set the bounds of the state space.
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] getBounds")
-        # return self(0).getBounds()
         re3_space = self.getSubspace(0)
         return re3_space.getBounds()
 
@@ -1225,31 +1221,29 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Print the properties of the state space.
         """
         # TODO: test
-        print(f"DubinsAirplaneStateSpace [{self.getName()}]")
-        print(f"  !!! This state space is asymmetric !!!")
-        print(f"  Airplane speed relative to ground:  9 m/s")
-        print(f"  Euclidean Distance: {self.__useEuclideanDistance}")
-        print(f"  Minimum turning radius: {self._rho} m")
-        print(f"  Maximum climbing angle: {self._gammaMax} radian")
-        print(
+        log.debug(f"DubinsAirplaneStateSpace [{self.getName()}]")
+        log.debug(f"  !!! This state space is asymmetric !!!")
+        log.debug(f"  Airplane speed relative to ground:  9 m/s")
+        log.debug(f"  Euclidean Distance: {self.__useEuclideanDistance}")
+        log.debug(f"  Minimum turning radius: {self._rho} m")
+        log.debug(f"  Maximum climbing angle: {self._gammaMax} radian")
+        log.debug(
             f"  Using optimal Dubins airplane paths (not working properly): "
             f"{self._optimalStSp}"
         )
-        print(
+        log.debug(
             f"  State space bounds (in meter and radian): "
             f"[{self.getBounds().low[0]}, {self.getBounds().high[0]}], "
             f"[{self.getBounds().low[1]} {self.getBounds().high[1]}], "
             f"[{self.getBounds().low[2]} {self.getBounds().high[2]}], "
             f"[-pi, pi)"
         )
-        print()
 
     def printCtrs(self) -> None:
         """
         Print the control variables.
         """
         # TODO: will not implement
-        print(f"[DubinsAirplaneStateSpace] printCtrs")
         pass
 
     def printDurations(self) -> None:
@@ -1257,7 +1251,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         Print the durations.
         """
         # TODO: will not implement
-        print(f"[DubinsAirplaneStateSpace] printDurations")
         pass
 
     def resetCtrs(self) -> None:
@@ -1339,7 +1332,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: DubinsPath
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] dubins1")
         if d < DUBINS_EPS and math.fabs(alpha - beta) < DUBINS_EPS:
             path = DubinsPath(DubinsPath.Index.TYPE_LSL, 0.0, d, 0.0)
             return path
@@ -1411,9 +1403,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: DubinsPath
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] calcDubPathWithClassification")
-        # path = DubinsPath()
-
         # TODO: Computational speed up could be achieved here by ordering the
         # if-cases according to their relative probability (if known a priori)
         # classification = path.getClassification()
@@ -1849,7 +1838,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param cb: Precomputed cos(beta)
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] calcDubPathWithoutClassification")
         path = DubinsAirplaneStateSpace.dubinsLSL_fast(d, alpha, beta, sa, sb, ca, cb)
         minLength = path.length_2d()
 
@@ -1904,7 +1892,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: tuple[float, bool, float, float, float, float]
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] additionalManeuver")
         foundSol = False
 
         # extract state 1
@@ -2126,7 +2113,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param beta: Corrected heading of the goal state
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] classifyPath")
         row: int = 0
         column: int = 0
 
@@ -2168,7 +2154,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :param k: Number of circles in the helix.
         """
         # TODO: test
-        # print(f"[DubinsAirplaneStateSpace] computeOptRratio")
         return (fabsHdist - L * fabsTanGamma) / (twopi * fabsTanGamma * k)
 
     def interpolateWithWind(
@@ -2191,7 +2176,6 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :rtype: ompl.base.State
         """
         # TODO: test
-        print(f"[DubinsAirplaneStateSpace] interpolateWithWind")
         return self.interpolate3(path, segmentStarts, t)
 
     def calculateSegmentStarts(
@@ -2225,13 +2209,9 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         da_interpol_state = DubinsAirplaneStateSpace.DubinsAirplaneState(interpol_state)
         da_interpol_state.setXYZYaw(0.0, 0.0, 0.0, da_from_state.getYaw())
 
-        # TODO: remove debug prints
-        debug_print = False
-        if debug_print:
-            print(f"[calculateSegmentStarts]")
-            print(f"interpol_seg:       {interpol_seg}")
-            print(f"interpol_tanGamma:  {interpol_tanGamma}")
-            print(f"[calculateSegmentStarts] loop...")
+        # NOTE: leave for in-depth debugging
+        # log.debug(f"interpol_seg:       {interpol_seg}")
+        # log.debug(f"interpol_tanGamma:  {interpol_tanGamma}")
 
         # DubinsPath length[]
         # 0:  start helix segment
@@ -2262,20 +2242,19 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
             so2_space.enforceBounds(so2_state)
             segmentStarts.segmentStarts[interpol_iter].yaw = da_interpol_state.getYaw()
 
-            # TODO: remove debug prints
-            if debug_print:
-                print(f"interpol_iter:      {interpol_iter}")
-                print(f"interpol_seg:       {interpol_seg}")
-                print(f"interpol_v:         {interpol_v}")
-                print(f"interpol_phiStart:  {interpol_phiStart}")
-                print(f"stateInterp.x:      {da_interpol_state.getX()}")
-                print(f"stateInterp.y:      {da_interpol_state.getY()}")
-                print(f"stateInterp.z:      {da_interpol_state.getZ()}")
-                print(f"stateInterp.yaw:    {da_interpol_state.getYaw()}")
-                print(f"from.x:             {da_from_state.getX()}")
-                print(f"from.y:             {da_from_state.getY()}")
-                print(f"from.z:             {da_from_state.getZ()}")
-                print(f"from.yaw:           {da_from_state.getYaw()}")
+            # NOTE: leave for in-depth debugging
+            # log.debug(f"interpol_iter:      {interpol_iter}")
+            # log.debug(f"interpol_seg:       {interpol_seg}")
+            # log.debug(f"interpol_v:         {interpol_v}")
+            # log.debug(f"interpol_phiStart:  {interpol_phiStart}")
+            # log.debug(f"stateInterp.x:      {da_interpol_state.getX()}")
+            # log.debug(f"stateInterp.y:      {da_interpol_state.getY()}")
+            # log.debug(f"stateInterp.z:      {da_interpol_state.getZ()}")
+            # log.debug(f"stateInterp.yaw:    {da_interpol_state.getYaw()}")
+            # log.debug(f"from.x:             {da_from_state.getX()}")
+            # log.debug(f"from.y:             {da_from_state.getY()}")
+            # log.debug(f"from.z:             {da_from_state.getZ()}")
+            # log.debug(f"from.yaw:           {da_from_state.getYaw()}")
 
             path_type = path.getType()
             segment_type = path_type[self.convert_idx(interpol_iter)]
