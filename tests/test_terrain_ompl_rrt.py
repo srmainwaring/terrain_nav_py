@@ -53,9 +53,22 @@ from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 log = logging.getLogger(__name__)
 
 
+def add_test_stderr_logger(level: int = logging.DEBUG) -> logging.StreamHandler:
+    logger = logging.getLogger(__name__)
+    handler = logging.StreamHandler()
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s [%(module)s] %(message)s")
+    )
+    logger.addHandler(handler)
+    logger.setLevel(level)
+    logger.debug(f"Added a stderr logging handler to logger: {__name__}")
+    return handler
+
+
 def test_terrain_ompl_rrt():
-    # configure logger
+    # configure loggers
     add_stderr_logger()
+    add_test_stderr_logger()
 
     # TODO: set local seed to ensure reproducible results - this does
     #       not appear to be working.
@@ -91,26 +104,26 @@ def test_terrain_ompl_rrt():
 
     east = distance * math.sin(bearing_rad)
     north = distance * math.cos(bearing_rad)
-    print(f"distance:       {distance:.0f} m")
-    print(f"bearing:        {bearing_deg:.1f} deg")
-    print(f"east:           {east:.0f} m")
-    print(f"north:          {north:.0f} m")
+    log.debug(f"distance:       {distance:.0f} m")
+    log.debug(f"bearing:        {bearing_deg:.1f} deg")
+    log.debug(f"east:           {east:.0f} m")
+    log.debug(f"north:          {north:.0f} m")
 
     # set map size and centre
     (map_lat, map_lon) = mp_util.gps_offset(
         start_lat, start_lon, 0.5 * east, 0.5 * north
     )
     grid_length = grid_length_factor * max(math.fabs(east), math.fabs(north))
-    print(f"grid_length:    {grid_length:.0f} m")
+    log.debug(f"grid_length:    {grid_length:.0f} m")
 
     start_east = -0.5 * east
     start_north = -0.5 * north
     goal_east = 0.5 * east
     goal_north = 0.5 * north
-    print(f"start_east:     {start_east:.0f} m")
-    print(f"start_north:    {start_north:.0f} m")
-    print(f"goal_east:      {goal_east:.0f} m")
-    print(f"goal_north:     {goal_north:.0f} m")
+    log.debug(f"start_east:     {start_east:.0f} m")
+    log.debug(f"start_north:    {start_north:.0f} m")
+    log.debug(f"goal_east:      {goal_east:.0f} m")
+    log.debug(f"goal_north:     {goal_north:.0f} m")
 
     # settings
     loiter_radius = 90.0
@@ -128,9 +141,8 @@ def test_terrain_ompl_rrt():
     grid_map.setGridLength(grid_length)
 
     # set up distance layer (may take a while..)
-    print(f"calculating distance-surface...", end="")
+    log.debug(f"calculating distance-surface...")
     # grid_map.addLayerDistanceTransform(surface_distance=min_altitude)
-    print(f"done.")
 
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
@@ -157,14 +169,14 @@ def test_terrain_ompl_rrt():
     # point a circle of radius r will not intersect with the elevation layer.
     is_start_valid = TerrainOmplRrt.validatePosition(grid_map, start_pos, loiter_radius)
     if not is_start_valid:
-        print(f"Invalid start position: {start_pos}")
+        log.debug(f"Invalid start position: {start_pos}")
     else:
-        print(f"Accept start position: {start_pos}")
+        log.debug(f"Accept start position: {start_pos}")
     is_goal_valid = TerrainOmplRrt.validatePosition(grid_map, start_pos, loiter_radius)
     if not is_goal_valid:
-        print(f"Invalid goal position: {goal_pos}")
+        log.debug(f"Invalid goal position: {goal_pos}")
     else:
-        print(f"Accept goal position: {start_pos}")
+        log.debug(f"Accept goal position: {start_pos}")
 
     # NOTE: if the time budget is insufficient, the solution tree may not
     #       include a goal state, and an approximate solution will be found.
@@ -180,7 +192,7 @@ def test_terrain_ompl_rrt():
     problem.setStateValidityCheckingResolution(resolution_requested)
     si = problem.getSpaceInformation()
     resolution_used = si.getStateValidityCheckingResolution()
-    print(f"Resolution used: {resolution_used}")
+    log.debug(f"Resolution used: {resolution_used}")
 
     candidate_path = Path()
     planner_mgr.Solve1(time_budget=time_budget, path=candidate_path)
@@ -205,7 +217,7 @@ def test_terrain_ompl_rrt():
         (x, y, z, yaw) = da_state.getXYZYaw()
         layer = "elevation"
         elevation = grid_map.atPosition(layer, da_state.getXYZ())
-        print(
+        log.debug(
             f"[{layer}]: "
             f"[{x:.2f}, {y:.2f}, {z:.2f}]; "
             f"ter_alt: {elevation:.2f}, agl_alt: {(z - elevation):.2f}"
@@ -228,9 +240,8 @@ def test_terrain_ompl_rrt():
 
     planner_data = ob.PlannerData(si)
     problem.getPlannerData(planner_data)
-    print(planner_data)
-    print(f"numVertices: {planner_data.numVertices()}")
-    print(f"numEdges: {planner_data.numEdges()}")
+    log.debug(f"numVertices: {planner_data.numVertices()}")
+    log.debug(f"numEdges: {planner_data.numEdges()}")
 
     # only display plots if run as script
     if __name__ == "__main__":
@@ -251,6 +262,10 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     state: [-40.0000, -0.0000, 73.9186; 1.5708]
     state: [-187.6393, 161.9577, 104.6088; -2.8274]
     """
+    # configure loggers
+    add_stderr_logger()
+    add_test_stderr_logger()
+
     map_lat = 56.6987387
     map_lon = -6.1082210
     gamma = 0.1
@@ -339,8 +354,8 @@ def plot_path(
         velocity = path.velocity()
         velocity = np.array(velocity)
 
-        print(f"position.shape: {position.shape}")
-        print(f"velocity.shape: {velocity.shape}")
+        log.debug(f"position.shape: {position.shape}")
+        log.debug(f"velocity.shape: {velocity.shape}")
 
         scale = 0.25 * loiter_radius
         stride = 10
