@@ -37,6 +37,7 @@
 Terrain planner state validity checker and sampler
 """
 
+import logging
 import math
 
 from ompl import base as ob
@@ -46,6 +47,8 @@ from shapely import geometry
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.grid_map import GridMap
+
+log = logging.getLogger(__name__)
 
 
 class TerrainValidityChecker(ob.StateValidityChecker):
@@ -72,7 +75,8 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
         position = da_state.getXYZ()
 
-        # print(f"[TerrainValidityChecker] position: {position}")
+        # NOTE: leave for in-depth debugging
+        # log.debug(f"position: {position}")
         return not self.checkCollision(position)
 
     def checkCollision(self, position: tuple[float, float, float]) -> bool:
