@@ -380,6 +380,7 @@ def plot_path(
         )
 
     def plot_state(ax, state, label=""):
+        from terrain_nav_py.terrain_ompl_rrt_owen import TerrainOmplRrt
         position = TerrainOmplRrt.dubinsairplanePosition(state)
         yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
         x = position[0]
