@@ -350,28 +350,20 @@ def plot_path(
         ax.text(position[0] + 1.5 * radius, position[1], position[2], label)
 
     def plot_segment(ax, segment):
-        for i in range(3):
-            ax.scatter(
-                segment.segmentStarts[i].x,
-                segment.segmentStarts[i].y,
-                segment.segmentStarts[i].z,
-                marker="*",
-                s=48,
-                c="blue",
-            )
-            scale = 1.0 * loiter_radius
-            u = scale * np.cos(segment.segmentStarts[i].yaw)
-            v = scale * np.sin(segment.segmentStarts[i].yaw)
-            w = 0.0
-            ax.quiver(
-                segment.segmentStarts[i].x,
-                segment.segmentStarts[i].y,
-                segment.segmentStarts[i].z,
-                u,
-                v,
-                w,
-                color="blue",
-            )
+        for i in range(6):
+            x = segment.segmentStarts[i].x
+            y = segment.segmentStarts[i].y
+            z = segment.segmentStarts[i].z
+            yaw = segment.segmentStarts[i].yaw
+
+            # skip origin (empty segment)
+            if x != 0.0 or y != 0.0 or z != 0.0:
+                ax.scatter(x, y, z, marker="*", s=48, c="blue")
+                scale = 1.0 * loiter_radius
+                u = scale * np.cos(yaw)
+                v = scale * np.sin(yaw)
+                w = 0.0
+                ax.quiver(x, y, z, u, v, w, color="blue")
 
     def plot_segments(ax, segments):
         for segment in segments:
