@@ -96,6 +96,16 @@ def test_owen_state_space_model():
     goal_lon = 9.8260916
     grid_length_factor = 2.0
 
+    # Caswell
+    start_lat = 51.568510858990884
+    start_lon = -4.033516028895548
+    # goal_lat = 51.56337235695456
+    # goal_lon = -4.033516028895548
+
+    # Langland
+    goal_lat = 51.566326390180855
+    goal_lon = -4.010968419937816
+
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
     bearing_rad = math.radians(bearing_deg)
