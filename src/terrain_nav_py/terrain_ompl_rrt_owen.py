@@ -585,9 +585,6 @@ class TerrainOmplRrtOwen:
         # TODO: test
         log.debug(f"Run solver")
         if self._problem_setup.solve(time_budget):
-            # self._problem_setup.getSolutionPath().print(std::cout)
-            # self._problem_setup.simplifySolution()
-            # self._problem_setup.getSolutionPath().print(std::cout)
             self._problem_setup.getPlannerData(self._planner_data)
             self._solve_duration = self._problem_setup.getLastPlanComputationTime()
 
