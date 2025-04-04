@@ -329,7 +329,13 @@ def test_terrain_ompl_rrt_solution_path_to_path():
 
 
 def plot_path(
-    start_pos, goal_pos, loiter_radius, path=None, states=None, grid_map=None
+    start_pos,
+    goal_pos,
+    loiter_radius,
+    path=None,
+    states=None,
+    grid_map=None,
+    segments=None,
 ):
     import matplotlib.pyplot as plt
     import numpy as np
@@ -342,6 +348,34 @@ def plot_path(
         z = position[2] * np.ones(len(theta))
         ax.scatter(x, y, z, linestyle="solid", marker=".", s=1, c="blue")
         ax.text(position[0] + 1.5 * radius, position[1], position[2], label)
+
+    def plot_segment(ax, segment):
+        for i in range(3):
+            ax.scatter(
+                segment.segmentStarts[i].x,
+                segment.segmentStarts[i].y,
+                segment.segmentStarts[i].z,
+                marker="*",
+                s=48,
+                c="blue",
+            )
+            scale = 1.0 * loiter_radius
+            u = scale * np.cos(segment.segmentStarts[i].yaw)
+            v = scale * np.sin(segment.segmentStarts[i].yaw)
+            w = 0.0
+            ax.quiver(
+                segment.segmentStarts[i].x,
+                segment.segmentStarts[i].y,
+                segment.segmentStarts[i].z,
+                u,
+                v,
+                w,
+                color="blue",
+            )
+
+    def plot_segments(ax, segments):
+        for segment in segments:
+            plot_segment(ax, segment)
 
     def plot_path(ax, path):
         position = path.position()
@@ -380,7 +414,10 @@ def plot_path(
         )
 
     def plot_state(ax, state, label=""):
-        from terrain_nav_py.terrain_ompl_rrt_owen import TerrainOmplRrtOwen as TerrainOmplRrt
+        from terrain_nav_py.terrain_ompl_rrt_owen import (
+            TerrainOmplRrtOwen as TerrainOmplRrt,
+        )
+
         position = TerrainOmplRrt.dubinsairplanePosition(state)
         yaw = TerrainOmplRrt.dubinsairplaneYaw(state)
         x = position[0]
@@ -390,7 +427,7 @@ def plot_path(
         ax.text(position[0], position[1], position[2], label)
 
         # plot tangent
-        scale = 0.5 * loiter_radius
+        scale = 2.0 * loiter_radius
         u = scale * np.cos(yaw)
         v = scale * np.sin(yaw)
         w = 0.0
@@ -459,6 +496,10 @@ def plot_path(
     # states
     if states is not None:
         plot_states(ax, states)
+
+    # segment
+    if segments is not None:
+        plot_segments(ax, segments)
 
     # map
     if grid_map is not None:
