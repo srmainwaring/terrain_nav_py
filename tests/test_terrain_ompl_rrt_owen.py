@@ -71,6 +71,9 @@ def add_test_stderr_logger(level: int = logging.DEBUG) -> logging.StreamHandler:
 
 
 def test_owen_state_space_model():
+    # set the RNG seed for repeatable outcomes
+    ou.RNG.setSeed(1)
+
     # configure loggers
     add_stderr_logger()
     add_test_stderr_logger()
