@@ -97,14 +97,14 @@ def test_owen_state_space_model():
     grid_length_factor = 2.0
 
     # Caswell
-    start_lat = 51.568510858990884
-    start_lon = -4.033516028895548
+    # start_lat = 51.568510858990884
+    # start_lon = -4.033516028895548
     # goal_lat = 51.56337235695456
     # goal_lon = -4.033516028895548
 
     # Langland
-    goal_lat = 51.566326390180855
-    goal_lon = -4.010968419937816
+    # goal_lat = 51.566326390180855
+    # goal_lon = -4.010968419937816
 
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
@@ -283,8 +283,10 @@ def test_owen_state_space_model():
             f"{path_type.path_.length_[1]:.4f}, {path_type.path_.length_[2]:.4f}"
         )
         print(f"path_type.path.reverse: {path_type.path_.reverse_}")
-        if path_type.numTurns_ > 0:
-            pass
+
+        # skip case where start == end to avoid div zero below
+        if path_type.length() == 0.0:
+            continue
 
         # TODO: need the max climb rate from the state space
         def calculateSegmentStarts(
@@ -292,8 +294,6 @@ def test_owen_state_space_model():
         ) -> DubinsAirplaneStateSpace.SegmentStarts:
             # calculate segments of each Dubins curve
             segmentStarts = DubinsAirplaneStateSpace.SegmentStarts()
-
-            tanGammaMax = math.tan(gammaMax)
 
             dubins_path = path_type.path_
             dubins_len = (
@@ -312,9 +312,6 @@ def test_owen_state_space_model():
             hlen = dubins_len + 2.0 * math.pi * num_turns + phi
             print(f"hlen: {hlen}")
 
-            if hlen == 0.0:
-                return segmentStarts
-
             interpol_tanGamma = (dz / radius) / hlen
             interpol_seg = hlen
 
@@ -330,32 +327,106 @@ def test_owen_state_space_model():
             # HIGH_ALTITUDE
             #   - Initial spiral of k-turns followed by a Dubins path
             #
+            def turn_left(phi_start, ds, tan_gamma):
+                delta_phi = ds
+                tmp = 2 * math.sin(0.5 * delta_phi)
+                dx = tmp * math.cos(phi_start + 0.5 * delta_phi)
+                dy = tmp * math.sin(phi_start + 0.5 * delta_phi)
+                dz = delta_phi * tan_gamma
+                yaw = phi_start + delta_phi
+                return (dx, dy, dz, yaw)
+
+            def turn_right(phi_start, ds, tan_gamma):
+                delta_phi = ds
+                tmp = 2 * math.sin(0.5 * delta_phi)
+                dx = tmp * math.cos(phi_start - 0.5 * delta_phi)
+                dy = tmp * math.sin(phi_start - 0.5 * delta_phi)
+                dz = delta_phi * tan_gamma
+                yaw = phi_start - delta_phi
+                return (dx, dy, dz, yaw)
+
+            def straight(phi_start, ds, tan_gamma):
+                delta_phi = ds
+                dx = ds * math.cos(phi_start)
+                dy = ds * math.sin(phi_start)
+                dz = ds * tan_gamma
+                yaw = phi_start
+                return (dx, dy, dz, yaw)
 
             # Dubins segments
-            # interpol state is for path with turns of unit radius.
+            # tmp_state is used to enforce yaw bounds
+            # interpol_state is for path with turns of unit radius.
+            tmp_state = ob.State(space)
             interpol_state = ob.State(space)
             interpol_state[0] = 0.0
             interpol_state[1] = 0.0
             interpol_state[2] = 0.0
             interpol_state().setYaw(from_state.yaw())
 
-            tmp_state = ob.State(space)
+            interpol_iter_offset = 0
+            if category == ob.OwenStateSpace.LOW_ALTITUDE:
+                # only Dubins segments
+                pass
+            elif category == ob.OwenStateSpace.MEDIUM_ALTITUDE:
+                # include an initial turn
+                interpol_iter_offset = 1
+
+                interpol_v = min(interpol_seg, phi)
+                interpol_seg -= interpol_v
+                interpol_phiStart = interpol_state().yaw()
+
+                segmentStarts.segmentStarts[0].x = (
+                    interpol_state[0] * rho + from_state[0]
+                )
+                segmentStarts.segmentStarts[0].y = (
+                    interpol_state[1] * rho + from_state[1]
+                )
+                segmentStarts.segmentStarts[0].z = (
+                    interpol_state[2] * rho + from_state[2]
+                )
+
+                # enforce bounds using temporary state
+                tmp_state[0] = 0.0
+                tmp_state[1] = 0.0
+                tmp_state[2] = 0.0
+                tmp_state().setYaw(interpol_state().yaw())
+                space.enforceBounds(tmp_state())
+                interpol_state().setYaw(tmp_state().yaw())
+                segmentStarts.segmentStarts[0].yaw = interpol_state().yaw()
+
+                if phi > 0.0:
+                    (dx, dy, dz, yaw) = turn_left(
+                        interpol_phiStart, interpol_v, interpol_tanGamma
+                    )
+                elif phi < 0.0:
+                    (dx, dy, dz, yaw) = turn_right(
+                        interpol_phiStart, interpol_v, interpol_tanGamma
+                    )
+                interpol_state[0] += dx
+                interpol_state[1] += dy
+                interpol_state[2] += dz
+                interpol_state().setYaw(yaw)
+
+            elif category == ob.OwenStateSpace.HIGH_ALTITUDE:
+                # include a spiral
+                pass
+
             for interpol_iter in range(3):
                 if interpol_seg <= 0.0:
                     break
 
                 # NOTE: DubinsPath length is scaled by turn radius,
                 interpol_v = min(interpol_seg, path_type.path_.length_[interpol_iter])
-                interpol_phiStart = interpol_state().yaw()
                 interpol_seg -= interpol_v
+                interpol_phiStart = interpol_state().yaw()
 
-                segmentStarts.segmentStarts[interpol_iter].x = (
+                segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].x = (
                     interpol_state[0] * rho + from_state[0]
                 )
-                segmentStarts.segmentStarts[interpol_iter].y = (
+                segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].y = (
                     interpol_state[1] * rho + from_state[1]
                 )
-                segmentStarts.segmentStarts[interpol_iter].z = (
+                segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].z = (
                     interpol_state[2] * rho + from_state[2]
                 )
 
@@ -365,7 +436,6 @@ def test_owen_state_space_model():
                 #     internal_state = interpol_state()
                 # elif isinstance(interpol_state, ob.CompoundInternalState):
                 #     internal_state = interpol_state
-
                 # so2_space = space.getSubspace(1)
                 # so2_state = internal_state[1]
                 # so2_space.enforceBounds(so2_state)
@@ -377,101 +447,38 @@ def test_owen_state_space_model():
                 tmp_state().setYaw(interpol_state().yaw())
                 space.enforceBounds(tmp_state())
                 interpol_state().setYaw(tmp_state().yaw())
-                segmentStarts.segmentStarts[interpol_iter].yaw = interpol_state().yaw()
+                segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].yaw = interpol_state().yaw()
 
-                def turn_left(phi_start, ds, tan_gamma):
-                    delta_phi = ds
-                    tmp = 2 * math.sin(0.5 * delta_phi)
-                    dx = tmp * math.cos(phi_start + 0.5 * delta_phi)
-                    dy = tmp * math.sin(phi_start + 0.5 * delta_phi)
-                    dz = delta_phi * tan_gamma
-                    yaw = phi_start + delta_phi
-                    return (dx, dy, dz, yaw)
-
-                def turn_right(phi_start, ds, tan_gamma):
-                    delta_phi = ds
-                    tmp = 2 * math.sin(0.5 * delta_phi)
-                    dx = tmp * math.cos(phi_start - 0.5 * delta_phi)
-                    dy = tmp * math.sin(phi_start - 0.5 * delta_phi)
-                    dz = delta_phi * tan_gamma
-                    yaw = phi_start - delta_phi
-                    return (dx, dy, dz, yaw)
-
-                def straight(phi_start, ds, tan_gamma):
-                    delta_phi = ds
-                    dx = ds * math.cos(phi_start)
-                    dy = ds * math.sin(phi_start)
-                    dz = ds * tan_gamma
-                    yaw = phi_start
-                    return (dx, dy, dz, yaw)
-
-                # NOTE: no convert_idx here
+                # calculate change in position and yaw
                 segment_type = path_type.path_.type_[interpol_iter]
                 if segment_type == ob.DubinsStateSpace.DUBINS_LEFT:
-                    # interpol_dPhi = interpol_v
-                    # interpol_tmp = 2 * math.sin(0.5 * interpol_dPhi)
-                    # interpol_state[0] += interpol_tmp * math.cos(
-                    #     interpol_phiStart + 0.5 * interpol_dPhi
-                    # )
-                    # interpol_state[1] += interpol_tmp * math.sin(
-                    #     interpol_phiStart + 0.5 * interpol_dPhi
-                    # )
-                    # interpol_state[2] += interpol_v * interpol_tanGamma
-                    # interpol_state().setYaw(interpol_phiStart + interpol_dPhi)
                     (dx, dy, dz, yaw) = turn_left(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
-                    interpol_state[0] += dx
-                    interpol_state[1] += dy
-                    interpol_state[2] += dz
-                    interpol_state().setYaw(yaw)
                 elif segment_type == ob.DubinsStateSpace.DUBINS_RIGHT:
-                    # interpol_dPhi = interpol_v
-                    # interpol_tmp = 2 * math.sin(0.5 * interpol_dPhi)
-                    # interpol_state[0] += interpol_tmp * math.cos(
-                    #     interpol_phiStart - 0.5 * interpol_dPhi
-                    # )
-                    # interpol_state[1] += interpol_tmp * math.sin(
-                    #     interpol_phiStart - 0.5 * interpol_dPhi
-                    # )
-                    # interpol_state[2] += interpol_v * interpol_tanGamma
-                    # interpol_state().setYaw(interpol_phiStart - interpol_dPhi)
                     (dx, dy, dz, yaw) = turn_right(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
-                    interpol_state[0] += dx
-                    interpol_state[1] += dy
-                    interpol_state[2] += dz
-                    interpol_state().setYaw(yaw)
                 elif segment_type == ob.DubinsStateSpace.DUBINS_STRAIGHT:
-                    # interpol_state[0] += interpol_v * math.cos(interpol_phiStart)
-                    # interpol_state[1] += interpol_v * math.sin(interpol_phiStart)
-                    # interpol_state[2] += interpol_v * interpol_tanGamma
                     (dx, dy, dz, yaw) = straight(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
-                    interpol_state[0] += dx
-                    interpol_state[1] += dy
-                    interpol_state[2] += dz
-                    interpol_state().setYaw(yaw)
+                else:
+                    raise ValueError("Invalid segment type")
+                interpol_state[0] += dx
+                interpol_state[1] += dy
+                interpol_state[2] += dz
+                interpol_state().setYaw(yaw)
 
             return segmentStarts
 
-        # rho = turning_radius
-        # dx = to_state[0] - from_state[0]
-        # dy = to_state[1] - from_state[1]
-        # dz = to_state[2] - from_state[2]
-        # ds = math.sqrt(dx * dx + dy * dy)
-        # ds = db_path.length_[0] + db_path.length_[1] + db_path.length_[2]
-        if True:  # ds > 0.0:
-            # gamma = math.atan(dz / (ds * rho))
-            segmentStarts = calculateSegmentStarts(
-                from_state,
-                path_type=path_type,
-                rho=turning_radius,
-                gammaMax=climb_angle_rad,
-            )
-            segments.append(segmentStarts)
+        segmentStarts = calculateSegmentStarts(
+            from_state,
+            path_type=path_type,
+            rho=turning_radius,
+            gammaMax=climb_angle_rad,
+        )
+        segments.append(segmentStarts)
 
     # NOTE: approximate path construction for visualisation, as
     #       OwenStateSpace is missing additional methods present in
