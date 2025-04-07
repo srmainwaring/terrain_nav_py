@@ -106,6 +106,27 @@ def test_owen_state_space_model():
     # goal_lat = 51.566326390180855
     # goal_lon = -4.010968419937816
 
+    # Loen
+    start_lat = 61.873577836121434
+    start_lon = 6.838535329603306
+    # goal_lat = 61.8861596546826 
+    # goal_lon = 6.8333895309163
+    goal_lat = 61.892806099143634 
+    goal_lon = 6.85857902161146
+    grid_length_factor = 5.0
+
+    # Brecon, Storey Arms to Pen-y-fan
+    # example includes a spiral when
+    # turning_radius = 60
+    # max_alt = 100
+    # min_alt = 60
+    # climb_angle_rad = 0.10 
+    start_lat = 51.86949481854276
+    start_lon = -3.475730001422848
+    goal_lat = 51.883459907192325
+    goal_lon = -3.4367987405967733
+    grid_length_factor = 2.0
+
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
     bearing_rad = math.radians(bearing_deg)
@@ -134,10 +155,10 @@ def test_owen_state_space_model():
     log.debug(f"goal_north:     {goal_north:.0f} m")
 
     # settings
-    loiter_radius = 90.0
+    loiter_radius = 60.0
     loiter_alt = 60.0
-    turning_radius = 90.0
-    climb_angle_rad = 0.15
+    turning_radius = 60.0
+    climb_angle_rad = 0.10
     max_altitude = 100.0
     min_altitude = 40.0
     time_budget = 10.0
@@ -409,7 +430,41 @@ def test_owen_state_space_model():
 
             elif category == ob.OwenStateSpace.HIGH_ALTITUDE:
                 # include a spiral
-                pass
+                interpol_iter_offset = 1
+
+                # length of spiral
+                hlen = num_turns * 2.0 * math.pi
+                interpol_v = min(interpol_seg, hlen)
+                interpol_seg -= interpol_v
+                interpol_phiStart = interpol_state().yaw()
+
+                segmentStarts.segmentStarts[0].x = (
+                    interpol_state[0] * rho + from_state[0]
+                )
+                segmentStarts.segmentStarts[0].y = (
+                    interpol_state[1] * rho + from_state[1]
+                )
+                segmentStarts.segmentStarts[0].z = (
+                    interpol_state[2] * rho + from_state[2]
+                )
+
+                # enforce bounds using temporary state
+                tmp_state[0] = 0.0
+                tmp_state[1] = 0.0
+                tmp_state[2] = 0.0
+                tmp_state().setYaw(interpol_state().yaw())
+                space.enforceBounds(tmp_state())
+                interpol_state().setYaw(tmp_state().yaw())
+                segmentStarts.segmentStarts[0].yaw = interpol_state().yaw()
+
+                dx = 0.0
+                dy = 0.0
+                dz = hlen * interpol_tanGamma
+                yaw = interpol_state().yaw()
+                interpol_state[0] += dx
+                interpol_state[1] += dy
+                interpol_state[2] += dz
+                interpol_state().setYaw(yaw)
 
             for interpol_iter in range(3):
                 if interpol_seg <= 0.0:
