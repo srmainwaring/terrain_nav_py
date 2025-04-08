@@ -109,9 +109,9 @@ def test_owen_state_space_model():
     # Loen
     start_lat = 61.873577836121434
     start_lon = 6.838535329603306
-    # goal_lat = 61.8861596546826 
+    # goal_lat = 61.8861596546826
     # goal_lon = 6.8333895309163
-    goal_lat = 61.892806099143634 
+    goal_lat = 61.892806099143634
     goal_lon = 6.85857902161146
     grid_length_factor = 5.0
 
@@ -120,7 +120,7 @@ def test_owen_state_space_model():
     # turning_radius = 60
     # max_alt = 100
     # min_alt = 60
-    # climb_angle_rad = 0.10 
+    # climb_angle_rad = 0.10
     start_lat = 51.86949481854276
     start_lon = -3.475730001422848
     goal_lat = 51.883459907192325
@@ -328,10 +328,11 @@ def test_owen_state_space_model():
             num_turns = path_type.numTurns_
             radius = path_type.turnRadius_
             phi = path_type.phi_
-            hlen = math.sqrt(ds * ds - dz * dz) / radius
-            print(f"hlen: {hlen}")
+            # NOTE: retain as cross check
+            # hlen = math.sqrt(ds * ds - dz * dz) / radius
+            # print(f"hlen: {hlen}")
             hlen = dubins_len + 2.0 * math.pi * num_turns + phi
-            print(f"hlen: {hlen}")
+            # print(f"hlen: {hlen}")
 
             interpol_tanGamma = (dz / radius) / hlen
             interpol_seg = hlen
@@ -339,11 +340,9 @@ def test_owen_state_space_model():
             # OwenStateSpace.PathType may have the following structure
             # LOW_ALTITUDE
             #   - Dubins path
-            #   - rho = turn radius
             #
             # MEDIUM_ALTITUDE
             #   - Initial turn of phi followed by a Dubins path
-            #   - rho = turn radius
             #
             # HIGH_ALTITUDE
             #   - Initial spiral of k-turns followed by a Dubins path
@@ -374,10 +373,25 @@ def test_owen_state_space_model():
                 yaw = phi_start
                 return (dx, dy, dz, yaw)
 
+            def add_to_state(state, dx, dy, dz, yaw):
+                """Add to the RE3 part of the state and set yaw"""
+                state[0] += dx
+                state[1] += dy
+                state[2] += dz
+                state().setYaw(yaw)
+
+            def enforce_so2_bounds(state):
+                space = state.getSpace()
+                s = ob.State(space)
+                s[0] = 0.0
+                s[1] = 0.0
+                s[2] = 0.0
+                s().setYaw(state().yaw())
+                space.enforceBounds(s())
+                state().setYaw(s().yaw())
+
             # Dubins segments
-            # tmp_state is used to enforce yaw bounds
             # interpol_state is for path with turns of unit radius.
-            tmp_state = ob.State(space)
             interpol_state = ob.State(space)
             interpol_state[0] = 0.0
             interpol_state[1] = 0.0
@@ -395,6 +409,7 @@ def test_owen_state_space_model():
                 interpol_v = min(interpol_seg, phi)
                 interpol_seg -= interpol_v
                 interpol_phiStart = interpol_state().yaw()
+                enforce_so2_bounds(interpol_state)
 
                 segmentStarts.segmentStarts[0].x = (
                     interpol_state[0] * rho + from_state[0]
@@ -405,14 +420,6 @@ def test_owen_state_space_model():
                 segmentStarts.segmentStarts[0].z = (
                     interpol_state[2] * rho + from_state[2]
                 )
-
-                # enforce bounds using temporary state
-                tmp_state[0] = 0.0
-                tmp_state[1] = 0.0
-                tmp_state[2] = 0.0
-                tmp_state().setYaw(interpol_state().yaw())
-                space.enforceBounds(tmp_state())
-                interpol_state().setYaw(tmp_state().yaw())
                 segmentStarts.segmentStarts[0].yaw = interpol_state().yaw()
 
                 if phi > 0.0:
@@ -423,10 +430,8 @@ def test_owen_state_space_model():
                     (dx, dy, dz, yaw) = turn_right(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
-                interpol_state[0] += dx
-                interpol_state[1] += dy
-                interpol_state[2] += dz
-                interpol_state().setYaw(yaw)
+
+                add_to_state(interpol_state, dx, dy, dz, yaw)
 
             elif category == ob.OwenStateSpace.HIGH_ALTITUDE:
                 # include a spiral
@@ -437,6 +442,7 @@ def test_owen_state_space_model():
                 interpol_v = min(interpol_seg, hlen)
                 interpol_seg -= interpol_v
                 interpol_phiStart = interpol_state().yaw()
+                enforce_so2_bounds(interpol_state)
 
                 segmentStarts.segmentStarts[0].x = (
                     interpol_state[0] * rho + from_state[0]
@@ -447,24 +453,13 @@ def test_owen_state_space_model():
                 segmentStarts.segmentStarts[0].z = (
                     interpol_state[2] * rho + from_state[2]
                 )
-
-                # enforce bounds using temporary state
-                tmp_state[0] = 0.0
-                tmp_state[1] = 0.0
-                tmp_state[2] = 0.0
-                tmp_state().setYaw(interpol_state().yaw())
-                space.enforceBounds(tmp_state())
-                interpol_state().setYaw(tmp_state().yaw())
                 segmentStarts.segmentStarts[0].yaw = interpol_state().yaw()
 
                 dx = 0.0
                 dy = 0.0
                 dz = hlen * interpol_tanGamma
                 yaw = interpol_state().yaw()
-                interpol_state[0] += dx
-                interpol_state[1] += dy
-                interpol_state[2] += dz
-                interpol_state().setYaw(yaw)
+                add_to_state(interpol_state, dx, dy, dz, yaw)
 
             for interpol_iter in range(3):
                 if interpol_seg <= 0.0:
@@ -474,6 +469,7 @@ def test_owen_state_space_model():
                 interpol_v = min(interpol_seg, path_type.path_.length_[interpol_iter])
                 interpol_seg -= interpol_v
                 interpol_phiStart = interpol_state().yaw()
+                enforce_so2_bounds(interpol_state)
 
                 segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].x = (
                     interpol_state[0] * rho + from_state[0]
@@ -484,25 +480,9 @@ def test_owen_state_space_model():
                 segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].z = (
                     interpol_state[2] * rho + from_state[2]
                 )
-
-                # TODO: cannot access internal state as compound state?
-                # if isinstance(interpol_state, ob.State):
-                #     abstract_state = interpol_state
-                #     internal_state = interpol_state()
-                # elif isinstance(interpol_state, ob.CompoundInternalState):
-                #     internal_state = interpol_state
-                # so2_space = space.getSubspace(1)
-                # so2_state = internal_state[1]
-                # so2_space.enforceBounds(so2_state)
-
-                # enforce bounds using temporary state
-                tmp_state[0] = 0.0
-                tmp_state[1] = 0.0
-                tmp_state[2] = 0.0
-                tmp_state().setYaw(interpol_state().yaw())
-                space.enforceBounds(tmp_state())
-                interpol_state().setYaw(tmp_state().yaw())
-                segmentStarts.segmentStarts[interpol_iter + interpol_iter_offset].yaw = interpol_state().yaw()
+                segmentStarts.segmentStarts[
+                    interpol_iter + interpol_iter_offset
+                ].yaw = interpol_state().yaw()
 
                 # calculate change in position and yaw
                 segment_type = path_type.path_.type_[interpol_iter]
@@ -520,10 +500,8 @@ def test_owen_state_space_model():
                     )
                 else:
                     raise ValueError("Invalid segment type")
-                interpol_state[0] += dx
-                interpol_state[1] += dy
-                interpol_state[2] += dz
-                interpol_state().setYaw(yaw)
+
+                add_to_state(interpol_state, dx, dy, dz, yaw)
 
             return segmentStarts
 
