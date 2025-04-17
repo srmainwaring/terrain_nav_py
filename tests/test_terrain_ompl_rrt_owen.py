@@ -158,7 +158,7 @@ def test_owen_state_space_model():
     loiter_radius = 60.0
     loiter_alt = 60.0
     turning_radius = 60.0
-    climb_angle_rad = 0.10
+    climb_angle_rad = 0.08
     max_altitude = 100.0
     min_altitude = 40.0
     time_budget = 10.0
@@ -309,6 +309,11 @@ def test_owen_state_space_model():
         if path_type.length() == 0.0:
             continue
 
+        def to_latlon(x, y, z, yaw_rad):
+            yaw_deg = math.degrees(yaw_rad)
+            (lat, lon) = mp_util.gps_offset(map_lat, map_lon, x, y)
+            return (lat, lon, z, yaw_deg)
+
         # TODO: need the max climb rate from the state space
         def calculateSegmentStarts(
             from_state, path_type, rho, gammaMax
@@ -398,9 +403,11 @@ def test_owen_state_space_model():
             interpol_state[2] = 0.0
             interpol_state().setYaw(from_state.yaw())
 
+            print("--------------------")
             interpol_iter_offset = 0
             if category == ob.OwenStateSpace.LOW_ALTITUDE:
                 # only Dubins segments
+                print(f"category: LOW_ALTITUDE")
                 pass
             elif category == ob.OwenStateSpace.MEDIUM_ALTITUDE:
                 # include an initial turn
@@ -426,12 +433,35 @@ def test_owen_state_space_model():
                     (dx, dy, dz, yaw) = turn_left(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
+                    print(f"category: MEDIUM_ALTITUDE")
+                    print(f"type:     DUBINS_LEFT")
                 elif phi < 0.0:
                     (dx, dy, dz, yaw) = turn_right(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
+                    print(f"category: MEDIUM_ALTITUDE")
+                    print(f"type:     DUBINS_RIGHT")
+
+                print(f"radius:   {radius}")
+                print(f"phi:      {phi}")
+
+                x = interpol_state[0] * rho + from_state[0]
+                y = interpol_state[1] * rho + from_state[1]
+                z = interpol_state[2] * rho + from_state[2]
+                yaw_rad = interpol_state().yaw()
+                (lat, lon, alt, yaw_deg) = to_latlon(x, y, z, yaw_rad)
+                print(f"state_s:  {x:.2f} {y:.2f} {z:.2f} {yaw_rad:.3f}")
+                print(f"latlon_s: {lat:.8f} {lon:.8f} {alt:.2f} {yaw_deg:.1f}")
 
                 add_to_state(interpol_state, dx, dy, dz, yaw)
+
+                x = interpol_state[0] * rho + from_state[0]
+                y = interpol_state[1] * rho + from_state[1]
+                z = interpol_state[2] * rho + from_state[2]
+                yaw_rad = interpol_state().yaw()
+                (lat, lon, alt, yaw_deg) = to_latlon(x, y, z, yaw_rad)
+                print(f"state_e:  {x:.2f} {y:.2f} {z:.2f} {yaw_rad:.3f}")
+                print(f"latlon_e: {lat:.8f} {lon:.8f} {alt:.2f} {yaw_deg:.1f}")
 
             elif category == ob.OwenStateSpace.HIGH_ALTITUDE:
                 # include a spiral
@@ -459,7 +489,28 @@ def test_owen_state_space_model():
                 dy = 0.0
                 dz = hlen * interpol_tanGamma
                 yaw = interpol_state().yaw()
+
+                print(f"category: HIGH_ALTITUDE")
+                print(f"radius:   {radius}")
+                print(f"turns:    {num_turns}")
+
+                x = interpol_state[0] * rho + from_state[0]
+                y = interpol_state[1] * rho + from_state[1]
+                z = interpol_state[2] * rho + from_state[2]
+                yaw_rad = interpol_state().yaw()
+                (lat, lon, alt, yaw_deg) = to_latlon(x, y, z, yaw_rad)
+                print(f"state_s:  {x:.2f} {y:.2f} {z:.2f} {yaw_rad:.3f}")
+                print(f"latlon_s: {lat:.8f} {lon:.8f} {alt:.2f} {yaw_deg:.1f}")
+
                 add_to_state(interpol_state, dx, dy, dz, yaw)
+
+                x = interpol_state[0] * rho + from_state[0]
+                y = interpol_state[1] * rho + from_state[1]
+                z = interpol_state[2] * rho + from_state[2]
+                yaw_rad = interpol_state().yaw()
+                (lat, lon, alt, yaw_deg) = to_latlon(x, y, z, yaw_rad)
+                print(f"state_e:  {x:.2f} {y:.2f} {z:.2f} {yaw_rad:.3f}")
+                print(f"latlon_e: {lat:.8f} {lon:.8f} {alt:.2f} {yaw_deg:.1f}")
 
             for interpol_iter in range(3):
                 if interpol_seg <= 0.0:
@@ -490,18 +541,41 @@ def test_owen_state_space_model():
                     (dx, dy, dz, yaw) = turn_left(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
+                    print(f"type:     DUBINS_LEFT")
                 elif segment_type == ob.DubinsStateSpace.DUBINS_RIGHT:
                     (dx, dy, dz, yaw) = turn_right(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
+                    print(f"type:     DUBINS_RIGHT")
                 elif segment_type == ob.DubinsStateSpace.DUBINS_STRAIGHT:
                     (dx, dy, dz, yaw) = straight(
                         interpol_phiStart, interpol_v, interpol_tanGamma
                     )
+                    print(f"type:     DUBINS_STRAIGHT")
                 else:
                     raise ValueError("Invalid segment type")
 
+                print(f"radius:   {radius}")
+
+                x = interpol_state[0] * rho + from_state[0]
+                y = interpol_state[1] * rho + from_state[1]
+                z = interpol_state[2] * rho + from_state[2]
+                yaw_rad = interpol_state().yaw()
+                (lat, lon, alt, yaw_deg) = to_latlon(x, y, z, yaw_rad)
+                print(f"state_s:  {x:.2f} {y:.2f} {z:.2f} {yaw_rad:.3f}")
+                print(f"latlon_s: {lat:.8f} {lon:.8f} {alt:.2f} {yaw_deg:.1f}")
+
                 add_to_state(interpol_state, dx, dy, dz, yaw)
+
+                x = interpol_state[0] * rho + from_state[0]
+                y = interpol_state[1] * rho + from_state[1]
+                z = interpol_state[2] * rho + from_state[2]
+                yaw_rad = interpol_state().yaw()
+                (lat, lon, alt, yaw_deg) = to_latlon(x, y, z, yaw_rad)
+                print(f"state_e:  {x:.2f} {y:.2f}, {z:.2f} {yaw_rad:.3f}")
+                print(f"latlon_e: {lat:.8f} {lon:.8f} {alt:.2f} {yaw_deg:.1f}")
+
+            print("--------------------")
 
             return segmentStarts
 
