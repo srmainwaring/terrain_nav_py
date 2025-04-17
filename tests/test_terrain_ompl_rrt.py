@@ -66,15 +66,14 @@ def add_test_stderr_logger(level: int = logging.DEBUG) -> logging.StreamHandler:
 
 
 def test_terrain_ompl_rrt():
+    # set the RNG seed for repeatable outcomes
+    ou.RNG.setSeed(1)
+
     # configure loggers
     add_stderr_logger()
     add_test_stderr_logger()
     ou.setLogLevel(ou.LogLevel.LOG_DEBUG)
     print(ou.getLogLevel())
-
-    # TODO: set local seed to ensure reproducible results - this does
-    #       not appear to be working.
-    ou.RNG().setLocalSeed(1)
 
     # Foothills Community Park, Colorado
     start_lat = 40.056671934301086
@@ -100,6 +99,18 @@ def test_terrain_ompl_rrt():
     # goal_lon = 9.8260916
     # grid_length_factor = 5.0
 
+    # Brecon, Storey Arms to Pen-y-fan
+    # example includes a spiral when
+    # turning_radius = 60
+    # max_alt = 100
+    # min_alt = 60
+    # climb_angle_rad = 0.10
+    start_lat = 51.86949481854276
+    start_lon = -3.475730001422848
+    goal_lat = 51.883459907192325
+    goal_lon = -3.4367987405967733
+    grid_length_factor = 2.0
+
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
     bearing_deg = mp_util.gps_bearing(start_lat, start_lon, goal_lat, goal_lon)
     bearing_rad = math.radians(bearing_deg)
@@ -115,6 +126,9 @@ def test_terrain_ompl_rrt():
     (map_lat, map_lon) = mp_util.gps_offset(
         start_lat, start_lon, 0.5 * east, 0.5 * north
     )
+    log.debug(f"map_lat:        {map_lat}")
+    log.debug(f"map_lon:        {map_lon}")
+
     grid_length = grid_length_factor * max(math.fabs(east), math.fabs(north))
     log.debug(f"grid_length:    {grid_length:.0f} m")
 
@@ -128,14 +142,14 @@ def test_terrain_ompl_rrt():
     log.debug(f"goal_north:     {goal_north:.0f} m")
 
     # settings
-    loiter_radius = 90.0
+    loiter_radius = 60.0
     loiter_alt = 60.0
-    turning_radius = 90.0
-    climb_angle_rad = 0.15
-    max_altitude = 120.0
-    min_altitude = 50.0
+    turning_radius = 60.0
+    climb_angle_rad = 0.1
+    max_altitude = 100.0
+    min_altitude = 60.0
     time_budget = 20.0
-    resolution_m = 200.0
+    resolution_m = 100.0
 
     # create map
     grid_map = GridMapSRTM(map_lat=map_lat, map_lon=map_lon)
