@@ -36,6 +36,8 @@ from ompl import util as ou
 
 from MAVProxy.modules.lib import mp_util
 
+from pymavlink.rotmat import Vector3
+
 from terrain_nav_py import add_stderr_logger
 
 from terrain_nav_py.path import Path
@@ -45,6 +47,7 @@ from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.grid_map import GridMapSRTM
 
 from terrain_nav_py.path import Path
+from terrain_nav_py.path_segment import PathSegment
 
 from terrain_nav_py.terrain_map import TerrainMap
 
@@ -266,17 +269,185 @@ def test_terrain_ompl_rrt():
 
 def test_terrain_ompl_rrt_solution_path_to_path():
     """
-    map_lat=56.6987387
-    map_lon=-6.1082210
-    turningRadius=40.0
-    gam=0.1
-    start_pos = [0.0, 0.0, 60.0]
-    goal_pos = [-200.0, 200.0, 60.0]
-    max_altitude=120.0
-    min_altitude=50.0
+    loiter_radius = 60.0
+    climb_angle_rad = 0.1
+    max_altitude = 100.0
+    min_altitude = 60.0
 
-    state: [-40.0000, -0.0000, 73.9186; 1.5708]
-    state: [-187.6393, 161.9577, 104.6088; -2.8274]
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] distance:       3094 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] bearing:        59.8 deg
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] east:           2675 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] north:          1555 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] map_lat:        51.87647736286754
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] map_lon:        -3.4562658824495816
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] grid_length:    5351 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] start_east:     -1338 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] start_north:    -777 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] goal_east:      1338 m
+    2025-04-17 17:27:57,615 DEBUG [test_terrain_ompl_rrt] goal_north:     777 m
+
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] Path has 11 states
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] state[0]:    [-1319.2087, -834.3522, 496.3328; -2.8274]
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] state[1]:    [-1509.0698, -277.3968, 557.1601; 2.1498]
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSL
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_LEFT
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.len: 1.676 8.380 0.370
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A11
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] segs[0]:     x: -1319.209, y: -834.352, z: 496.333, yaw: -2.827
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] segs[1]:     x: -1319.209, y: -834.352, z: 496.333, yaw: -2.827
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] segs[2]:     x: -1396.449, y: -789.716, z: 506.112, yaw: 1.779
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] segs[3]:     x: -1396.449, y: -789.716, z: 506.112, yaw: 1.779
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] segs[4]:     x: -1500.591, y: -297.802, z: 554.999, yaw: 1.779
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,824 DEBUG [terrain_ompl_rrt] total_length: 10.427002385674154
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] state[1]:    [-1509.0698, -277.3968, 557.1601; 2.1498]
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] state[2]:    [-1376.9522, 29.2846, 617.5511; 1.7377]
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSL
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_LEFT
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.len: 1.135 3.935 0.723
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_MEDIUM
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A11
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.ks:   1
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] segs[0]:     x: -1509.070, y: -277.397, z: 557.160, yaw: 2.150
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] segs[1]:     x: -1509.070, y: -277.397, z: 588.580, yaw: 2.150
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] segs[2]:     x: -1509.808, y: -212.889, z: 594.257, yaw: 1.015
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] segs[3]:     x: -1509.808, y: -212.889, z: 594.257, yaw: 1.015
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] segs[4]:     x: -1385.160, y: -12.360, z: 613.935, yaw: 1.015
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,860 DEBUG [terrain_ompl_rrt] total_length: 12.076638929545622
+    2025-04-17 16:50:53,908 DEBUG [terrain_ompl_rrt] state[2]:    [-1376.9522, 29.2846, 617.5511; 1.7377]
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] state[3]:    [-1398.0118, 727.1960, 666.9492; 1.6002]
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSR
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_RIGHT
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.len: 0.138 11.500 0.000
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A14
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] segs[0]:     x: -1376.952, y: 29.285, z: 617.551, yaw: 1.738
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] segs[1]:     x: -1376.952, y: 29.285, z: 617.551, yaw: 1.738
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] segs[2]:     x: -1377.761, y: 37.493, z: 618.135, yaw: 1.600
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] segs[3]:     x: -1377.761, y: 37.493, z: 618.135, yaw: 1.600
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] segs[4]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,909 DEBUG [terrain_ompl_rrt] total_length: 11.637580776286727
+    2025-04-17 16:50:53,932 DEBUG [terrain_ompl_rrt] state[3]:    [-1398.0118, 727.1960, 666.9492; 1.6002]
+    2025-04-17 16:50:53,932 DEBUG [terrain_ompl_rrt] state[4]:    [-993.7344, 1293.9982, 704.4269; 0.9327]
+    2025-04-17 16:50:53,932 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSR
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_RIGHT
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] dubins.len: 0.667 10.983 0.000
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A14
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] segs[0]:     x: -1398.012, y: 727.196, z: 666.949, yaw: 1.600
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] segs[1]:     x: -1398.012, y: 727.196, z: 666.949, yaw: 1.600
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] segs[2]:     x: -1386.233, y: 764.695, z: 669.096, yaw: 0.933
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] segs[3]:     x: -1386.233, y: 764.695, z: 669.096, yaw: 0.933
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] segs[4]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,933 DEBUG [terrain_ompl_rrt] total_length: 11.649933493305893
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] state[4]:    [-993.7344, 1293.9982, 704.4269; 0.9327]
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] state[5]:    [-513.9431, 1532.9495, 689.4346; 2.3127]
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSL
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_LEFT
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] dubins.len: 0.657 7.274 2.037
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A12
+    2025-04-17 16:50:53,956 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] segs[0]:     x: -993.734, y: 1293.998, z: 704.427, yaw: 0.933
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] segs[1]:     x: -993.734, y: 1293.998, z: 704.427, yaw: 0.933
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] segs[2]:     x: -961.854, y: 1315.999, z: 703.438, yaw: 0.275
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] segs[3]:     x: -961.854, y: 1315.999, z: 703.438, yaw: 0.275
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] segs[4]:     x: -541.860, y: 1434.669, z: 692.499, yaw: 0.275
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:53,957 DEBUG [terrain_ompl_rrt] total_length: 9.968628157928265
+    2025-04-17 16:50:53,987 DEBUG [terrain_ompl_rrt] state[5]:    [-513.9431, 1532.9495, 689.4346; 2.3127]
+    2025-04-17 16:50:53,987 DEBUG [terrain_ompl_rrt] state[6]:    [-95.2192, 1252.5827, 751.8279; -0.6693]
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSL
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_LEFT
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.len: 3.145 7.995 0.163
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A24
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] segs[0]:     x: -513.943, y: 1532.949, z: 689.435, yaw: 2.313
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] segs[1]:     x: -513.943, y: 1532.949, z: 689.435, yaw: 2.313
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] segs[2]:     x: -425.352, y: 1613.891, z: 706.795, yaw: -0.832
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] segs[3]:     x: -425.352, y: 1613.891, z: 706.795, yaw: -0.832
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] segs[4]:     x: -102.352, y: 1259.237, z: 750.929, yaw: -0.832
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] segs[5]:     x: -95.219, y: 1252.583, z: 751.828, yaw: -0.669
+    2025-04-17 16:50:53,988 DEBUG [terrain_ompl_rrt] total_length: 11.302470582915976
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] state[6]:    [-95.2192, 1252.5827, 751.8279; -0.6693]
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] state[7]:    [354.7171, 720.7249, 819.4522; -0.8704]
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSR
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_RIGHT
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.len: 0.201 11.411 0.000
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A14
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] segs[0]:     x: -95.219, y: 1252.583, z: 751.828, yaw: -0.669
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] segs[1]:     x: -95.219, y: 1252.583, z: 751.828, yaw: -0.669
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] segs[2]:     x: -86.572, y: 1244.200, z: 752.999, yaw: -0.870
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] segs[3]:     x: -86.572, y: 1244.200, z: 752.999, yaw: -0.870
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] segs[4]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:54,022 DEBUG [terrain_ompl_rrt] total_length: 11.612097969419427
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] state[7]:    [354.7171, 720.7249, 819.4522; -0.8704]
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] state[8]:    [659.1998, 313.5875, 843.8850; 0.5264]
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSL
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_LEFT
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.len: 0.179 7.233 1.576
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A11
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] segs[0]:     x: 354.717, y: 720.725, z: 819.452, yaw: -0.870
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] segs[1]:     x: 354.717, y: 720.725, z: 819.452, yaw: -0.870
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] segs[2]:     x: 360.872, y: 711.935, z: 819.939, yaw: -1.049
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] segs[3]:     x: 360.872, y: 711.935, z: 819.939, yaw: -1.049
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] segs[4]:     x: 577.025, y: 335.582, z: 839.601, yaw: -1.049
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] segs[5]:     x: 659.200, y: 313.588, z: 843.885, yaw: 0.526
+    2025-04-17 16:50:54,046 DEBUG [terrain_ompl_rrt] total_length: 8.988424647444615
+    2025-04-17 16:50:54,073 DEBUG [terrain_ompl_rrt] state[8]:    [659.1998, 313.5875, 843.8850; 0.5264]
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] state[9]:    [741.6659, 591.6972, 912.2411; 1.2548]
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_LSR
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_LEFT DUBINS_STRAIGHT DUBINS_RIGHT
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.len: 0.823 3.995 0.095
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_HIGH
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A44
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.ks:   1
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] segs[0]:     x: 659.200, y: 313.588, z: 843.885, yaw: 0.526
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] segs[1]:     x: 659.200, y: 313.588, z: 882.660, yaw: 0.526
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] segs[2]:     x: 687.594, y: 352.310, z: 887.616, yaw: 1.350
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] segs[3]:     x: 687.594, y: 352.310, z: 887.616, yaw: 1.350
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] segs[4]:     x: 740.154, y: 586.205, z: 911.669, yaw: 1.350
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] segs[5]:     x: 0.000, y: 0.000, z: 0.000, yaw: 0.000
+    2025-04-17 16:50:54,074 DEBUG [terrain_ompl_rrt] total_length: 11.354685123522213
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] state[9]:    [741.6659, 591.6972, 912.2411; 1.2548]
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] state[10]:    [1356.2907, 720.2254, 941.3644; 0.3142]
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.idx:  TYPE_RSL
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.type: DUBINS_RIGHT DUBINS_STRAIGHT DUBINS_LEFT
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.len: 1.102 9.397 0.162
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.alt:  ALT_CASE_LOW
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.cls:  CLASS_A11
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.ks:   0
+    2025-04-17 16:50:54,119 DEBUG [terrain_ompl_rrt] dubins.ke:   0
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] segs[0]:     x: 741.666, y: 591.697, z: 912.241, yaw: 1.255
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] segs[1]:     x: 741.666, y: 591.697, z: 912.241, yaw: 1.255
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] segs[2]:     x: 789.582, y: 632.354, z: 915.252, yaw: 0.152
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] segs[3]:     x: 789.582, y: 632.354, z: 915.252, yaw: 0.152
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] segs[4]:     x: 1346.862, y: 717.985, z: 940.923, yaw: 0.152
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] segs[5]:     x: 1356.291, y: 720.225, z: 941.364, yaw: 0.314
+    2025-04-17 16:50:54,120 DEBUG [terrain_ompl_rrt] total_length: 10.66101320450275
+
     """
     # configure loggers
     add_stderr_logger()
@@ -284,29 +455,55 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     ou.setLogLevel(ou.LogLevel.LOG_DEBUG)
     print(ou.getLogLevel())
 
-    map_lat = 56.6987387
-    map_lon = -6.1082210
-    gamma = 0.1
-    loiter_radius = 40.0
-    max_altitude = 120.0
-    min_altitude = 50.0
+    # inputs
+    loiter_radius = 60.0
+    climb_angle_rad = 0.1
+    max_altitude = 100.0
+    min_altitude = 60.0
+    map_lat = 51.87647736286754
+    map_lon = -3.4562658824495816
+    grid_spacing = 30
+    grid_length = 5351.0
+    start_east = -1338.0
+    start_north = -777.0
+    goal_east = 1338.0
+    goal_north = 777.0
+
+    # states from planner solution
+    solution_states = [
+        [-1319.2087, -834.3522, 496.3328, -2.8274],
+        [-1509.0698, -277.3968, 557.1601, 2.1498],
+        [-1376.9522, 29.2846, 617.5511, 1.7377],
+        [-1398.0118, 727.1960, 666.9492, 1.6002],
+        [-993.7344, 1293.9982, 704.4269, 0.9327],
+        [-513.9431, 1532.9495, 689.4346, 2.3127],
+        [-95.2192, 1252.5827, 751.8279, -0.6693],
+        [354.7171, 720.7249, 819.4522, -0.8704],
+        [659.1998, 313.5875, 843.8850, 0.5264],
+        [741.6659, 591.6972, 912.2411, 1.2548],
+        [1356.2907, 720.2254, 941.3644, 0.3142],
+    ]
 
     # create terrain map
     grid_map = GridMapSRTM(map_lat, map_lon)
-    grid_map.setGridLength(800)
+    grid_map.setGridSpacing(grid_spacing)
+    grid_map.setGridLength(grid_length)
+
     terrain_map = TerrainMap()
     terrain_map.setGridMap(grid_map)
 
     # create planner manager
-    da_space = DubinsAirplaneStateSpace(turningRadius=loiter_radius, gam=gamma)
+    da_space = DubinsAirplaneStateSpace(
+        turningRadius=loiter_radius, gam=climb_angle_rad
+    )
     planner_mgr = TerrainOmplRrt(da_space)
     planner_mgr.setMap(terrain_map)
     planner_mgr.setAltitudeLimits(max_altitude, min_altitude)
     planner_mgr.setBoundsFromMap(terrain_map.getGridMap())
 
     # set start and goal
-    start_pos = [0.0, 0.0, 60.0]
-    goal_pos = [-200.0, 200.0, 60.0]
+    start_pos = [start_east, start_north, min_altitude]
+    goal_pos = [goal_east, goal_north, min_altitude]
 
     # adjust start and goal altitudes
     start_pos[2] += grid_map.atPosition("elevation", start_pos)
@@ -321,20 +518,103 @@ def test_terrain_ompl_rrt_solution_path_to_path():
     solution_path = og.PathGeometric(si)
 
     # add states
-    state = ob.State(da_space)
-    da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-    da_state.setXYZYaw(-40.0000, -0.0000, 73.9186, 1.5708)
-    solution_path.append(state())
-
-    state = ob.State(da_space)
-    da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
-    da_state.setXYZYaw(-187.6393, 161.9577, 104.6088, -2.8274)
-    solution_path.append(state())
+    for s in solution_states:
+        state = ob.State(da_space)
+        da_state = DubinsAirplaneStateSpace.DubinsAirplaneState(state)
+        da_state.setXYZYaw(s[0], s[1], s[2], s[3])
+        solution_path.append(state())
 
     trajectory_segments = Path()
     planner_mgr.solutionPathToPath(solution_path, trajectory_segments)
 
     states = solution_path.getStates()
+
+    # Make / use a class for mission items
+    # 0	  0	0	16	0.0	  0.0	  0.0	   0.0 51.86949482 -3.475730	 435.00 1
+    # 1	  0	0	31	1.0	-60.0	  0.0	   1.0 51.86898184 -3.4742518  500.90 1
+
+    mission_items = []
+    wp_num = 0
+    for i, segment in enumerate(trajectory_segments._segments):
+        # print(f"[{i}] first:\n{segment.first_state()}")
+        # print(f"[{i}] last:\n{segment.last_state()}")
+        position3 = segment.first_state().position
+        tangent3 = (segment.first_state().velocity).normalized()
+        curvature = segment.curvature
+        position2 = Vector3(position3.x, position3.y, 0.0)
+        tangent2 = Vector3(tangent3.x, tangent3.y, 0.0)
+
+
+        (start_lat, start_lon) = mp_util.gps_offset(
+            map_lat, map_lon, position3.x, position3.y
+        )
+        start_alt = position3.z
+
+        (end_lat, end_lon) = mp_util.gps_offset(
+            map_lat,
+            map_lon,
+            segment.last_state().position.x,
+            segment.last_state().position.y,
+        )
+        end_alt = segment.last_state().position.z
+
+        # waypoint number - should also include home position
+        sys_id = 0
+        cmp_id = 0
+        if curvature != 0.0:
+            # do not add a loiter for short turns
+            length = segment.get_length()
+            radius = 1.0 / math.fabs(curvature)
+            phi = length / radius
+            if phi < 0.5 * math.pi:
+                continue
+
+            arc_centre = PathSegment.get_arc_centre(position2, tangent2, curvature)
+            (cen_lat, cen_lon) = mp_util.gps_offset(
+                map_lat,
+                map_lon,
+                arc_centre.x,
+                arc_centre.y,
+            )
+
+            # print(f"[{i}]\ncentre:    {arc_centre}")
+            # print(f"curvature: {curvature:.4f}")
+
+            # mission item MAV_CMD_NAV_LOITER_TO_ALT (31)
+            mav_id = 31
+            p1 = 1 # heading required: 0: no, 1: yes 
+            p2 = -1.0 / curvature # radius: > 0 loiter CW, < 0 loiter CCW
+            p3 = 0
+            p4 = 1 # loiter exit location: 1: line between exit and next wp.  
+            p5 = cen_lat
+            p6 = cen_lon
+            p7 = end_alt
+            p8 = 1 # abs alt
+            mission_item = (
+                f"{wp_num} {sys_id} {cmp_id} {mav_id} "
+                f"{p1} {p2} {p3} {p4} {p5} {p6} {p7} {p8}"
+            )
+            print(mission_item)
+            mission_items.append(mission_item)
+            wp_num += 1
+
+        # mission item MAV_CMD_NAV_WAYPOINT (16)
+        mav_id = 16
+        p1 = 0 # hold
+        p2 = 0 # accept radius
+        p3 = 0 # pass radius
+        p4 = 0 # yaw at wapypoint 
+        p5 = end_lat
+        p6 = end_lon
+        p7 = end_alt
+        p8 = 1 # abs alt
+        mission_item = (
+            f"{wp_num} {sys_id} {cmp_id} {mav_id} "
+            f"{p1} {p2} {p3} {p4} {p5} {p6} {p7} {p8}"
+        )
+        print(mission_item)
+        mission_items.append(mission_item)
+        wp_num += 1
 
     if __name__ == "__main__":
         plot_path(
@@ -372,8 +652,8 @@ def plot_path(
         velocity = path.velocity()
         velocity = np.array(velocity)
 
-        log.debug(f"position.shape: {position.shape}")
-        log.debug(f"velocity.shape: {velocity.shape}")
+        # log.debug(f"position.shape: {position.shape}")
+        # log.debug(f"velocity.shape: {velocity.shape}")
 
         scale = 0.25 * loiter_radius
         stride = 10
@@ -453,8 +733,8 @@ def plot_path(
     ax = plt.figure().add_subplot(projection="3d")
     ax.set_xlim(-5000.0, 5000.0)
     ax.set_ylim(-5000.0, 5000.0)
-    # ax.set_zlim(0.0, 500.0)
-    ax.set_zlim(1000.0, 2500.0)
+    ax.set_zlim(0.0, 1500.0)
+    # ax.set_zlim(1000.0, 2500.0)
     ax.set_xlabel("east (m)")
     ax.set_ylabel("north (m)")
     ax.set_title("Terrain Planner (source: SRTM1)")
@@ -484,8 +764,8 @@ def plot_path(
 
 
 def main():
-    test_terrain_ompl_rrt()
-    # test_terrain_ompl_rrt_solution_path_to_path()
+    # test_terrain_ompl_rrt()
+    test_terrain_ompl_rrt_solution_path_to_path()
 
 
 if __name__ == "__main__":
