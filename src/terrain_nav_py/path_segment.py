@@ -98,6 +98,13 @@ class State:
         """
         self._attitude = value
 
+    def __str__(self):
+        msg = (
+            f"position:  {self.position}\n"
+            f"velocity:  {self.velocity}\n"
+            f"attitude:  {self.attitude}"
+        )
+        return msg
 
 class PathSegment:
     """
