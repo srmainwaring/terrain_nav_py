@@ -765,7 +765,7 @@ class TerrainOmplRrt:
                         end_state.velocity = Vector3(
                             end_velocity[0], end_velocity[1], end_velocity[2]
                         )
-                        end_state.attitude = [0.0, 0.0, end_yaw]
+                        end_state.attitude = Quaternion([0.0, 0.0, end_yaw])
                         trajectory.append_state(end_state)
 
                     progress = track_progress
