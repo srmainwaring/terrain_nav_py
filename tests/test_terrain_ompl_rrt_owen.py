@@ -47,11 +47,13 @@ from terrain_nav_py import add_stderr_logger
 
 from terrain_nav_py.dubins_airplane import DubinsAirplaneStateSpace
 from terrain_nav_py.grid_map import GridMapSRTM
+from terrain_nav_py.ompl_setup import PlannerType
 from terrain_nav_py.path import Path
 from terrain_nav_py.path_segment import PathSegment
 from terrain_nav_py.path_segment import State
 from terrain_nav_py.terrain_map import TerrainMap
 from terrain_nav_py.terrain_ompl_rrt_owen import TerrainOmplRrtOwen
+
 
 from test_terrain_ompl_rrt import plot_path
 
@@ -90,11 +92,11 @@ def test_owen_state_space_model():
     grid_length_factor = 1.2
 
     # Davos
-    start_lat = 46.8141348
-    start_lon = 9.8488310
-    goal_lat = 46.8201124
-    goal_lon = 9.8260916
-    grid_length_factor = 2.0
+    # start_lat = 46.8141348
+    # start_lon = 9.8488310
+    # goal_lat = 46.8201124
+    # goal_lon = 9.8260916
+    # grid_length_factor = 2.0
 
     # Caswell
     # start_lat = 51.568510858990884
@@ -121,10 +123,17 @@ def test_owen_state_space_model():
     # max_alt = 100
     # min_alt = 60
     # climb_angle_rad = 0.10
-    start_lat = 51.86949481854276
-    start_lon = -3.475730001422848
-    goal_lat = 51.883459907192325
-    goal_lon = -3.4367987405967733
+    # start_lat = 51.86949481854276
+    # start_lon = -3.475730001422848
+    # goal_lat = 51.883459907192325
+    # goal_lon = -3.4367987405967733
+    # grid_length_factor = 2.0
+
+    # Spring Valley
+    start_lat = -35.28206849440639
+    start_lon = 149.0059138453497
+    goal_lat = -35.4432972
+    goal_lon = 148.8181000
     grid_length_factor = 2.0
 
     distance = mp_util.gps_distance(start_lat, start_lon, goal_lat, goal_lon)
@@ -161,7 +170,7 @@ def test_owen_state_space_model():
     climb_angle_rad = 0.08
     max_altitude = 100.0
     min_altitude = 40.0
-    time_budget = 10.0
+    time_budget = 30.0
     resolution_m = 100.0
 
     # create map
@@ -170,7 +179,7 @@ def test_owen_state_space_model():
     grid_map.setGridLength(grid_length)
 
     # set up distance layer (may take a while..)
-    log.debug(f"calculating distance-surface...")
+    # log.debug(f"calculating distance-surface...")
     # grid_map.addLayerDistanceTransform(surface_distance=min_altitude)
 
     terrain_map = TerrainMap()
@@ -225,6 +234,9 @@ def test_owen_state_space_model():
     resolution_used = si.getStateValidityCheckingResolution()
     log.debug(f"Resolution used: {resolution_used}")
 
+    # try different planners
+    problem.setDefaultPlanner(PlannerType.RRTCONNECT)
+
     # NOTE: this does not work because of unmatched signature...
     # use a deterministic sampler
     # space = problem.getStateSpace()
@@ -267,7 +279,7 @@ def test_owen_state_space_model():
         path_type = space.getPath(from_state, to_state)
 
         # the Dubins path connecting from_state and to_state
-        db_path = path_type.path_
+        dubins_path = path_type.path_
 
         def to_string(category):
             """Utility to convert enum PathCategory to a string"""
@@ -294,16 +306,16 @@ def test_owen_state_space_model():
         print(f"path_type.deltaZ: {path_type.deltaZ_:.4f}")
         print(f"path_type.phi: {path_type.phi_:.2f}")
         print(f"path_type.numTurns: {path_type.numTurns_}")
-        print(f"path_type.path: {path_type.path_}")
+        print(f"path_type.path: {dubins_path}")
         print(
-            f"path_type.path.type: {path_type.path_.type_[0]}, "
-            f"{path_type.path_.type_[1]}. {path_type.path_.type_[2]}"
+            f"path_type.path.type: {dubins_path.type_[0]}, "
+            f"{dubins_path.type_[1]}. {dubins_path.type_[2]}"
         )
         print(
-            f"path_type.path.length: {path_type.path_.length_[0]:.4f}, "
-            f"{path_type.path_.length_[1]:.4f}, {path_type.path_.length_[2]:.4f}"
+            f"path_type.path.length: {dubins_path.length_[0]:.4f}, "
+            f"{dubins_path.length_[1]:.4f}, {dubins_path.length_[2]:.4f}"
         )
-        print(f"path_type.path.reverse: {path_type.path_.reverse_}")
+        print(f"path_type.path.reverse: {dubins_path.reverse_}")
 
         # skip case where start == end to avoid div zero below
         if path_type.length() == 0.0:
@@ -517,7 +529,7 @@ def test_owen_state_space_model():
                     break
 
                 # NOTE: DubinsPath length is scaled by turn radius,
-                interpol_v = min(interpol_seg, path_type.path_.length_[interpol_iter])
+                interpol_v = min(interpol_seg, dubins_path.length_[interpol_iter])
                 interpol_seg -= interpol_v
                 interpol_phiStart = interpol_state().yaw()
                 enforce_so2_bounds(interpol_state)
@@ -536,7 +548,7 @@ def test_owen_state_space_model():
                 ].yaw = interpol_state().yaw()
 
                 # calculate change in position and yaw
-                segment_type = path_type.path_.type_[interpol_iter]
+                segment_type = dubins_type[interpol_iter]
                 if segment_type == ob.DubinsStateSpace.DUBINS_LEFT:
                     (dx, dy, dz, yaw) = turn_left(
                         interpol_phiStart, interpol_v, interpol_tanGamma
