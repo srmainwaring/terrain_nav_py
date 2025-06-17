@@ -331,7 +331,7 @@ class DubinsPath:
         A function returning the length (normalized by minimum radius) of the
         3D (non-optimal) Dubins airplane path.
 
-        :return: The 3D path length normalised by the minumum radius
+        :return: The 3D path length normalised by the minimum radius
         :rtype: float
         """
         return self.length_2d() * self._one_div_cos_abs_gamma
