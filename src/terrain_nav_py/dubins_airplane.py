@@ -38,7 +38,7 @@
 Dubins airplane model
 
 DUBINSAIRPLANE STATE SPACE for control-based planning with (non-optimal) Dubins airplane paths,
-using geometric motion planning algorithms. (This is an extension ot the OMPL DubinsStateSpace)
+using geometric motion planning algorithms. (This is an extension to the OMPL DubinsStateSpace)
 """
 
 
@@ -157,7 +157,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         :type turningRadius: float
         :param gam: The maximum climb angle of the airplane, defaults to 0.15
         :type gam: float
-        :param useEuclDist: If true the euclidian distance is used, else the Dubins airplane distance, defaults to False
+        :param useEuclDist: If true the euclidean distance is used, else the Dubins airplane distance, defaults to False
         :type useEuclDist: float
         """
         super().__init__()
@@ -174,7 +174,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         # computation with wind.
         #
         # NOTE: A too low number speeds up the computation in general but leads
-        #       to more failed attemps of Dubins path computation.
+        #       to more failed attempts of Dubins path computation.
         #   */
         self.MAX_ITER: int = 12
 
@@ -725,7 +725,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
         return dp
 
     # virtual void interpolate(const ob::State* from, const ob::State* to, const double t, ob::State* state) const override;
-    # NOTE: overides base class interpolate - so cannot have different name...
+    # NOTE: overrides base class interpolate - so cannot have different name...
     def interpolate(
         self, from_state: ob.State, to_state: ob.State, t: float, state: ob.State
     ) -> None:
@@ -1943,7 +1943,7 @@ class DubinsAirplaneStateSpace(ob.CompoundStateSpace):
 
         dp_tmp = DubinsPath()
 
-        # seperate by path case
+        # separate by path case
         path_type = dp.getIdx()
         if path_type == DubinsPath.Index.TYPE_LSL:
             # The sub-optimal 2D Dubins path is LSL so the optimal path is L + RSL
