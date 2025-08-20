@@ -212,6 +212,19 @@ class GridMapSRTM(GridMap):
         self._grid_length = value
         self._updateGrid()
 
+    def setTerrainSource(self, value: str) -> None:
+        """
+        Set the terrain data source
+        """
+        if (value != "SRTM1") and (value != "SRTM3"):
+            raise ValueError(
+                f"[GridMapSRTM] invalid terrain source: {value}. "
+                f"Valid choices are `SRTM1` or `SRTM3`"
+            )
+
+        self._terrain_source = value
+        self._updateGrid()
+
     def isInside(self, position: tuple[float, float]) -> bool:
         """
         Check if a 2d position is inside the grid map boundary.
