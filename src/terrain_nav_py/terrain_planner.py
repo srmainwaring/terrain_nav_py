@@ -6,6 +6,8 @@ import math
 import time
 import threading
 
+from dataclasses import dataclass, field
+
 from MAVProxy.modules.lib import multiproc
 from MAVProxy.modules.lib import mp_util
 
@@ -19,110 +21,110 @@ from terrain_nav_py.terrain_ompl_rrt import TerrainOmplRrt
 # data messages [in]
 
 
+@dataclass
 class PlannerStartLatLon:
-    def __init__(self, start_latlon, is_valid=False):
-        self.start_latlon = start_latlon
-        self.is_valid = is_valid
+    start_latlon: tuple[float, float] = None
+    is_valid: bool = False
 
 
+@dataclass
 class PlannerGoalLatLon:
-    def __init__(self, goal_latlon, is_valid=False):
-        self.goal_latlon = goal_latlon
-        self.is_valid = is_valid
+    goal_latlon: tuple[float, float] = None
+    is_valid: bool = False
 
 
+@dataclass
 class PlannerLoiterAglAlt:
-    def __init__(self, loiter_agl_alt):
-        self.loiter_agl_alt = loiter_agl_alt
+    loiter_agl_alt: float
 
 
+@dataclass
 class PlannerLoiterRadius:
-    def __init__(self, loiter_radius):
-        self.loiter_radius = loiter_radius
+    loiter_radius: float
 
 
+@dataclass
 class PlannerTurningRadius:
-    def __init__(self, turning_radius):
-        self.turning_radius = turning_radius
+    turning_radius: float
 
 
+@dataclass
 class PlannerClimbAngleDeg:
-    def __init__(self, climb_angle_deg):
-        self.climb_angle_deg = climb_angle_deg
+    climb_angle_deg: float
 
 
+@dataclass
 class PlannerMaxAglAlt:
-    def __init__(self, max_agl_alt):
-        self.max_agl_alt = max_agl_alt
+    max_agl_alt: float
 
 
+@dataclass
 class PlannerMinAglAlt:
-    def __init__(self, min_agl_alt):
-        self.min_agl_alt = min_agl_alt
+    min_agl_alt: float
 
 
+@dataclass
 class PlannerGridLatLon:
-    def __init__(self, grid_latlon):
-        self.grid_latlon = grid_latlon
+    grid_latlon: tuple[float, float] = None
 
 
+@dataclass
 class PlannerGridSpacing:
-    def __init__(self, grid_spacing):
-        self.grid_spacing = grid_spacing
+    grid_spacing: float
 
 
+@dataclass
 class PlannerGridLength:
-    def __init__(self, grid_length):
-        self.grid_length = grid_length
+    grid_length: float
 
 
+@dataclass
 class PlannerTerrainSource:
-    def __init__(self, terrain_source):
-        self.terrain_source = terrain_source
+    terrain_source: str
 
 
+@dataclass
 class PlannerTimeBudget:
-    def __init__(self, time_budget):
-        self.time_budget = time_budget
+    time_budget: float
 
 
+@dataclass
 class PlannerResolution:
-    def __init__(self, resolution):
-        self.resolution = resolution
+    resolution: float
 
 
+@dataclass
 class PlannerPolyFences:
-    def __init__(self):
-        self.exclusion_polygons = []
-        self.inclusion_polygons = []
-        self.exclusion_circles = []
-        self.inclusion_circles = []
+    exclusion_polygons: list = field(default_factory=list)
+    inclusion_polygons: list = field(default_factory=list)
+    exclusion_circles: list = field(default_factory=list)
+    inclusion_circles: list = field(default_factory=list)
 
 
 # data messages [out]
 
 
+@dataclass
 class PlannerStatus:
-    def __init__(self, status):
-        self.status = status
+    status: str
 
 
+@dataclass
 class PlannerPath:
-    def __init__(self, path):
-        self.path = path
+    path: Path = field(default_factory=Path)
 
 
+@dataclass
 class PlannerStates:
-    def __init__(self, states):
-        self.states = states
+    states: list = field(default_factory=list)
 
 
 # command messages
 
 
+@dataclass
 class PlannerCmdRunPlanner:
-    def __init__(self):
-        pass
+    pass
 
 
 class TerrainPlanner(multiproc.Process):
