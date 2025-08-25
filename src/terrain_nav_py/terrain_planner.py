@@ -542,6 +542,9 @@ class TerrainPlanner(multiproc.Process):
         # run the solver
         candidate_path = Path()
         try:
+            # NOTE: calculation in progress
+            msg = PlannerStatus(status="PENDING")
+
             self._planner_mgr.Solve1(
                 time_budget=self._time_budget,
                 path=candidate_path,
