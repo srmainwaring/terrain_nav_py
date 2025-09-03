@@ -66,7 +66,7 @@ class TerrainValidityChecker(ob.StateValidityChecker):
 
     def isValid(self, state: ob.State) -> bool:
         """
-        State validity check - overrides virual base class method
+        State validity check - overrides virtual base class method
 
         :param state: the state to check
         :type state: ob.State
@@ -106,7 +106,7 @@ class TerrainValidityChecker(ob.StateValidityChecker):
         :type position: tuple[float, float, float]
         :param is_above: `True` if to check above layer, `False` to check below
         :type is_above: bool
-        :return: `True` if the positon is in collision
+        :return: `True` if the position is in collision
         :rtype: bool
         """
         # check fences, circles are fastest so do first
@@ -274,10 +274,10 @@ class TerrainStateSampler(ob.StateSampler):
         self._max_altitude: float = max_altitude
         self._min_altitude: float = min_altitude
 
-    # TODO: We don't need to querry this everytime we sample
+    # TODO: We don't need to query this every time we sample
     def sampleUniform(self, state: ob.State) -> None:
         """
-        Populate the state with uniform sample given terrain contraints.
+        Populate the state with uniform sample given terrain constraints.
 
         :param state: the state to modify
         :type state: ob.State

@@ -395,7 +395,7 @@ def test_path_segment_get_closest_point():
     path_segment.append_state(state1)
     path_segment.append_state(state2)
 
-    # closest point is mid-point - progess is 1/8 circumference
+    # closest point is mid-point - progress is 1/8 circumference
     arc_centre = state1.position + radius * Vector3(1.0, 1.0, 0.0).normalized()
     position = Vector3(arc_centre.x, 0.0, 5.0)
     (theta, closest_point, tangent, curvature_out) = path_segment.get_closest_point(
